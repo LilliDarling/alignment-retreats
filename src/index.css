@@ -1,0 +1,138 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Retreat Collaboration Platform - Earth Tones Design System */
+
+@layer base {
+  :root {
+    /* Cream background */
+    --background: 42 47% 96%;
+    --foreground: 25 25% 20%;
+
+    /* Warm cream cards */
+    --card: 40 33% 98%;
+    --card-foreground: 25 25% 20%;
+
+    --popover: 40 33% 98%;
+    --popover-foreground: 25 25% 20%;
+
+    /* Warm Terracotta primary */
+    --primary: 15 55% 50%;
+    --primary-foreground: 40 33% 98%;
+
+    /* Warm Brown secondary */
+    --secondary: 25 24% 44%;
+    --secondary-foreground: 40 33% 98%;
+
+    /* Muted terracotta */
+    --muted: 15 25% 90%;
+    --muted-foreground: 25 15% 45%;
+
+    /* Accent - lighter terracotta */
+    --accent: 15 30% 85%;
+    --accent-foreground: 25 25% 20%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 40 33% 98%;
+
+    --border: 30 20% 85%;
+    --input: 30 20% 85%;
+    --ring: 15 55% 50%;
+
+    --radius: 0.75rem;
+
+    /* Sidebar - warm tones */
+    --sidebar-background: 40 33% 98%;
+    --sidebar-foreground: 25 25% 20%;
+    --sidebar-primary: 15 55% 50%;
+    --sidebar-primary-foreground: 40 33% 98%;
+    --sidebar-accent: 15 25% 92%;
+    --sidebar-accent-foreground: 25 25% 20%;
+    --sidebar-border: 30 20% 85%;
+    --sidebar-ring: 15 55% 50%;
+
+    /* Custom tokens */
+    --success: 15 50% 45%;
+    --success-foreground: 40 33% 98%;
+    --warning: 35 90% 55%;
+    --warning-foreground: 25 25% 20%;
+  }
+
+  .dark {
+    --background: 25 20% 12%;
+    --foreground: 42 30% 92%;
+
+    --card: 25 18% 16%;
+    --card-foreground: 42 30% 92%;
+
+    --popover: 25 18% 16%;
+    --popover-foreground: 42 30% 92%;
+
+    --primary: 15 55% 55%;
+    --primary-foreground: 25 20% 12%;
+
+    --secondary: 30 25% 35%;
+    --secondary-foreground: 42 30% 92%;
+
+    --muted: 25 15% 22%;
+    --muted-foreground: 42 20% 65%;
+
+    --accent: 15 25% 25%;
+    --accent-foreground: 42 30% 92%;
+
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 42 30% 92%;
+
+    --border: 25 15% 25%;
+    --input: 25 15% 25%;
+    --ring: 15 55% 55%;
+
+    --sidebar-background: 25 18% 14%;
+    --sidebar-foreground: 42 30% 92%;
+    --sidebar-primary: 15 55% 55%;
+    --sidebar-primary-foreground: 25 20% 12%;
+    --sidebar-accent: 25 15% 20%;
+    --sidebar-accent-foreground: 42 30% 92%;
+    --sidebar-border: 25 15% 22%;
+    --sidebar-ring: 15 55% 55%;
+
+    --success: 15 50% 50%;
+    --success-foreground: 25 20% 12%;
+    --warning: 35 90% 55%;
+    --warning-foreground: 25 20% 12%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Nunito Sans', sans-serif;
+  }
+
+  /* Prevent orphan words - balanced text wrapping */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Nunito Sans', sans-serif;
+    text-wrap: balance;
+  }
+
+  p, span, a, li, label, button {
+    text-wrap: pretty;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Nunito Sans', sans-serif;
+  }
+
+  .font-sans {
+    font-family: 'Nunito Sans', sans-serif;
+  }
+}

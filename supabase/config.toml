@@ -1,0 +1,31 @@
+project_id = "drceikqfpogwijcenqsd"
+
+[functions.send-welcome-email]
+verify_jwt = false
+
+[functions.notify-new-member]
+verify_jwt = false
+
+[functions.stripe-connect-onboard]
+verify_jwt = true
+
+[functions.process-booking-payment]
+verify_jwt = true
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.process-scheduled-payouts]
+verify_jwt = false
+
+[functions.notify-retreat-submission]
+verify_jwt = false
+
+[functions.resend-verification-email]
+verify_jwt = false
+
+[functions.notify-profile-completed]
+verify_jwt = false
+
+[functions.notify-attendee-wish]
+verify_jwt = false
