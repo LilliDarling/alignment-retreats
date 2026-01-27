@@ -2,18 +2,20 @@ import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { differenceInCalendarDays, format } from 'date-fns';
-import { 
-  Heart, 
-  Star, 
-  Calendar, 
-  Users, 
-  MapPin, 
-  ArrowLeft, 
+import {
+  Heart,
+  Star,
+  Calendar,
+  Users,
+  MapPin,
+  ArrowLeft,
   Share2,
   Check,
-  MessageCircle
+  MessageCircle,
+  Loader2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -22,13 +24,16 @@ import { MessageModal } from '@/components/MessageModal';
 import { ItineraryDisplay } from '@/components/ItineraryDisplay';
 import { cn } from '@/lib/utils';
 import { parseDateOnly } from '@/lib/dateOnly';
+import { toast } from 'sonner';
 
 export default function RetreatDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(false);
+  const { user } = useAuth();
   const [messageModalOpen, setMessageModalOpen] = useState(false);
   const [messageType, setMessageType] = useState<'booking_inquiry' | 'collaboration'>('booking_inquiry');
+  const [bookingLoading, setBookingLoading] = useState(false);
 
   // Fetch retreat from database only
   const { data: retreat, isLoading, error } = useQuery({
@@ -111,6 +116,37 @@ export default function RetreatDetail() {
   const handleOpenMessage = (type: 'booking_inquiry' | 'collaboration') => {
     setMessageType(type);
     setMessageModalOpen(true);
+  };
+
+  const handleBookNow = async () => {
+    if (!user) {
+      navigate('/login', { state: { from: `/retreats/${id}` } });
+      return;
+    }
+
+    setBookingLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('process-booking-payment', {
+        body: {
+          retreat_id: id,
+          success_url: `${window.location.origin}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${window.location.origin}/retreats/${id}`,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error('Unable to start checkout. Please try again.');
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Something went wrong';
+      toast.error('Booking failed', { description: message });
+    } finally {
+      setBookingLoading(false);
+    }
   };
 
   const hostName = hostProfile?.name || 'Retreat Host';
@@ -325,12 +361,20 @@ export default function RetreatDetail() {
 
               {/* CTA Buttons */}
               <div className="space-y-3">
-                <Button 
+                <Button
                   className="w-full rounded-full font-semibold"
                   size="lg"
-                  onClick={() => handleOpenMessage('booking_inquiry')}
+                  onClick={handleBookNow}
+                  disabled={bookingLoading || !retreat.price_per_person}
                 >
-                  Book Now
+                  {bookingLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Redirecting to checkout...
+                    </>
+                  ) : (
+                    'Book Now'
+                  )}
                 </Button>
                 <Button 
                   variant="outline"
@@ -343,7 +387,7 @@ export default function RetreatDetail() {
               </div>
 
               <p className="text-center text-sm text-muted-foreground mt-4">
-                You won't be charged yet
+                Secure checkout powered by Stripe
               </p>
             </div>
           </div>

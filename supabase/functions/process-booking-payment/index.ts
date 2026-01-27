@@ -180,8 +180,8 @@ serve(async (req) => {
       });
     }
 
-    // Calculate platform fee (5%)
-    const platformFee = Math.round(totalAmount * 0.05);
+    // Calculate platform fee (30%)
+    const platformFee = Math.round(totalAmount * 0.30);
 
     // Create or get Stripe customer
     const { data: existingCustomers } = await stripe.customers.list({

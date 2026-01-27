@@ -96,11 +96,40 @@ serve(async (req) => {
       });
     }
 
-    console.log("Webhook event verified:", { 
-      type: event.type, 
+    console.log("Webhook event verified:", {
+      type: event.type,
       eventId: event.id,
-      requestId 
+      requestId
     });
+
+    // Idempotency check: skip already-processed events
+    const { data: existingEvent } = await supabaseAdmin
+      .from("processed_webhook_events")
+      .select("event_id")
+      .eq("event_id", event.id)
+      .single();
+
+    if (existingEvent) {
+      console.log("Duplicate webhook event, skipping:", { eventId: event.id, requestId });
+      return new Response(JSON.stringify({ received: true, duplicate: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Record the event before processing to prevent races between retries
+    const { error: recordError } = await supabaseAdmin
+      .from("processed_webhook_events")
+      .insert({ event_id: event.id, event_type: event.type });
+
+    if (recordError) {
+      // If insert fails with unique violation, another instance is already processing this event
+      console.log("Event already being processed by another instance:", { eventId: event.id, requestId });
+      return new Response(JSON.stringify({ received: true, duplicate: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     switch (event.type) {
       case "checkout.session.completed": {
@@ -163,10 +192,10 @@ serve(async (req) => {
           console.error("Error creating payment record:", paymentError);
         }
 
-        // Get retreat details for scheduling payouts
+        // Get retreat start_date for payout scheduling
         const { data: retreat } = await supabaseAdmin
           .from("retreats")
-          .select("start_date, retreat_team(*)")
+          .select("start_date")
           .eq("id", retreat_id)
           .single();
 
@@ -176,35 +205,43 @@ serve(async (req) => {
           const finalDate = new Date(startDate);
           finalDate.setDate(finalDate.getDate() - 7); // 1 week before retreat
 
-          // Schedule payouts for each team member
-          const teamMembers = retreat.retreat_team || [];
-          for (const member of teamMembers) {
-            if (!member.agreed) continue;
+          // Use get_payout_breakdown() to correctly calculate fees by type
+          // (flat, per_person, per_night, per_person_per_night)
+          const { data: payoutBreakdown, error: breakdownError } = await supabaseAdmin
+            .rpc("get_payout_breakdown", { _booking_id: booking.id });
 
-            // Calculate payout amount (simplified - would need proper calculation based on fee_type)
-            const payoutAmount = member.fee_amount / 2; // 50% each phase
+          if (breakdownError) {
+            console.error("Error getting payout breakdown:", breakdownError);
+          } else if (payoutBreakdown && payoutBreakdown.length > 0) {
+            for (const member of payoutBreakdown) {
+              if (member.deposit_amount <= 0 && member.final_amount <= 0) continue;
 
-            // Create deposit payout (immediate)
-            await supabaseAdmin.from("scheduled_payouts").insert({
-              escrow_id: escrow.id,
-              recipient_user_id: member.user_id,
-              retreat_team_id: member.id,
-              amount: payoutAmount,
-              payout_type: "deposit",
-              scheduled_date: depositDate.toISOString().split("T")[0],
-              status: "scheduled",
-            });
+              // Create deposit payout (immediate)
+              if (member.deposit_amount > 0) {
+                await supabaseAdmin.from("scheduled_payouts").insert({
+                  escrow_id: escrow.id,
+                  recipient_user_id: member.recipient_user_id,
+                  retreat_team_id: member.retreat_team_id,
+                  amount: member.deposit_amount,
+                  payout_type: "deposit",
+                  scheduled_date: depositDate.toISOString().split("T")[0],
+                  status: "scheduled",
+                });
+              }
 
-            // Create final payout (1 week before)
-            await supabaseAdmin.from("scheduled_payouts").insert({
-              escrow_id: escrow.id,
-              recipient_user_id: member.user_id,
-              retreat_team_id: member.id,
-              amount: payoutAmount,
-              payout_type: "final",
-              scheduled_date: finalDate.toISOString().split("T")[0],
-              status: "scheduled",
-            });
+              // Create final payout (1 week before retreat)
+              if (member.final_amount > 0) {
+                await supabaseAdmin.from("scheduled_payouts").insert({
+                  escrow_id: escrow.id,
+                  recipient_user_id: member.recipient_user_id,
+                  retreat_team_id: member.retreat_team_id,
+                  amount: member.final_amount,
+                  payout_type: "final",
+                  scheduled_date: finalDate.toISOString().split("T")[0],
+                  status: "scheduled",
+                });
+              }
+            }
           }
         }
 

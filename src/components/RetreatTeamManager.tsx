@@ -90,7 +90,7 @@ export function RetreatTeamManager({
 
   const totalTeamCost = teamMembers.reduce((sum, member) => sum + calculateMemberFee(member), 0);
   const totalRevenue = pricePerPerson * maxAttendees;
-  const platformFee = totalRevenue * 0.05; // 5% platform fee
+  const platformFee = totalRevenue * 0.30; // 30% platform fee
   const hostProfit = totalRevenue - totalTeamCost - platformFee;
 
   useEffect(() => {
@@ -174,7 +174,7 @@ export function RetreatTeamManager({
               </p>
             </div>
             <div>
-              <p className="text-muted-foreground">Platform Fee (5%)</p>
+              <p className="text-muted-foreground">Platform Fee (30%)</p>
               <p className="text-xl font-semibold text-muted-foreground">
                 -${platformFee.toLocaleString()}
               </p>
