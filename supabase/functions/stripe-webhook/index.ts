@@ -1,17 +1,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { 
-  checkRateLimit, 
+import {
+  checkRateLimit,
   isValidUUID,
   getClientIP,
-  securityHeaders 
+  securityHeaders
 } from "../_shared/security.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 // Maximum events to process per minute (per IP)
 const WEBHOOK_RATE_LIMIT = 100;
