@@ -18,14 +18,6 @@ serve(async (req) => {
   const clientIP = getClientIP(req);
   const requestId = crypto.randomUUID();
 
-  // Log request for audit
-  console.log("Payment request received:", {
-    requestId,
-    timestamp: new Date().toISOString(),
-    clientIP,
-    method: req.method,
-  });
-
   try {
     // Rate limit by IP: 5 payment attempts per minute
     const rateLimitResult = checkRateLimit(`payment:${clientIP}`, {
@@ -140,7 +132,7 @@ serve(async (req) => {
     // Fetch retreat details - use service role for reliable access
     const { data: retreat, error: retreatError } = await supabaseClient
       .from("retreats")
-      .select("id, title, retreat_type, price_per_person, status, max_attendees, retreat_team(*)")
+      .select("id, title, retreat_type, price_per_person, status, max_attendees, start_date, retreat_team(*)")
       .eq("id", retreat_id)
       .eq("status", "published") // Only allow booking published retreats
       .single();
@@ -151,6 +143,18 @@ serve(async (req) => {
         status: 404,
         headers: { ...corsHeaders, ...securityHeaders },
       });
+    }
+
+    // Block bookings for retreats that have already started
+    if (retreat.start_date) {
+      const startDate = new Date(retreat.start_date + "T00:00:00Z");
+      if (new Date() >= startDate) {
+        console.warn("Booking attempt for past/started retreat:", { retreat_id, start_date: retreat.start_date, requestId });
+        return new Response(JSON.stringify({ error: "This retreat has already started and is no longer accepting bookings" }), {
+          status: 410,
+          headers: { ...corsHeaders, ...securityHeaders },
+        });
+      }
     }
 
     // Check if user already has a booking for this retreat
@@ -169,6 +173,35 @@ serve(async (req) => {
       });
     }
 
+    // Check max attendees capacity using service role for accurate count
+    if (retreat.max_attendees) {
+      const supabaseAdmin = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      );
+
+      const { count, error: countError } = await supabaseAdmin
+        .from("bookings")
+        .select("id", { count: "exact", head: true })
+        .eq("retreat_id", retreat_id);
+
+      if (countError) {
+        console.error("Error checking booking count:", { retreat_id, requestId, error: countError.message });
+        return new Response(JSON.stringify({ error: "Unable to verify availability" }), {
+          status: 500,
+          headers: { ...corsHeaders, ...securityHeaders },
+        });
+      }
+
+      if ((count ?? 0) >= retreat.max_attendees) {
+        console.warn("Retreat at capacity:", { retreat_id, count, max: retreat.max_attendees, requestId });
+        return new Response(JSON.stringify({ error: "This retreat is fully booked" }), {
+          status: 409,
+          headers: { ...corsHeaders, ...securityHeaders },
+        });
+      }
+    }
+
     const pricePerPerson = retreat.price_per_person || 0;
     const totalAmount = Math.round(pricePerPerson * 100); // Convert to cents
 
@@ -180,8 +213,8 @@ serve(async (req) => {
       });
     }
 
-    // Calculate platform fee (5%)
-    const platformFee = Math.round(totalAmount * 0.05);
+    // Calculate platform fee (30%)
+    const platformFee = Math.round(totalAmount * 0.30);
 
     // Create or get Stripe customer
     const { data: existingCustomers } = await stripe.customers.list({
@@ -238,14 +271,6 @@ serve(async (req) => {
       expires_at: Math.floor(Date.now() / 1000) + 1800, // 30 min expiry
     }, {
       idempotencyKey,
-    });
-
-    console.log("Checkout session created:", { 
-      sessionId: session.id, 
-      userId: user.id, 
-      retreat_id,
-      amount: totalAmount,
-      requestId 
     });
 
     return new Response(JSON.stringify({

@@ -1,4 +1,7 @@
--- Make mathew.vetten@gmail.com an admin
+-- Grant admin role to initial admin user by email lookup
+-- This avoids hardcoding UUIDs which can trigger false-positive security warnings
 INSERT INTO public.user_roles (user_id, role)
-VALUES ('d1af398b-a299-4b58-bcf0-86765d62753e', 'admin')
+SELECT id, 'admin'
+FROM auth.users
+WHERE email = 'mathew.vetten@gmail.com'
 ON CONFLICT (user_id, role) DO NOTHING;

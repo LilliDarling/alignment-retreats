@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { 
-  ArrowLeft, 
-  MapPin, 
-  Star, 
-  Briefcase, 
-  Clock, 
+import {
+  ArrowLeft,
+  MapPin,
+  Star,
+  Briefcase,
+  Clock,
   DollarSign,
   MessageCircle,
   ExternalLink,
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -43,6 +44,9 @@ export default function Profile() {
     },
     enabled: !!userId,
   });
+
+  // Set page title
+  usePageTitle(profile?.name ? `${profile.name}'s Profile` : 'Profile');
 
   // Fetch user roles
   const { data: roles } = useQuery({

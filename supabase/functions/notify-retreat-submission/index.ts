@@ -3,6 +3,7 @@ import { Resend } from "https://esm.sh/resend@2.0.0";
 import { corsHeaders } from "../_shared/cors.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL");
 
 interface RetreatSubmissionRequest {
   title: string;
@@ -19,16 +20,22 @@ interface RetreatSubmissionRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log("notify-retreat-submission function invoked");
-
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Validate ADMIN_EMAIL is configured
+    if (!ADMIN_EMAIL) {
+      console.error("ADMIN_EMAIL not configured");
+      return new Response(
+        JSON.stringify({ success: false, error: "Admin email not configured" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const data: RetreatSubmissionRequest = await req.json();
-    console.log("Received retreat submission from:", data.submitterName);
 
     const needsList = data.needs.map(need => {
       const note = data.needsNotes[need];
@@ -88,11 +95,9 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    console.log("Sending retreat submission email to mathew.vetten@gmail.com");
-
     const emailResponse = await resend.emails.send({
       from: "Alignment Retreats <onboarding@resend.dev>",
-      to: ["mathew.vetten@gmail.com"],
+      to: [ADMIN_EMAIL],
       subject: `🌿 New Retreat Submission: ${data.title || "Untitled Retreat"}`,
       html: emailHtml,
     });
@@ -104,8 +109,6 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
-
-    console.log("Email sent successfully:", emailResponse.data);
 
     return new Response(
       JSON.stringify({ success: true, emailId: emailResponse.data?.id }),

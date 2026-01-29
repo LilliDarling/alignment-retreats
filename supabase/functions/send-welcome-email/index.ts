@@ -17,7 +17,6 @@ const isCollaborator = (roles: string[]): boolean => {
 
 // Generate collaborator email content
 const getCollaboratorEmailContent = (name: string, roles: string[]): string => {
-  // TODO: Replace with user's custom script content
   return `
     <!DOCTYPE html>
     <html>
@@ -58,7 +57,6 @@ const getCollaboratorEmailContent = (name: string, roles: string[]): string => {
 
 // Generate attendee email content
 const getAttendeeEmailContent = (name: string): string => {
-  // TODO: Replace with user's custom script content
   return `
     <!DOCTYPE html>
     <html>
@@ -97,8 +95,6 @@ const getAttendeeEmailContent = (name: string): string => {
 };
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log("send-welcome-email function invoked");
-
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -116,19 +112,15 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { name, email, roles }: WelcomeEmailRequest = await req.json();
 
-    console.log(`Preparing welcome email for ${email} (user: ${name}, roles: ${roles.join(", ")})`);
-
     // Determine email type based on roles
     const isUserCollaborator = isCollaborator(roles);
     const htmlContent = isUserCollaborator 
       ? getCollaboratorEmailContent(name, roles)
       : getAttendeeEmailContent(name);
     
-    const subject = isUserCollaborator 
+    const subject = isUserCollaborator
       ? "Welcome to Alignment Retreats - Let's Get Started!"
       : "Your Journey Begins - Welcome to Alignment Retreats!";
-
-    console.log(`Sending ${isUserCollaborator ? "collaborator" : "attendee"} welcome email to ${email}`);
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -154,8 +146,6 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
-
-    console.log("Email sent successfully:", data);
 
     return new Response(JSON.stringify({ success: true, data }), {
       status: 200,

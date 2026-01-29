@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { Search, Filter, Star, CheckCircle, Lock, Users, Briefcase, Home, ChefHat, X, Building, MapPin } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -80,6 +81,7 @@ const roleColors: Record<string, string> = {
 };
 
 export default function Directory() {
+  usePageTitle('Member Directory');
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');

@@ -3,7 +3,6 @@ import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import {
   checkRateLimit,
-  isValidUUID,
   getClientIP,
   securityHeaders
 } from "../_shared/security.ts";
@@ -52,17 +51,12 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
   );
 
+  // Track event ID for error handling
+  let currentEventId: string | null = null;
+
   try {
     const signature = req.headers.get("stripe-signature");
     const body = await req.text();
-
-    console.log("Webhook request received:", {
-      requestId,
-      hasSignature: !!signature,
-      contentLength: body.length,
-      timestamp: new Date().toISOString(),
-      clientIP,
-    });
 
     // ALWAYS require webhook secret - fail closed if not configured
     const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
@@ -96,11 +90,39 @@ serve(async (req) => {
       });
     }
 
-    console.log("Webhook event verified:", { 
-      type: event.type, 
-      eventId: event.id,
-      requestId 
-    });
+    // Store event ID for error handling
+    currentEventId = event.id;
+
+    // Idempotency check: skip already-completed events
+    const { data: existingEvent } = await supabaseAdmin
+      .from("processed_webhook_events")
+      .select("event_id, status")
+      .eq("event_id", event.id)
+      .single();
+
+    if (existingEvent) {
+      // Only skip if previously completed successfully
+      if (existingEvent.status === "completed") {
+        return new Response(JSON.stringify({ received: true, duplicate: true }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // If status is 'processing' or 'failed', allow retry by continuing
+    }
+
+    // Record or update the event as 'processing' before business logic
+    const { error: recordError } = await supabaseAdmin
+      .from("processed_webhook_events")
+      .upsert(
+        { event_id: event.id, event_type: event.type, status: "processing" },
+        { onConflict: "event_id" }
+      );
+
+    if (recordError) {
+      console.error("Error recording webhook event:", recordError);
+      // Continue processing - we don't want to lose the event
+    }
 
     switch (event.type) {
       case "checkout.session.completed": {
@@ -163,10 +185,10 @@ serve(async (req) => {
           console.error("Error creating payment record:", paymentError);
         }
 
-        // Get retreat details for scheduling payouts
+        // Get retreat start_date for payout scheduling
         const { data: retreat } = await supabaseAdmin
           .from("retreats")
-          .select("start_date, retreat_team(*)")
+          .select("start_date")
           .eq("id", retreat_id)
           .single();
 
@@ -176,39 +198,46 @@ serve(async (req) => {
           const finalDate = new Date(startDate);
           finalDate.setDate(finalDate.getDate() - 7); // 1 week before retreat
 
-          // Schedule payouts for each team member
-          const teamMembers = retreat.retreat_team || [];
-          for (const member of teamMembers) {
-            if (!member.agreed) continue;
+          // Use get_payout_breakdown() to correctly calculate fees by type
+          // (flat, per_person, per_night, per_person_per_night)
+          const { data: payoutBreakdown, error: breakdownError } = await supabaseAdmin
+            .rpc("get_payout_breakdown", { _booking_id: booking.id });
 
-            // Calculate payout amount (simplified - would need proper calculation based on fee_type)
-            const payoutAmount = member.fee_amount / 2; // 50% each phase
+          if (breakdownError) {
+            console.error("Error getting payout breakdown:", breakdownError);
+          } else if (payoutBreakdown && payoutBreakdown.length > 0) {
+            for (const member of payoutBreakdown) {
+              if (member.deposit_amount <= 0 && member.final_amount <= 0) continue;
 
-            // Create deposit payout (immediate)
-            await supabaseAdmin.from("scheduled_payouts").insert({
-              escrow_id: escrow.id,
-              recipient_user_id: member.user_id,
-              retreat_team_id: member.id,
-              amount: payoutAmount,
-              payout_type: "deposit",
-              scheduled_date: depositDate.toISOString().split("T")[0],
-              status: "scheduled",
-            });
+              // Create deposit payout (immediate)
+              if (member.deposit_amount > 0) {
+                await supabaseAdmin.from("scheduled_payouts").insert({
+                  escrow_id: escrow.id,
+                  recipient_user_id: member.recipient_user_id,
+                  retreat_team_id: member.retreat_team_id,
+                  amount: member.deposit_amount,
+                  payout_type: "deposit",
+                  scheduled_date: depositDate.toISOString().split("T")[0],
+                  status: "scheduled",
+                });
+              }
 
-            // Create final payout (1 week before)
-            await supabaseAdmin.from("scheduled_payouts").insert({
-              escrow_id: escrow.id,
-              recipient_user_id: member.user_id,
-              retreat_team_id: member.id,
-              amount: payoutAmount,
-              payout_type: "final",
-              scheduled_date: finalDate.toISOString().split("T")[0],
-              status: "scheduled",
-            });
+              // Create final payout (1 week before retreat)
+              if (member.final_amount > 0) {
+                await supabaseAdmin.from("scheduled_payouts").insert({
+                  escrow_id: escrow.id,
+                  recipient_user_id: member.recipient_user_id,
+                  retreat_team_id: member.retreat_team_id,
+                  amount: member.final_amount,
+                  payout_type: "final",
+                  scheduled_date: finalDate.toISOString().split("T")[0],
+                  status: "scheduled",
+                });
+              }
+            }
           }
         }
 
-        console.log("Booking and escrow created successfully:", booking.id);
         break;
       }
 
@@ -226,7 +255,6 @@ serve(async (req) => {
           })
           .eq("stripe_account_id", account.id);
 
-        console.log("Updated connected account:", account.id);
         break;
       }
 
@@ -249,11 +277,16 @@ serve(async (req) => {
       }
 
       case "payment_intent.payment_failed": {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        console.log("Payment failed:", paymentIntent.id);
+        // Payment failure handled - no action needed
         break;
       }
     }
+
+    // Mark event as successfully processed
+    await supabaseAdmin
+      .from("processed_webhook_events")
+      .update({ status: "completed" })
+      .eq("event_id", event.id);
 
     return new Response(JSON.stringify({ received: true }), {
       status: 200,
@@ -262,6 +295,19 @@ serve(async (req) => {
   } catch (error: unknown) {
     console.error("Webhook error:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
+
+    // Mark event as failed so it can be retried
+    if (currentEventId) {
+      try {
+        await supabaseAdmin
+          .from("processed_webhook_events")
+          .update({ status: "failed" })
+          .eq("event_id", currentEventId);
+      } catch {
+        // Ignore errors updating status
+      }
+    }
+
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

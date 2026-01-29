@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { supabase } from '@/integrations/supabase/client';
 import { AppHeader } from '@/components/AppHeader';
 import { LandownerOnboarding, LandownerOnboardingData } from '@/components/onboarding/LandownerOnboarding';
@@ -30,6 +31,7 @@ interface ProfileOnboarding {
 }
 
 export default function LandownerDashboard() {
+  usePageTitle('Landowner Dashboard');
   const { user, userRoles, hasRole } = useAuth();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -143,9 +145,8 @@ export default function LandownerDashboard() {
             data.interestedInResidency ? 'Interested in Creator Residencies' : null
           ].filter(Boolean)
         }
-      }).then(({ error }) => {
-        if (error) console.error('Profile completion notification failed:', error);
-        else console.log('Profile completion notification sent');
+      }).catch((error) => {
+        console.error('Profile completion notification failed:', error);
       });
     } catch (error) {
       console.error('Error creating property:', error);

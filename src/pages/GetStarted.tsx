@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAuth, AppRole } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Leaf, Crown, Users, Home, Briefcase, ChevronLeft, ChevronRight, Check } from 'lucide-react';
@@ -45,6 +46,7 @@ const needsCoopQuestion = (roles: CollaboratorRole[]) =>
   roles.includes('host') || roles.includes('landowner');
 
 export default function GetStarted() {
+  usePageTitle('Get Started');
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signUp, user } = useAuth();
@@ -152,9 +154,8 @@ export default function GetStarted() {
       // Send admin notification for new member (don't block on this)
       supabase.functions.invoke('notify-new-member', {
         body: { name, email, roles: selectedRoles }
-      }).then(({ error }) => {
-        if (error) console.error('Admin notification failed:', error);
-        else console.log('Admin notification sent successfully');
+      }).catch((error) => {
+        console.error('Admin notification failed:', error);
       });
 
       // Build completed fields from onboarding data
@@ -190,9 +191,8 @@ export default function GetStarted() {
           roles: selectedRoles,
           completedFields 
         }
-      }).then(({ error }) => {
-        if (error) console.error('Profile completion notification failed:', error);
-        else console.log('Profile completion notification sent');
+      }).catch((error) => {
+        console.error('Profile completion notification failed:', error);
       });
 
       toast({

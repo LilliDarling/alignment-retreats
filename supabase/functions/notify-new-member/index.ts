@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const ADMIN_EMAIL = "mathew.vetten@gmail.com";
+const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL");
 
 interface NewMemberNotification {
   name: string;
@@ -23,14 +23,12 @@ const getRoleLabels = (roles: string[]): string => {
 };
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log("notify-new-member function invoked");
-
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Validate API key exists
+    // Validate required environment variables
     if (!RESEND_API_KEY) {
       console.error("RESEND_API_KEY not configured");
       return new Response(
@@ -39,9 +37,15 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { name, email, roles }: NewMemberNotification = await req.json();
+    if (!ADMIN_EMAIL) {
+      console.error("ADMIN_EMAIL not configured");
+      return new Response(
+        JSON.stringify({ success: false, error: "Admin email not configured", skipped: true }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
-    console.log(`Notifying admin about new member: ${name} (${email})`);
+    const { name, email, roles }: NewMemberNotification = await req.json();
 
     const roleLabels = getRoleLabels(roles);
     const signupDate = new Date().toLocaleString("en-US", {
@@ -121,8 +125,6 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
-
-    console.log("Admin notification sent successfully:", data);
 
     return new Response(JSON.stringify({ success: true, data }), {
       status: 200,

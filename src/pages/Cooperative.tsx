@@ -1,12 +1,13 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { 
-  Key, 
-  Compass, 
-  Vote, 
-  TrendingUp, 
-  Users, 
-  Shield, 
+import { usePageTitle } from "@/hooks/usePageTitle";
+import {
+  Key,
+  Compass,
+  Vote,
+  TrendingUp,
+  Users,
+  Shield,
   Calendar,
   Coins,
   FileText,
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CALENDLY_COOP_ONBOARDING_URL, MADC_FOUNDATION_URL } from "@/config/constants";
 
 const steps = [
   {
@@ -102,6 +104,7 @@ const benefits = [
 ];
 
 const Cooperative = () => {
+  usePageTitle('Join the Co-Op');
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -372,9 +375,9 @@ const Cooperative = () => {
                 className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-6 rounded-full shadow-xl"
                 asChild
               >
-                <a 
-                  href="https://calendly.com/mathew-vetten/co-op-onboarding" 
-                  target="_blank" 
+                <a
+                  href={CALENDLY_COOP_ONBOARDING_URL}
+                  target="_blank"
                   rel="noopener noreferrer"
                 >
                   Book a Discovery Call
@@ -397,9 +400,9 @@ const Cooperative = () => {
             <p className="mt-8 text-sm text-white/60">
               Buy-ins are non-refundable. Members must host at least one retreat per year to remain active.
             </p>
-            <a 
-              href="https://madcfoundation.org" 
-              target="_blank" 
+            <a
+              href={MADC_FOUNDATION_URL}
+              target="_blank"
               rel="noopener noreferrer"
               className="mt-4 text-sm text-white/80 hover:text-white underline"
             >

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { AppHeader } from '@/components/AppHeader';
 import { Button } from '@/components/ui/button';
 import { 
@@ -43,6 +44,7 @@ const categoryMap: Record<string, string> = {
 };
 
 export default function BrowseRetreats() {
+  usePageTitle('Browse Retreats');
   const { user } = useAuth();
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);

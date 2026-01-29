@@ -321,7 +321,6 @@ export function BuildRetreatWizard({ onClose, onSuccess }: BuildRetreatWizardPro
   const handleAttendeeSubmit = async () => {
     if (!user) {
       // Save their work to localStorage so they don't lose it
-      console.log('[BuildRetreatWizard] Saving pending dream retreat to localStorage:', attendeeData);
       localStorage.setItem('pendingDreamRetreat', JSON.stringify(attendeeData));
       
       toast({
@@ -337,11 +336,9 @@ export function BuildRetreatWizard({ onClose, onSuccess }: BuildRetreatWizardPro
     }
 
     setIsSubmitting(true);
-    console.log('[BuildRetreatWizard] Submitting attendee wish for user:', user.id);
-    
+
     try {
-      console.log('[BuildRetreatWizard] Inserting into retreat_wishes:', attendeeData);
-      const { data: wishData, error } = await supabase.from('retreat_wishes').insert({
+      const { error } = await supabase.from('retreat_wishes').insert({
         user_id: user.id,
         retreat_types: attendeeData.retreatTypes,
         desired_experiences: attendeeData.desiredExperiences,
@@ -357,11 +354,7 @@ export function BuildRetreatWizard({ onClose, onSuccess }: BuildRetreatWizardPro
         priority: attendeeData.priority,
       }).select();
 
-      if (error) {
-        console.error('[BuildRetreatWizard] Error inserting retreat_wishes:', error);
-        throw error;
-      }
-      console.log('[BuildRetreatWizard] Successfully inserted retreat_wish:', wishData);
+      if (error) throw error;
 
       // Create admin notification
       await supabase.from('admin_notifications').insert({
@@ -378,9 +371,8 @@ export function BuildRetreatWizard({ onClose, onSuccess }: BuildRetreatWizardPro
         .eq('id', user.id)
         .single();
 
-      // Send email notification
-      console.log('[BuildRetreatWizard] Invoking notify-attendee-wish edge function');
-      const { error: edgeFnError } = await supabase.functions.invoke('notify-attendee-wish', {
+      // Send email notification (fire and forget)
+      await supabase.functions.invoke('notify-attendee-wish', {
         body: {
           retreatTypes: attendeeData.retreatTypes,
           desiredExperiences: attendeeData.desiredExperiences,
@@ -399,12 +391,6 @@ export function BuildRetreatWizard({ onClose, onSuccess }: BuildRetreatWizardPro
         },
       });
       
-      if (edgeFnError) {
-        console.error('[BuildRetreatWizard] Edge function error:', edgeFnError);
-      } else {
-        console.log('[BuildRetreatWizard] Edge function called successfully');
-      }
-
       toast({
         title: 'Dream retreat saved!',
         description: 'We\'ll notify you when matching retreats become available.',

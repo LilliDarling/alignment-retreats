@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -77,6 +78,7 @@ interface RevenueMetrics {
 }
 
 export default function AdminDashboard() {
+  usePageTitle('Admin Dashboard');
   const { user } = useAuth();
   const location = useLocation();
   const [members, setMembers] = useState<MemberData[]>([]);

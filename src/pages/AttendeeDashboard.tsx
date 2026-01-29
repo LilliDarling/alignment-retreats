@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { supabase } from '@/integrations/supabase/client';
 import { AppHeader } from '@/components/AppHeader';
 
@@ -43,6 +44,7 @@ interface RetreatWish {
 }
 
 export default function AttendeeDashboard() {
+  usePageTitle('My Retreats');
   const { user, userRoles } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [wishes, setWishes] = useState<RetreatWish[]>([]);

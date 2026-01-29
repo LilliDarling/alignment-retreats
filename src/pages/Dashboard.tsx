@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth, AppRole } from '@/contexts/AuthContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { AppHeader } from '@/components/AppHeader';
 import { ComingSoonOverlay } from '@/components/ComingSoonOverlay';
 
@@ -63,6 +64,7 @@ const roleConfig: Record<AppRole, { label: string; description: string; icon: Re
 };
 
 export default function Dashboard() {
+  usePageTitle('Dashboard');
   const { userRoles, loading, hasRole, user } = useAuth();
   const navigate = useNavigate();
   const isAdmin = hasRole('admin');
