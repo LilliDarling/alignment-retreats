@@ -33,6 +33,7 @@ import Directory from "./pages/Directory";
 import Messages from "./pages/Messages";
 import BuildRetreat from "./pages/BuildRetreat";
 import GetStarted from "./pages/GetStarted";
+import AuthCallback from "./pages/AuthCallback";
 
 import NotFound from "./pages/NotFound";
 
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="/signup" element={<Signup />} />
               <Route path="/signup/attendee" element={<AttendeeSignup />} />
               <Route path="/thank-you" element={<ThankYou />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               <Route
                 path="/onboarding"
                 element={

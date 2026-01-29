@@ -128,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, name: string, userTypes: AppRole[], onboardingData?: OnboardingMetadata) => {
-    const redirectUrl = `${window.location.origin}/`;
+    const redirectUrl = `${window.location.origin}/auth/callback`;
 
     const { error } = await supabase.auth.signUp({
       email,
@@ -160,11 +160,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithMagicLink = async (email: string, redirectTo?: string) => {
-    const redirectPath = redirectTo || '/dashboard';
+    // Store intended destination for after auth callback
+    if (redirectTo && redirectTo !== '/dashboard') {
+      sessionStorage.setItem('authRedirectTo', redirectTo);
+    }
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}${redirectPath}`,
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
 
