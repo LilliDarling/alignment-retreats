@@ -329,8 +329,8 @@ export function BuildRetreatWizard({ onClose, onSuccess }: BuildRetreatWizardPro
       });
       
       onClose?.();
-      navigate('/signup/attendee', { 
-        state: { returnTo: '/build-retreat', hasPendingRetreat: true } 
+      navigate('/signup', {
+        state: { returnTo: '/build-retreat', hasPendingRetreat: true }
       });
       return;
     }

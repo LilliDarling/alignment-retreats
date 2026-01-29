@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth, AppRole } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useToast } from '@/hooks/use-toast';
@@ -55,8 +55,12 @@ export default function Signup() {
 
   const { signUp } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { trackFormSubmit, trackSignup } = useAnalytics();
+
+  // Check for returnTo in location state
+  const returnTo = (location.state as { returnTo?: string })?.returnTo;
 
   const toggleRole = (role: AppRole) => {
     setUserTypes(prev => 
@@ -110,8 +114,8 @@ export default function Signup() {
         body: { name, email, roles: userTypes }
       });
 
-      // Redirect directly to dashboard
-      navigate('/dashboard');
+      // Redirect to returnTo path if provided, otherwise dashboard
+      navigate(returnTo || '/dashboard');
     } catch {
       toast({
         title: 'Sign up failed',

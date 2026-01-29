@@ -2,18 +2,16 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import ComingSoon from "./pages/ComingSoon";
 import Cooperative from "./pages/Cooperative";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import AttendeeSignup from "./pages/AttendeeSignup";
 import ThankYou from "./pages/ThankYou";
 import OnboardingWizard from "./pages/OnboardingWizard";
 import Dashboard from "./pages/Dashboard";
@@ -54,7 +52,8 @@ const App = () => (
               <Route path="/cooperative" element={<Cooperative />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
-              <Route path="/signup/attendee" element={<AttendeeSignup />} />
+              {/* Redirect old attendee signup to unified signup */}
+              <Route path="/signup/attendee" element={<Navigate to="/signup" replace />} />
               <Route path="/thank-you" element={<ThankYou />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route

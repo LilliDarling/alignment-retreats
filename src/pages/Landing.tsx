@@ -252,21 +252,21 @@ export default function Landing() {
                     sampleItinerary={(retreat as any).sample_itinerary}
                 onClick={() => {
                       if (!user) {
-                        navigate('/signup/attendee', { state: { returnTo: '/retreats/browse' } });
+                        navigate('/signup', { state: { returnTo: '/retreats/browse' } });
                       } else {
                         navigate(`/retreat/${retreat.id}`);
                       }
                     }}
                     onBook={() => {
                       if (!user) {
-                        navigate('/signup/attendee', { state: { returnTo: '/retreats/browse' } });
+                        navigate('/signup', { state: { returnTo: '/retreats/browse' } });
                       } else {
                         navigate(`/retreat/${retreat.id}`);
                       }
                     }}
                     onCollaborate={() => {
                       if (!user) {
-                        navigate('/signup/attendee', { state: { returnTo: '/retreats/browse' } });
+                        navigate('/signup', { state: { returnTo: '/retreats/browse' } });
                       } else {
                         navigate(`/retreat/${retreat.id}`);
                       }

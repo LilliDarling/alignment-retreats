@@ -208,14 +208,14 @@ export default function BrowseRetreats() {
                 sampleItinerary={retreat.sample_itinerary || undefined}
                 onClick={() => {
                   if (!user) {
-                    navigate('/signup/attendee', { state: { returnTo: '/retreats/browse' } });
+                    navigate('/signup', { state: { returnTo: '/retreats/browse' } });
                   } else {
                     navigate(`/retreat/${retreat.id}`);
                   }
                 }}
                 onBook={() => {
                   if (!user) {
-                    navigate('/signup/attendee', { state: { returnTo: '/retreats/browse' } });
+                    navigate('/signup', { state: { returnTo: '/retreats/browse' } });
                   } else {
                     navigate(`/retreat/${retreat.id}`);
                   }
