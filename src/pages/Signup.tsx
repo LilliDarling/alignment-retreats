@@ -14,7 +14,7 @@ import { z } from 'zod';
 const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Please enter a valid email'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
   userTypes: z.array(z.string()).min(1, 'Select at least one role'),
 });
 
@@ -104,18 +104,13 @@ export default function Signup() {
       trackFormSubmit('signup');
       trackSignup('email', { roles: userTypes.join(','), email });
 
-      // Send admin notification (don't block on this)
       supabase.functions.invoke('notify-new-member', {
         body: { name, email, roles: userTypes }
-      }).then(({ error }) => {
-        if (error) console.error('Admin notification failed:', error);
-        else console.log('Admin notification sent successfully');
       });
 
       // Redirect directly to dashboard
       navigate('/dashboard');
-    } catch (err) {
-      console.error('Signup error:', err);
+    } catch {
       toast({
         title: 'Sign up failed',
         description: 'An unexpected error occurred. Please try again.',
@@ -181,7 +176,7 @@ export default function Signup() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 6 characters"
+                  placeholder="At least 8 characters"
                 />
                 {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
               </div>

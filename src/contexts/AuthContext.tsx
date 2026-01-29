@@ -39,9 +39,11 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, name: string, userTypes: AppRole[], onboardingData?: OnboardingMetadata) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signInWithMagicLink: (email: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   hasRole: (role: AppRole) => boolean;
   hasAnyRole: (roles: AppRole[]) => boolean;
+  updatePassword: (password: string) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -157,6 +159,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error as Error | null };
   };
 
+  const signInWithMagicLink = async (email: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+
+    return { error: error as Error | null };
+  };
+
+  const updatePassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    return { error: error as Error | null };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -169,7 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const hasAnyRole = (roles: AppRole[]) => roles.some(role => userRoles.includes(role));
 
   return (
-    <AuthContext.Provider value={{ user, session, userRoles, loading, signUp, signIn, signOut, hasRole, hasAnyRole }}>
+    <AuthContext.Provider value={{ user, session, userRoles, loading, signUp, signIn, signInWithMagicLink, signOut, hasRole, hasAnyRole, updatePassword }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Camera, Upload, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Camera, Save, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -11,10 +11,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { z } from 'zod';
+
+const passwordSchema = z.object({
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword'],
+});
 
 export default function EditProfile() {
   const navigate = useNavigate();
-  const { user, userRoles } = useAuth();
+  const { user, userRoles, updatePassword } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -45,6 +54,12 @@ export default function EditProfile() {
   const [portfolioUrl, setPortfolioUrl] = useState('');
   const [staffMinRate, setStaffMinRate] = useState('');
   const [staffMaxRate, setStaffMaxRate] = useState('');
+
+  // Password fields
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordErrors, setPasswordErrors] = useState<{ password?: string; confirmPassword?: string }>({});
+  const [savingPassword, setSavingPassword] = useState(false);
 
   // Fetch current profile
   const { data: profile, isLoading } = useQuery({
@@ -279,6 +294,44 @@ export default function EditProfile() {
       });
     },
   });
+
+  const handlePasswordSave = async () => {
+    setPasswordErrors({});
+
+    const validation = passwordSchema.safeParse({ password: newPassword, confirmPassword });
+    if (!validation.success) {
+      const fieldErrors: { password?: string; confirmPassword?: string } = {};
+      validation.error.errors.forEach((err) => {
+        if (err.path[0] === 'password') fieldErrors.password = err.message;
+        if (err.path[0] === 'confirmPassword') fieldErrors.confirmPassword = err.message;
+      });
+      setPasswordErrors(fieldErrors);
+      return;
+    }
+
+    setSavingPassword(true);
+
+    const { error } = await updatePassword(newPassword);
+
+    if (error) {
+      toast({
+        title: 'Error updating password',
+        description: error.message,
+        variant: 'destructive',
+      });
+      setSavingPassword(false);
+      return;
+    }
+
+    toast({
+      title: 'Password updated',
+      description: 'Your password has been changed successfully.',
+    });
+
+    setNewPassword('');
+    setConfirmPassword('');
+    setSavingPassword(false);
+  };
 
   if (isLoading) {
     return (
@@ -601,6 +654,53 @@ export default function EditProfile() {
               </section>
             </>
           )}
+
+          <Separator />
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold text-foreground">Set Password</h2>
+            <p className="text-sm text-muted-foreground">
+              Set or change your password for email/password login.
+            </p>
+
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">New Password</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="At least 8 characters"
+              />
+              {passwordErrors.password && (
+                <p className="text-sm text-destructive">{passwordErrors.password}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm your password"
+              />
+              {passwordErrors.confirmPassword && (
+                <p className="text-sm text-destructive">{passwordErrors.confirmPassword}</p>
+              )}
+            </div>
+
+            <Button
+              onClick={handlePasswordSave}
+              disabled={savingPassword || !newPassword || !confirmPassword}
+              variant="outline"
+            >
+              {savingPassword ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : null}
+              Update Password
+            </Button>
+          </section>
         </div>
       </main>
     </div>

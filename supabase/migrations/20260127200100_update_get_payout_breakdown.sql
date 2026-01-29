@@ -1,5 +1,8 @@
--- Update get_payout_breakdown to include retreat_team_id for payout scheduling
-CREATE OR REPLACE FUNCTION public.get_payout_breakdown(
+-- Update get_payout_breakdown to include retreat_team_id for payout scheduling.
+-- Must DROP first because CREATE OR REPLACE cannot change the return type.
+DROP FUNCTION IF EXISTS public.get_payout_breakdown(UUID);
+
+CREATE FUNCTION public.get_payout_breakdown(
   _booking_id UUID
 )
 RETURNS TABLE(
