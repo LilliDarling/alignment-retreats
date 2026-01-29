@@ -18,14 +18,6 @@ serve(async (req) => {
   const clientIP = getClientIP(req);
   const requestId = crypto.randomUUID();
 
-  // Log request for audit
-  console.log("Payment request received:", {
-    requestId,
-    timestamp: new Date().toISOString(),
-    clientIP,
-    method: req.method,
-  });
-
   try {
     // Rate limit by IP: 5 payment attempts per minute
     const rateLimitResult = checkRateLimit(`payment:${clientIP}`, {
@@ -279,14 +271,6 @@ serve(async (req) => {
       expires_at: Math.floor(Date.now() / 1000) + 1800, // 30 min expiry
     }, {
       idempotencyKey,
-    });
-
-    console.log("Checkout session created:", { 
-      sessionId: session.id, 
-      userId: user.id, 
-      retreat_id,
-      amount: totalAmount,
-      requestId 
     });
 
     return new Response(JSON.stringify({

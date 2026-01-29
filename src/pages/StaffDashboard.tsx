@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { AppHeader } from '@/components/AppHeader';
 import { EarningsCalculator } from '@/components/EarningsCalculator';
 import { ComingSoonOverlay } from '@/components/ComingSoonOverlay';
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 
 export default function StaffDashboard() {
+  usePageTitle('Staff Dashboard');
   const { userRoles, hasRole } = useAuth();
   const hasMultipleRoles = userRoles.length > 1;
   const isAdmin = hasRole('admin');

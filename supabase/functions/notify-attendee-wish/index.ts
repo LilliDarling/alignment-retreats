@@ -22,8 +22,6 @@ interface AttendeeWishRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log("notify-attendee-wish function invoked");
-
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -31,7 +29,6 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const data: AttendeeWishRequest = await req.json();
-    console.log("Received attendee wish from:", data.submitterName);
 
     const emailHtml = `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -96,8 +93,6 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    console.log("Sending attendee wish email to mathew.vetten@gmail.com");
-
     const emailResponse = await resend.emails.send({
       from: "Alignment Retreats <onboarding@resend.dev>",
       to: ["mathew.vetten@gmail.com"],
@@ -112,8 +107,6 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
-
-    console.log("Email sent successfully:", emailResponse.data);
 
     return new Response(
       JSON.stringify({ success: true, emailId: emailResponse.data?.id }),

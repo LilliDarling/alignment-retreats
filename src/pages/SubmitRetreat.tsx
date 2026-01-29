@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { supabase } from '@/integrations/supabase/client';
 import { AppHeader } from '@/components/AppHeader';
 import { Button } from '@/components/ui/button';
@@ -52,6 +53,7 @@ const steps = [
 ];
 
 export default function SubmitRetreat() {
+  usePageTitle('Submit Retreat Idea');
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -165,9 +167,8 @@ export default function SubmitRetreat() {
           submitterName: profile?.name || 'Unknown',
           submitterEmail: user.email || 'Unknown',
         },
-      }).then(({ error }) => {
-        if (error) console.error('Email notification failed:', error);
-        else console.log('Email notification sent successfully');
+      }).catch((error) => {
+        console.error('Email notification failed:', error);
       });
 
       toast({

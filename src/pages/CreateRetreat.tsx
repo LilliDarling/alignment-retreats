@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,6 +43,7 @@ const steps = [
 ];
 
 export default function CreateRetreat() {
+  usePageTitle('Create Retreat');
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();

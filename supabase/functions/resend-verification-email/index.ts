@@ -55,8 +55,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log("Verification email resent to:", email);
-
     return new Response(
       JSON.stringify({ success: true, message: "Verification email sent" }),
       {

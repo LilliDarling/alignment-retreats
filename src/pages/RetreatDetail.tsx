@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -67,6 +68,9 @@ export default function RetreatDetail() {
       };
     },
   });
+
+  // Set page title based on retreat
+  usePageTitle(retreat?.title || 'Retreat Details');
 
   // Fetch host profile
   const { data: hostProfile } = useQuery({

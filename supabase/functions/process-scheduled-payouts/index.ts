@@ -22,14 +22,6 @@ serve(async (req) => {
   const clientIP = getClientIP(req);
   const requestId = crypto.randomUUID();
 
-  // Log request for audit purposes
-  console.log("Scheduled payout request received:", {
-    requestId,
-    timestamp: new Date().toISOString(),
-    method: req.method,
-    clientIP,
-  });
-
   // Rate limit: Only allow 5 calls per minute to prevent abuse
   const rateLimitResult = checkRateLimit("payout-processor", {
     windowMs: 60000,
@@ -129,14 +121,11 @@ serve(async (req) => {
     }
 
     if (!pendingPayouts || pendingPayouts.length === 0) {
-      console.log("No payouts to process", { requestId });
       return new Response(JSON.stringify({ processed: 0, requestId }), {
         status: 200,
         headers: { ...corsHeaders, ...securityHeaders },
       });
     }
-
-    console.log(`Processing ${pendingPayouts.length} payouts`, { requestId });
 
     let processed = 0;
     let failed = 0;
@@ -309,13 +298,6 @@ serve(async (req) => {
           })
           .eq("id", payout.escrow_id);
 
-        console.log("Payout processed successfully:", { 
-          payoutId: payout.id, 
-          amount: payout.amount,
-          transferId: transfer.id,
-          recipientAccount: stripeAccount.stripe_account_id.substring(0, 10) + "...",
-          requestId 
-        });
         processed++;
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : "Unknown error";
@@ -336,13 +318,6 @@ serve(async (req) => {
         failed++;
       }
     }
-
-    console.log("Payout processing complete:", { 
-      processed, 
-      failed, 
-      total: pendingPayouts.length,
-      requestId 
-    });
 
     return new Response(JSON.stringify({ 
       processed, 

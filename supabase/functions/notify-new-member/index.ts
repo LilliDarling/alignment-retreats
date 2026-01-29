@@ -23,8 +23,6 @@ const getRoleLabels = (roles: string[]): string => {
 };
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log("notify-new-member function invoked");
-
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -40,8 +38,6 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const { name, email, roles }: NewMemberNotification = await req.json();
-
-    console.log(`Notifying admin about new member: ${name} (${email})`);
 
     const roleLabels = getRoleLabels(roles);
     const signupDate = new Date().toLocaleString("en-US", {
@@ -121,8 +117,6 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
-
-    console.log("Admin notification sent successfully:", data);
 
     return new Response(JSON.stringify({ success: true, data }), {
       status: 200,

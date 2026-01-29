@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { AppHeader } from '@/components/AppHeader';
 import { CohostOnboarding } from '@/components/onboarding/CohostOnboarding';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,7 @@ interface CohostProfile {
 }
 
 export default function CohostDashboard() {
+  usePageTitle('Co-Host Dashboard');
   const { user, userRoles } = useAuth();
   const hasMultipleRoles = userRoles.length > 1;
   
@@ -167,9 +169,8 @@ export default function CohostDashboard() {
             data.preferredRegions ? `Preferred Regions: ${data.preferredRegions}` : null
           ].filter(Boolean)
         }
-      }).then(({ error }) => {
-        if (error) console.error('Profile completion notification failed:', error);
-        else console.log('Profile completion notification sent');
+      }).catch((error) => {
+        console.error('Profile completion notification failed:', error);
       });
     } catch (error) {
       console.error('Error saving cohost profile:', error);

@@ -20,14 +20,6 @@ serve(async (req) => {
   const clientIP = getClientIP(req);
   const requestId = crypto.randomUUID();
 
-  // Log request for audit
-  console.log("Stripe Connect request received:", {
-    requestId,
-    timestamp: new Date().toISOString(),
-    clientIP,
-    method: req.method,
-  });
-
   try {
     // Rate limit by IP: 10 requests per minute
     const rateLimitResult = checkRateLimit(`stripe-connect:${clientIP}`, {
@@ -143,11 +135,6 @@ serve(async (req) => {
 
       if (existingAccount) {
         stripeAccountId = existingAccount.stripe_account_id;
-        console.log("Using existing Stripe account:", { 
-          userId: user.id, 
-          accountId: stripeAccountId.substring(0, 10) + "...",
-          requestId 
-        });
       } else {
         // Create new Stripe Connect account
         const account = await stripe.accounts.create({
@@ -172,14 +159,7 @@ serve(async (req) => {
 
         if (insertError) {
           console.error("Error saving Stripe account:", { error: insertError, requestId });
-          // Continue - the account was created in Stripe, we can try to save again later
         }
-
-        console.log("Created new Stripe account:", { 
-          userId: user.id, 
-          accountId: stripeAccountId.substring(0, 10) + "...",
-          requestId 
-        });
       }
 
       // Create onboarding link
@@ -254,11 +234,6 @@ serve(async (req) => {
       }
 
       const loginLink = await stripe.accounts.createLoginLink(accountData.stripe_account_id);
-
-      console.log("Created Stripe dashboard login link:", { 
-        userId: user.id, 
-        requestId 
-      });
 
       return new Response(JSON.stringify({ url: loginLink.url }), {
         status: 200,

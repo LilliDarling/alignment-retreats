@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion, useInView } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { 
-  Leaf, 
+import {
+  Leaf,
   Search,
   Compass,
   Users,
@@ -12,6 +12,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { CategoryStrip } from '@/components/CategoryStrip';
 import { RetreatCard } from '@/components/RetreatCard';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,6 +37,7 @@ const AnimatedSection = ({ children, className = '', delay = 0 }: { children: Re
 };
 
 export default function Landing() {
+  usePageTitle('Find Your Perfect Retreat');
   const { user, userRoles, hasRole, signOut } = useAuth();
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);

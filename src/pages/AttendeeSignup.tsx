@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useToast } from '@/hooks/use-toast';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +19,7 @@ const signupSchema = z.object({
 });
 
 export default function AttendeeSignup() {
+  usePageTitle('Sign Up');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -76,8 +78,8 @@ export default function AttendeeSignup() {
         body: { name, email, roles: ['attendee'] }
       });
 
-      // Redirect to returnTo path if provided, otherwise browse retreats
-      navigate(returnTo || '/retreats/browse');
+      // Redirect to returnTo path if provided, otherwise dashboard
+      navigate(returnTo || '/dashboard');
     } catch {
       toast({
         title: 'Sign up failed',

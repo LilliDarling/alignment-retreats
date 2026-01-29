@@ -24,8 +24,6 @@ const getRoleLabels = (roles: string[]): string => {
 };
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log("notify-profile-completed function invoked");
-
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -41,10 +39,6 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const { name, email, roles, completedFields }: ProfileCompletedNotification = await req.json();
-
-    console.log(`Notifying admin about profile completion: ${name} (${email})`);
-    console.log(`Roles: ${roles.join(', ')}`);
-    console.log(`Completed fields: ${completedFields.join(', ')}`);
 
     const roleLabels = getRoleLabels(roles);
     const completionDate = new Date().toLocaleString("en-US", {
@@ -130,8 +124,6 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
-
-    console.log("Profile completion notification sent successfully:", data);
 
     return new Response(JSON.stringify({ success: true, data }), {
       status: 200,

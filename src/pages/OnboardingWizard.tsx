@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, AppRole } from '@/contexts/AuthContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -85,6 +86,7 @@ const roleInfo: Record<AppRole, {
 };
 
 export default function OnboardingWizard() {
+  usePageTitle('Welcome');
   const { user, userRoles, loading } = useAuth();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);

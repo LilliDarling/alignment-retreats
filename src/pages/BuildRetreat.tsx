@@ -1,7 +1,9 @@
 import { AppHeader } from '@/components/AppHeader';
 import { BuildRetreatWizard } from '@/components/BuildRetreatWizard';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function BuildRetreat() {
+  usePageTitle('Build Your Dream Retreat');
   return (
     <div className="min-h-screen bg-background">
       <AppHeader />

@@ -3,10 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Leaf, CheckCircle, Compass, ArrowRight, Crown, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-
-const CALENDLY_URL = 'https://calendly.com/mathew-vetten/co-op-onboarding';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { CALENDLY_COOP_ONBOARDING_URL } from '@/config/constants';
 
 export default function ThankYou() {
+  usePageTitle('Welcome');
   const { user } = useAuth();
   const location = useLocation();
   const userName = user?.user_metadata?.name || 'there';
@@ -60,7 +61,7 @@ export default function ThankYou() {
                       and start your journey as a co-owner.
                     </p>
                     <a
-                      href={CALENDLY_URL}
+                      href={CALENDLY_COOP_ONBOARDING_URL}
                       target="_blank"
                       rel="noopener noreferrer"
                     >

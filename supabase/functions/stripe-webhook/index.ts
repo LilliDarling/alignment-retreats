@@ -56,14 +56,6 @@ serve(async (req) => {
     const signature = req.headers.get("stripe-signature");
     const body = await req.text();
 
-    console.log("Webhook request received:", {
-      requestId,
-      hasSignature: !!signature,
-      contentLength: body.length,
-      timestamp: new Date().toISOString(),
-      clientIP,
-    });
-
     // ALWAYS require webhook secret - fail closed if not configured
     const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
     if (!webhookSecret) {
@@ -96,12 +88,6 @@ serve(async (req) => {
       });
     }
 
-    console.log("Webhook event verified:", {
-      type: event.type,
-      eventId: event.id,
-      requestId
-    });
-
     // Idempotency check: skip already-processed events
     const { data: existingEvent } = await supabaseAdmin
       .from("processed_webhook_events")
@@ -110,7 +96,6 @@ serve(async (req) => {
       .single();
 
     if (existingEvent) {
-      console.log("Duplicate webhook event, skipping:", { eventId: event.id, requestId });
       return new Response(JSON.stringify({ received: true, duplicate: true }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -124,7 +109,6 @@ serve(async (req) => {
 
     if (recordError) {
       // If insert fails with unique violation, another instance is already processing this event
-      console.log("Event already being processed by another instance:", { eventId: event.id, requestId });
       return new Response(JSON.stringify({ received: true, duplicate: true }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -245,7 +229,6 @@ serve(async (req) => {
           }
         }
 
-        console.log("Booking and escrow created successfully:", booking.id);
         break;
       }
 
@@ -263,7 +246,6 @@ serve(async (req) => {
           })
           .eq("stripe_account_id", account.id);
 
-        console.log("Updated connected account:", account.id);
         break;
       }
 
@@ -286,8 +268,7 @@ serve(async (req) => {
       }
 
       case "payment_intent.payment_failed": {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        console.log("Payment failed:", paymentIntent.id);
+        // Payment failure handled - no action needed
         break;
       }
     }

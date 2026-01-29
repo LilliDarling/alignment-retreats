@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { supabase } from '@/integrations/supabase/client';
 import { AppHeader } from '@/components/AppHeader';
 import { HostOnboarding } from '@/components/onboarding/HostOnboarding';
@@ -43,6 +44,7 @@ interface Profile {
 }
 
 export default function HostDashboard() {
+  usePageTitle('Host Dashboard');
   const { user, userRoles } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [hostProfile, setHostProfile] = useState<HostProfile | null>(null);
@@ -182,9 +184,8 @@ export default function HostDashboard() {
           roles: ['host'],
           completedFields
         }
-      }).then(({ error }) => {
-        if (error) console.error('Profile completion notification failed:', error);
-        else console.log('Profile completion notification sent');
+      }).catch((error) => {
+        console.error('Profile completion notification failed:', error);
       });
     } catch (error) {
       console.error('Error saving host profile:', error);
