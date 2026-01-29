@@ -3,6 +3,7 @@ import { Resend } from "https://esm.sh/resend@2.0.0";
 import { corsHeaders } from "../_shared/cors.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL");
 
 interface AttendeeWishRequest {
   retreatTypes: string[];
@@ -95,7 +96,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await resend.emails.send({
       from: "Alignment Retreats <onboarding@resend.dev>",
-      to: ["mathew.vetten@gmail.com"],
+      to: [ADMIN_EMAIL!],
       subject: `💜 New Dream Retreat Request from ${data.submitterName}`,
       html: emailHtml,
     });
