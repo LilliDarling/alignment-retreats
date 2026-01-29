@@ -29,6 +29,15 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Validate ADMIN_EMAIL is configured
+    if (!ADMIN_EMAIL) {
+      console.error("ADMIN_EMAIL not configured");
+      return new Response(
+        JSON.stringify({ success: false, error: "Admin email not configured" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const data: AttendeeWishRequest = await req.json();
 
     const emailHtml = `
@@ -96,7 +105,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await resend.emails.send({
       from: "Alignment Retreats <onboarding@resend.dev>",
-      to: [ADMIN_EMAIL!],
+      to: [ADMIN_EMAIL],
       subject: `💜 New Dream Retreat Request from ${data.submitterName}`,
       html: emailHtml,
     });

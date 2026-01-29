@@ -3,7 +3,6 @@ import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import {
   checkRateLimit,
-  isValidUUID,
   getClientIP,
   securityHeaders
 } from "../_shared/security.ts";
@@ -52,6 +51,9 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
   );
 
+  // Track event ID for error handling
+  let currentEventId: string | null = null;
+
   try {
     const signature = req.headers.get("stripe-signature");
     const body = await req.text();
@@ -88,31 +90,38 @@ serve(async (req) => {
       });
     }
 
-    // Idempotency check: skip already-processed events
+    // Store event ID for error handling
+    currentEventId = event.id;
+
+    // Idempotency check: skip already-completed events
     const { data: existingEvent } = await supabaseAdmin
       .from("processed_webhook_events")
-      .select("event_id")
+      .select("event_id, status")
       .eq("event_id", event.id)
       .single();
 
     if (existingEvent) {
-      return new Response(JSON.stringify({ received: true, duplicate: true }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      // Only skip if previously completed successfully
+      if (existingEvent.status === "completed") {
+        return new Response(JSON.stringify({ received: true, duplicate: true }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // If status is 'processing' or 'failed', allow retry by continuing
     }
 
-    // Record the event before processing to prevent races between retries
+    // Record or update the event as 'processing' before business logic
     const { error: recordError } = await supabaseAdmin
       .from("processed_webhook_events")
-      .insert({ event_id: event.id, event_type: event.type });
+      .upsert(
+        { event_id: event.id, event_type: event.type, status: "processing" },
+        { onConflict: "event_id" }
+      );
 
     if (recordError) {
-      // If insert fails with unique violation, another instance is already processing this event
-      return new Response(JSON.stringify({ received: true, duplicate: true }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      console.error("Error recording webhook event:", recordError);
+      // Continue processing - we don't want to lose the event
     }
 
     switch (event.type) {
@@ -273,6 +282,12 @@ serve(async (req) => {
       }
     }
 
+    // Mark event as successfully processed
+    await supabaseAdmin
+      .from("processed_webhook_events")
+      .update({ status: "completed" })
+      .eq("event_id", event.id);
+
     return new Response(JSON.stringify({ received: true }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -280,6 +295,19 @@ serve(async (req) => {
   } catch (error: unknown) {
     console.error("Webhook error:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
+
+    // Mark event as failed so it can be retried
+    if (currentEventId) {
+      try {
+        await supabaseAdmin
+          .from("processed_webhook_events")
+          .update({ status: "failed" })
+          .eq("event_id", currentEventId);
+      } catch {
+        // Ignore errors updating status
+      }
+    }
+
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

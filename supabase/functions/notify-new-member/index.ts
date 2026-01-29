@@ -28,11 +28,19 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Validate API key exists
+    // Validate required environment variables
     if (!RESEND_API_KEY) {
       console.error("RESEND_API_KEY not configured");
       return new Response(
         JSON.stringify({ success: false, error: "Email service not configured", skipped: true }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (!ADMIN_EMAIL) {
+      console.error("ADMIN_EMAIL not configured");
+      return new Response(
+        JSON.stringify({ success: false, error: "Admin email not configured", skipped: true }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }

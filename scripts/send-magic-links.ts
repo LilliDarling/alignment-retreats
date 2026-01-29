@@ -78,11 +78,13 @@ async function sendMagicLinks(): Promise<SendResults> {
     }
 
     try {
-      const { error } = await supabase.auth.admin.generateLink({
-        type: 'magiclink',
+      // Use signInWithOtp which actually sends the magic link email via Supabase
+      // Note: generateLink only creates the link but does NOT send an email
+      const { error } = await supabase.auth.signInWithOtp({
         email: email,
         options: {
-          redirectTo: SITE_URL
+          emailRedirectTo: SITE_URL,
+          shouldCreateUser: false // Only send to existing users
         }
       })
 

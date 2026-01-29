@@ -90,7 +90,7 @@ export default function Login() {
 
     setLoading(true);
 
-    const { error } = await signInWithMagicLink(email);
+    const { error } = await signInWithMagicLink(email, redirectPath);
 
     if (error) {
       toast({
