@@ -18,6 +18,12 @@ verify_jwt = false
 [functions.process-scheduled-payouts]
 verify_jwt = false
 
+[functions.admin-process-payouts]
+verify_jwt = true
+
+[functions.admin-list-payouts]
+verify_jwt = true
+
 [functions.notify-retreat-submission]
 verify_jwt = false
 
