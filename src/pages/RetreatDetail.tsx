@@ -130,11 +130,23 @@ export default function RetreatDetail() {
 
     setBookingLoading(true);
     try {
+      // Get the current session to ensure we have a valid token
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError || !sessionData.session) {
+        toast.error('Please log in again to continue');
+        navigate('/login', { state: { from: `/retreats/${id}` } });
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('process-booking-payment', {
         body: {
           retreat_id: id,
           success_url: `${window.location.origin}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${window.location.origin}/retreats/${id}`,
+        },
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`,
         },
       });
 
