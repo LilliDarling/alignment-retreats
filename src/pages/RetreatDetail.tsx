@@ -16,7 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { ItineraryDisplay } from '@/components/ItineraryDisplay';
 import { cn } from '@/lib/utils';
@@ -54,16 +54,6 @@ export default function RetreatDetail() {
   // Set page title based on retreat
   usePageTitle(retreat?.title || 'Retreat Details');
 
-  // Fetch host profile
-  const { data: hostProfile } = useQuery({
-    queryKey: ['hostProfile', retreat?.host_user_id],
-    queryFn: async () => {
-      if (!retreat?.host_user_id) return null;
-      const { data } = await supabase.rpc('get_public_profile', { profile_id: retreat.host_user_id });
-      return data?.[0] || null;
-    },
-    enabled: !!retreat?.host_user_id,
-  });
 
   if (isLoading) {
     return (
@@ -134,7 +124,7 @@ export default function RetreatDetail() {
     }
   };
 
-  const hostName = hostProfile?.name || 'Retreat Host';
+  const hostName = (retreat as any).host_name || 'Retreat Host';
 
   return (
     <div className="min-h-screen bg-background">
@@ -213,7 +203,6 @@ export default function RetreatDetail() {
             <div className="flex items-center gap-4 p-4 bg-card rounded-xl border border-border">
               <Link to={retreat.host_user_id ? `/profile/${retreat.host_user_id}` : '#'}>
                 <Avatar className="h-14 w-14 border-2 border-primary/20">
-                  <AvatarImage src={hostProfile?.profile_photo} />
                   <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                     {hostName.charAt(0)}
                   </AvatarFallback>

@@ -18,9 +18,8 @@ interface DbRetreat {
   price_per_person: number | null;
   sample_itinerary: string | null;
   status: string;
-  host_user_id: string;
   location: string | null;
-  host_profile_name?: string | null;
+  host_name: string | null;
 }
 
 export default function BrowseRetreats() {
@@ -28,37 +27,20 @@ export default function BrowseRetreats() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Fetch real published retreats from database only
+  // Fetch published retreats from database
   const { data: retreats = [], isLoading } = useQuery({
     queryKey: ['published-retreats'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('retreats')
         .select(
-          'id,title,description,retreat_type,start_date,end_date,max_attendees,price_per_person,sample_itinerary,status,host_user_id,location'
+          'id,title,description,retreat_type,start_date,end_date,max_attendees,price_per_person,sample_itinerary,status,location,host_name'
         )
         .eq('status', 'published')
         .order('start_date', { ascending: true });
 
       if (error) throw error;
-
-      const base = (data || []) as unknown as DbRetreat[];
-      const hostIds = Array.from(new Set(base.map((r) => r.host_user_id).filter(Boolean)));
-
-      if (hostIds.length === 0) return base;
-
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, name')
-        .in('id', hostIds);
-
-      if (profilesError) return base;
-
-      const nameById = new Map((profiles || []).map((p) => [p.id, p.name]));
-      return base.map((r) => ({
-        ...r,
-        host_profile_name: nameById.get(r.host_user_id) || null,
-      }));
+      return (data || []) as unknown as DbRetreat[];
     },
   });
 
@@ -114,7 +96,7 @@ export default function BrowseRetreats() {
                 pricePerPerson={retreat.price_per_person || 0}
                 retreatType={retreat.retreat_type || 'Retreat'}
                 maxAttendees={retreat.max_attendees || undefined}
-                hostName={retreat.host_profile_name || undefined}
+                hostName={retreat.host_name || undefined}
                 sampleItinerary={retreat.sample_itinerary || undefined}
                 onClick={() => navigate(`/retreat/${retreat.id}`)}
                 onBook={() => navigate(`/retreat/${retreat.id}`)}

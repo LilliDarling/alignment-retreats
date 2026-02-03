@@ -42,7 +42,7 @@ export default function Landing() {
   const { user, userRoles, hasRole, signOut } = useAuth();
   const navigate = useNavigate();
 
-  // Fetch real published retreats from database with property info
+  // Fetch published retreats from database
   const { data: retreats = [], isLoading } = useQuery({
     queryKey: ['published-retreats-landing'],
     queryFn: async () => {
@@ -54,26 +54,7 @@ export default function Landing() {
         .limit(8);
 
       if (error) throw error;
-
-      const retreats = (data || []) as any[];
-      const hostIds = Array.from(
-        new Set(retreats.map((r) => r.host_user_id).filter(Boolean))
-      );
-
-      if (hostIds.length === 0) return retreats;
-
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, name')
-        .in('id', hostIds);
-
-      if (profilesError) return retreats;
-
-      const nameById = new Map((profiles || []).map((p) => [p.id, p.name]));
-      return retreats.map((r) => ({
-        ...r,
-        host_profile_name: nameById.get(r.host_user_id) || null,
-      }));
+      return (data || []) as any[];
     },
   });
 
@@ -235,7 +216,7 @@ export default function Landing() {
                     pricePerPerson={retreat.price_per_person || 0}
                     retreatType={retreat.retreat_type || 'Retreat'}
                     maxAttendees={retreat.max_attendees || undefined}
-                    hostName={(retreat as any).host_profile_name || undefined}
+                    hostName={retreat.host_name || undefined}
                     sampleItinerary={(retreat as any).sample_itinerary}
                     onClick={() => navigate(`/retreat/${retreat.id}`)}
                     onBook={() => navigate(`/retreat/${retreat.id}`)}
