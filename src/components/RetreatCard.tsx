@@ -223,12 +223,12 @@ export function RetreatCard({
           </div>
 
           {/* Action Button */}
-          <Button 
+          <Button
             onClick={handleBookNow}
             className="w-full rounded-full text-sm font-semibold"
             size="sm"
           >
-            Book Now
+            Reserve Spot
           </Button>
         </div>
       </div>

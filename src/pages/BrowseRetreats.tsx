@@ -206,20 +206,8 @@ export default function BrowseRetreats() {
                 maxAttendees={retreat.max_attendees || undefined}
                 hostName={retreat.host_profile_name || undefined}
                 sampleItinerary={retreat.sample_itinerary || undefined}
-                onClick={() => {
-                  if (!user) {
-                    navigate('/signup', { state: { returnTo: '/retreats/browse' } });
-                  } else {
-                    navigate(`/retreat/${retreat.id}`);
-                  }
-                }}
-                onBook={() => {
-                  if (!user) {
-                    navigate('/signup', { state: { returnTo: '/retreats/browse' } });
-                  } else {
-                    navigate(`/retreat/${retreat.id}`);
-                  }
-                }}
+                onClick={() => navigate(`/retreat/${retreat.id}`)}
+                onBook={() => navigate(`/retreat/${retreat.id}`)}
               />
             ))}
           </div>

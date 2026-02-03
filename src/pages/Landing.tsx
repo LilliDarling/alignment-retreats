@@ -9,7 +9,8 @@ import {
   Compass,
   Users,
   ArrowRight,
-  ChevronRight
+  ChevronRight,
+  Phone
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -17,6 +18,7 @@ import { CategoryStrip } from '@/components/CategoryStrip';
 import { RetreatCard } from '@/components/RetreatCard';
 import { supabase } from '@/integrations/supabase/client';
 import VideoHeroSection from '@/components/VideoHeroSection';
+import { CALENDLY_BOOK_CALL_URL } from '@/config/constants';
 
 // Animated section wrapper
 const AnimatedSection = ({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) => {
@@ -91,18 +93,18 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Co-Owner Banner */}
-      <motion.div 
+      {/* Announcement Banner */}
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white border-b border-border py-2 px-4"
+        className="bg-primary text-primary-foreground border-b border-border py-2 px-4"
       >
-        <div className="container mx-auto text-center text-sm">
-          <span className="text-black">Want to become a co-owner?</span>
-          <Link to="/cooperative" className="text-primary font-semibold ml-2 underline hover:opacity-80">
-            Learn More
-          </Link>
+        <div className="container mx-auto text-center text-sm flex flex-wrap items-center justify-center gap-x-2">
+          <span>The US dollar is at $1.40 CAD so it's a perfect time to book!</span>
+          <a href="#retreats" className="font-semibold underline hover:opacity-80">
+            Reserve Spot
+          </a>
         </div>
       </motion.div>
 
@@ -131,30 +133,31 @@ export default function Landing() {
           </motion.p>
 
           {/* CTAs */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="flex flex-col sm:flex-row justify-center gap-4 mt-10"
           >
             <a href="#retreats">
-              <Button 
-                size="lg" 
-                className="text-lg px-8 py-6 rounded-full bg-card text-foreground hover:bg-card/90 shadow-xl transition-transform hover:scale-105"
-              >
-                <Compass className="mr-2 h-5 w-5" />
-                Browse Retreats
-              </Button>
-            </a>
-            <Link to="/get-started">
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className="text-lg px-8 py-6 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-xl transition-transform hover:scale-105"
               >
-                <Leaf className="mr-2 h-5 w-5" />
-                Host or Collaborate
+                <Compass className="mr-2 h-5 w-5" />
+                Reserve Spot
               </Button>
-            </Link>
+            </a>
+            <a href={CALENDLY_BOOK_CALL_URL} target="_blank" rel="noopener noreferrer">
+              <Button
+                size="lg"
+                variant="outline"
+                className="text-lg px-8 py-6 rounded-full bg-card/80 text-foreground hover:bg-card border-2 border-white/20 shadow-xl transition-transform hover:scale-105"
+              >
+                <Phone className="mr-2 h-5 w-5" />
+                Book a Call
+              </Button>
+            </a>
           </motion.div>
         </div>
       </section>
@@ -250,27 +253,8 @@ export default function Landing() {
                     maxAttendees={retreat.max_attendees || undefined}
                     hostName={(retreat as any).host_profile_name || undefined}
                     sampleItinerary={(retreat as any).sample_itinerary}
-                onClick={() => {
-                      if (!user) {
-                        navigate('/signup', { state: { returnTo: '/retreats/browse' } });
-                      } else {
-                        navigate(`/retreat/${retreat.id}`);
-                      }
-                    }}
-                    onBook={() => {
-                      if (!user) {
-                        navigate('/signup', { state: { returnTo: '/retreats/browse' } });
-                      } else {
-                        navigate(`/retreat/${retreat.id}`);
-                      }
-                    }}
-                    onCollaborate={() => {
-                      if (!user) {
-                        navigate('/signup', { state: { returnTo: '/retreats/browse' } });
-                      } else {
-                        navigate(`/retreat/${retreat.id}`);
-                      }
-                    }}
+                    onClick={() => navigate(`/retreat/${retreat.id}`)}
+                    onBook={() => navigate(`/retreat/${retreat.id}`)}
                   />
                 </motion.div>
               ))}
@@ -423,13 +407,22 @@ export default function Landing() {
         </div>
       </AnimatedSection>
 
+      {/* Mobile Sticky CTA */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-card/95 backdrop-blur-sm border-t border-border md:hidden">
+        <a href="#retreats" className="block">
+          <Button className="w-full rounded-full font-semibold" size="lg">
+            Reserve Your Spot
+          </Button>
+        </a>
+      </div>
+
       {/* Footer */}
-      <motion.footer 
+      <motion.footer
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
-        className="py-12 px-4 border-t border-border bg-card"
+        className="py-12 px-4 border-t border-border bg-card pb-24 md:pb-12"
       >
         <div className="container mx-auto max-w-6xl">
           <div className="flex flex-col gap-6">

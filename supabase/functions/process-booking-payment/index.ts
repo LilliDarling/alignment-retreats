@@ -27,60 +27,57 @@ serve(async (req) => {
 
     if (!rateLimitResult.allowed) {
       console.warn("Rate limit exceeded:", { clientIP, requestId });
-      return new Response(JSON.stringify({ 
+      return new Response(JSON.stringify({
         error: "Too many requests. Please try again later.",
         retry_after: Math.ceil(rateLimitResult.resetIn / 1000)
       }), {
         status: 429,
-        headers: { 
-          ...corsHeaders, 
+        headers: {
+          ...corsHeaders,
           ...securityHeaders,
           "Retry-After": Math.ceil(rateLimitResult.resetIn / 1000).toString()
         },
       });
     }
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-    );
+    // Auth is optional - try to get user if token provided
+    const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
+    let user: { id: string; email?: string } | null = null;
 
-    // Validate Authorization header
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      console.warn("Missing or invalid auth header:", { requestId });
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, ...securityHeaders },
-      });
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const supabaseClient = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+        {
+          global: {
+            headers: { Authorization: authHeader },
+          },
+        }
+      );
+
+      const { data: { user: authUser } } = await supabaseClient.auth.getUser();
+      if (authUser) {
+        user = authUser;
+
+        // Additional rate limit by user: 10 per hour (only if authenticated)
+        const userRateLimitResult = checkRateLimit(`payment:user:${user.id}`, {
+          windowMs: 3600000,
+          maxRequests: 10,
+        });
+
+        if (!userRateLimitResult.allowed) {
+          console.warn("User rate limit exceeded:", { userId: user.id, requestId });
+          return new Response(JSON.stringify({
+            error: "Payment limit reached. Please try again later."
+          }), {
+            status: 429,
+            headers: { ...corsHeaders, ...securityHeaders },
+          });
+        }
+      }
     }
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
-
-    if (userError || !user) {
-      console.warn("Invalid token:", { requestId, error: userError?.message });
-      return new Response(JSON.stringify({ error: "Invalid token" }), {
-        status: 401,
-        headers: { ...corsHeaders, ...securityHeaders },
-      });
-    }
-
-    // Additional rate limit by user: 10 per hour
-    const userRateLimitResult = checkRateLimit(`payment:user:${user.id}`, {
-      windowMs: 3600000,
-      maxRequests: 10,
-    });
-
-    if (!userRateLimitResult.allowed) {
-      console.warn("User rate limit exceeded:", { userId: user.id, requestId });
-      return new Response(JSON.stringify({ 
-        error: "Payment limit reached. Please try again later." 
-      }), {
-        status: 429,
-        headers: { ...corsHeaders, ...securityHeaders },
-      });
-    }
+    console.log("Processing payment request:", { requestId, authenticated: !!user });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
@@ -112,7 +109,7 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || "";
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
     const allowedOrigins = [origin, supabaseUrl].filter(Boolean);
-    
+
     if (success_url && !isValidReturnUrl(success_url, allowedOrigins)) {
       console.warn("Invalid success_url:", { success_url, requestId });
       return new Response(JSON.stringify({ error: "Invalid success URL" }), {
@@ -129,8 +126,14 @@ serve(async (req) => {
       });
     }
 
-    // Fetch retreat details - use service role for reliable access
-    const { data: retreat, error: retreatError } = await supabaseClient
+    // Use service role client for retreat lookup (works without auth)
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    // Fetch retreat details
+    const { data: retreat, error: retreatError } = await supabaseAdmin
       .from("retreats")
       .select("id, title, retreat_type, price_per_person, status, max_attendees, start_date, retreat_team(*)")
       .eq("id", retreat_id)
@@ -157,29 +160,26 @@ serve(async (req) => {
       }
     }
 
-    // Check if user already has a booking for this retreat
-    const { data: existingBooking } = await supabaseClient
-      .from("bookings")
-      .select("id")
-      .eq("retreat_id", retreat_id)
-      .eq("attendee_user_id", user.id)
-      .single();
+    // Check if authenticated user already has a booking for this retreat
+    if (user) {
+      const { data: existingBooking } = await supabaseAdmin
+        .from("bookings")
+        .select("id")
+        .eq("retreat_id", retreat_id)
+        .eq("attendee_user_id", user.id)
+        .single();
 
-    if (existingBooking) {
-      console.warn("Duplicate booking attempt:", { userId: user.id, retreat_id, requestId });
-      return new Response(JSON.stringify({ error: "You already have a booking for this retreat" }), {
-        status: 409,
-        headers: { ...corsHeaders, ...securityHeaders },
-      });
+      if (existingBooking) {
+        console.warn("Duplicate booking attempt:", { userId: user.id, retreat_id, requestId });
+        return new Response(JSON.stringify({ error: "You already have a booking for this retreat" }), {
+          status: 409,
+          headers: { ...corsHeaders, ...securityHeaders },
+        });
+      }
     }
 
-    // Check max attendees capacity using service role for accurate count
+    // Check max attendees capacity
     if (retreat.max_attendees) {
-      const supabaseAdmin = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-      );
-
       const { count, error: countError } = await supabaseAdmin
         .from("bookings")
         .select("id", { count: "exact", head: true })
@@ -216,33 +216,16 @@ serve(async (req) => {
     // Calculate platform fee (30%)
     const platformFee = Math.round(totalAmount * 0.30);
 
-    // Create or get Stripe customer
-    const { data: existingCustomers } = await stripe.customers.list({
-      email: user.email,
-      limit: 1,
-    });
+    // Build checkout session options
+    const idempotencyKey = `checkout_${user?.id || clientIP}_${retreat_id}_${Date.now()}`;
 
-    let customerId: string;
-    if (existingCustomers && existingCustomers.length > 0) {
-      customerId = existingCustomers[0].id;
-    } else {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: { user_id: user.id },
-      });
-      customerId = customer.id;
-    }
-
-    // Create Checkout Session with idempotency
-    const idempotencyKey = `checkout_${user.id}_${retreat_id}_${Date.now()}`;
-    
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
+    // Checkout session configuration
+    const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ["card"],
       line_items: [
         {
           price_data: {
-            currency: "usd",
+            currency: "cad",
             product_data: {
               name: retreat.title,
               description: `Retreat booking - ${retreat.retreat_type || "Retreat"}`,
@@ -254,22 +237,54 @@ serve(async (req) => {
       ],
       mode: "payment",
       success_url: success_url || `${origin}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: cancel_url || `${origin}/retreats/${retreat_id}`,
+      cancel_url: cancel_url || `${origin}/retreat/${retreat_id}`,
       metadata: {
         retreat_id,
-        user_id: user.id,
+        user_id: user?.id || "guest",
         platform_fee: platformFee.toString(),
         request_id: requestId,
       },
       payment_intent_data: {
         metadata: {
           retreat_id,
-          user_id: user.id,
+          user_id: user?.id || "guest",
           request_id: requestId,
         },
       },
       expires_at: Math.floor(Date.now() / 1000) + 1800, // 30 min expiry
-    }, {
+    };
+
+    // If user is authenticated, link to their Stripe customer
+    if (user?.email) {
+      const { data: existingCustomers } = await stripe.customers.list({
+        email: user.email,
+        limit: 1,
+      });
+
+      if (existingCustomers && existingCustomers.length > 0) {
+        sessionConfig.customer = existingCustomers[0].id;
+      } else {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: { user_id: user.id },
+        });
+        sessionConfig.customer = customer.id;
+      }
+    } else {
+      // For unauthenticated users, collect contact info during checkout
+      sessionConfig.customer_creation = "always";
+      sessionConfig.phone_number_collection = { enabled: true };
+      sessionConfig.custom_fields = [
+        {
+          key: "notes",
+          label: { type: "custom", custom: "Any notes or dietary requirements?" },
+          type: "text",
+          optional: true,
+        },
+      ];
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig, {
       idempotencyKey,
     });
 

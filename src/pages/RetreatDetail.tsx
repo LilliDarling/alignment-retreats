@@ -123,31 +123,23 @@ export default function RetreatDetail() {
   };
 
   const handleBookNow = async () => {
-    if (!user) {
-      navigate('/login', { state: { from: `/retreats/${id}` } });
-      return;
-    }
-
     setBookingLoading(true);
     try {
-      // Get the current session to ensure we have a valid token
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      // Get session if user is logged in (optional)
+      const { data: sessionData } = await supabase.auth.getSession();
 
-      if (sessionError || !sessionData.session) {
-        toast.error('Please log in again to continue');
-        navigate('/login', { state: { from: `/retreats/${id}` } });
-        return;
+      const headers: Record<string, string> = {};
+      if (sessionData?.session?.access_token) {
+        headers.Authorization = `Bearer ${sessionData.session.access_token}`;
       }
 
       const { data, error } = await supabase.functions.invoke('process-booking-payment', {
         body: {
           retreat_id: id,
           success_url: `${window.location.origin}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${window.location.origin}/retreats/${id}`,
+          cancel_url: `${window.location.origin}/retreat/${id}`,
         },
-        headers: {
-          Authorization: `Bearer ${sessionData.session.access_token}`,
-        },
+        headers,
       });
 
       if (error) throw error;
@@ -389,7 +381,7 @@ export default function RetreatDetail() {
                       Redirecting to checkout...
                     </>
                   ) : (
-                    'Book Now'
+                    'Reserve Spot'
                   )}
                 </Button>
                 <Button 
