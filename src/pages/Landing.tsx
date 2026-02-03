@@ -111,7 +111,7 @@ export default function Landing() {
       {/* Hero Section with Full Background */}
       <section className="relative h-[75vh] min-h-[600px] flex items-center justify-center overflow-hidden">
         {/* Background Video */}
-        <VideoHeroSection videoId="-OByMPI6pLA" />
+        <VideoHeroSection />
 
         {/* Hero Content */}
         <div className="relative z-10 container mx-auto px-4 text-center">
