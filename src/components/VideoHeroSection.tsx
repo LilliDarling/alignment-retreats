@@ -1,11 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { HERO_VIDEO_URL } from '@/config/constants';
 
 interface VideoHeroSectionProps {
   videoSrc?: string;
 }
 
-const VideoHeroSection = ({ videoSrc = '/Alignment-Retreats-Website-BG.mp4' }: VideoHeroSectionProps) => {
+const VideoHeroSection = ({ videoSrc = HERO_VIDEO_URL }: VideoHeroSectionProps) => {
   const [showMask, setShowMask] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
