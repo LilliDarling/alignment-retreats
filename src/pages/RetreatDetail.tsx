@@ -4,24 +4,20 @@ import { useQuery } from '@tanstack/react-query';
 import { differenceInCalendarDays, format } from 'date-fns';
 import {
   Heart,
-  Star,
   Calendar,
   Users,
   MapPin,
   ArrowLeft,
   Share2,
   Check,
-  MessageCircle,
   Loader2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { MessageModal } from '@/components/MessageModal';
 import { ItineraryDisplay } from '@/components/ItineraryDisplay';
 import { cn } from '@/lib/utils';
 import { parseDateOnly } from '@/lib/dateOnly';
@@ -31,9 +27,6 @@ export default function RetreatDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(false);
-  const { user } = useAuth();
-  const [messageModalOpen, setMessageModalOpen] = useState(false);
-  const [messageType, setMessageType] = useState<'booking_inquiry' | 'collaboration'>('booking_inquiry');
   const [bookingLoading, setBookingLoading] = useState(false);
 
   // Fetch retreat from database only
@@ -115,11 +108,6 @@ export default function RetreatDetail() {
     if (!start || !end) return 'Duration TBD';
     const days = Math.max(1, differenceInCalendarDays(end, start));
     return `${days} ${days === 1 ? 'day' : 'days'}`;
-  };
-
-  const handleOpenMessage = (type: 'booking_inquiry' | 'collaboration') => {
-    setMessageType(type);
-    setMessageModalOpen(true);
   };
 
   const handleBookNow = async () => {
@@ -251,15 +239,6 @@ export default function RetreatDetail() {
                   {hostName}
                 </Link>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => handleOpenMessage('booking_inquiry')}
-                className="gap-2"
-              >
-                <MessageCircle className="h-4 w-4" />
-                Contact
-              </Button>
             </div>
 
             {/* Description */}
@@ -384,14 +363,6 @@ export default function RetreatDetail() {
                     'Reserve Spot'
                   )}
                 </Button>
-                <Button 
-                  variant="outline"
-                  className="w-full rounded-full font-medium border-primary/30 hover:bg-primary/10 hover:border-primary"
-                  size="lg"
-                  onClick={() => handleOpenMessage('collaboration')}
-                >
-                  Request to Collaborate
-                </Button>
               </div>
 
               <p className="text-center text-sm text-muted-foreground mt-4">
@@ -402,16 +373,6 @@ export default function RetreatDetail() {
         </div>
       </main>
 
-      {/* Message Modal */}
-      <MessageModal
-        open={messageModalOpen}
-        onOpenChange={setMessageModalOpen}
-        recipientId={retreat.host_user_id}
-        recipientName={hostName}
-        retreatId={id}
-        retreatTitle={retreat.title}
-        defaultMessageType={messageType}
-      />
     </div>
   );
 }

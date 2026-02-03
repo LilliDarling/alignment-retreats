@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion, useInView } from 'framer-motion';
@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { CategoryStrip } from '@/components/CategoryStrip';
 import { RetreatCard } from '@/components/RetreatCard';
 import { supabase } from '@/integrations/supabase/client';
 import VideoHeroSection from '@/components/VideoHeroSection';
@@ -42,7 +41,6 @@ export default function Landing() {
   usePageTitle('Find Your Perfect Retreat');
   const { user, userRoles, hasRole, signOut } = useAuth();
   const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Fetch real published retreats from database with property info
   const { data: retreats = [], isLoading } = useQuery({
@@ -98,11 +96,11 @@ export default function Landing() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-primary text-primary-foreground border-b border-border py-2 px-4"
+        className="bg-primary text-primary-foreground py-2 px-4"
       >
-        <div className="container mx-auto text-center text-sm flex flex-wrap items-center justify-center gap-x-2">
-          <span>The US dollar is at $1.40 CAD so it's a perfect time to book!</span>
-          <a href="#retreats" className="font-semibold underline hover:opacity-80">
+        <div className="container mx-auto text-center text-xs sm:text-sm whitespace-nowrap">
+          <span>The US dollar is at $1.40 CAD — perfect time to book!</span>
+          <a href="#retreats" className="font-semibold underline hover:opacity-80 ml-2">
             Reserve Spot
           </a>
         </div>
@@ -161,16 +159,6 @@ export default function Landing() {
           </motion.div>
         </div>
       </section>
-
-      {/* Category Strip */}
-      <div className="border-b border-border bg-card sticky top-0 z-40">
-        <div className="container mx-auto px-4">
-          <CategoryStrip 
-            selectedCategory={selectedCategory}
-            onSelectCategory={setSelectedCategory}
-          />
-        </div>
-      </div>
 
       {/* Featured Retreats */}
       <section id="retreats" className="py-8 md:py-12 px-4 scroll-mt-24">
