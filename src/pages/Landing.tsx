@@ -48,7 +48,7 @@ export default function Landing() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('retreats')
-        .select('*, properties_public!retreats_property_id_fkey(location)')
+        .select('*')
         .eq('status', 'published')
         .order('created_at', { ascending: false })
         .limit(8);
@@ -96,12 +96,12 @@ export default function Landing() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-primary text-primary-foreground py-2 px-4"
+        className="bg-primary text-primary-foreground py-2 px-2 sm:px-4"
       >
-        <div className="container mx-auto text-center text-xs sm:text-sm whitespace-nowrap">
-          <span>The US dollar is at $1.40 CAD — perfect time to book!</span>
-          <a href="#retreats" className="font-semibold underline hover:opacity-80 ml-2">
-            Reserve Spot
+        <div className="container mx-auto text-center text-[11px] sm:text-sm whitespace-nowrap">
+          <span>USD at $1.40 CAD — great time to book!</span>
+          <a href="#retreats" className="font-semibold underline hover:opacity-80 ml-1 sm:ml-2">
+            Reserve
           </a>
         </div>
       </motion.div>
@@ -228,11 +228,7 @@ export default function Landing() {
                   <RetreatCard
                     id={retreat.id}
                     title={retreat.title}
-                    location={
-                      (Array.isArray((retreat as any).properties_public)
-                        ? (retreat as any).properties_public?.[0]?.location
-                        : (retreat as any).properties_public?.location) || 'Location TBD'
-                    }
+                    location={retreat.location || 'Location TBD'}
                     image="https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&h=600&fit=crop"
                     startDate={retreat.start_date || ''}
                     endDate={retreat.end_date || ''}

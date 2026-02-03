@@ -40,21 +40,10 @@ export default function RetreatDetail() {
         .single();
 
       if (error) throw error;
-      
-      // Fetch property location if property_id exists
-      let location = 'Location TBD';
-      if (data.property_id) {
-        const { data: locationData } = await supabase.rpc('get_property_locations', { 
-          property_ids: [data.property_id] 
-        });
-        if (locationData && locationData[0]?.location) {
-          location = locationData[0].location;
-        }
-      }
-      
+
       return {
         ...data,
-        location,
+        location: (data as any).location || 'Location TBD',
         image: 'https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&h=600&fit=crop',
         amenities: ['Daily sessions', 'Healthy meals', 'Guided activities'],
         schedule: [],
