@@ -11,7 +11,6 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Cooperative from "./pages/Cooperative";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
-import Signup from "./pages/Signup";
 import ThankYou from "./pages/ThankYou";
 import OnboardingWizard from "./pages/OnboardingWizard";
 import Dashboard from "./pages/Dashboard";
@@ -51,9 +50,9 @@ const App = () => (
           <Route path="/" element={<Landing />} />
               <Route path="/cooperative" element={<Cooperative />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              {/* Redirect old attendee signup to unified signup */}
-              <Route path="/signup/attendee" element={<Navigate to="/signup" replace />} />
+              {/* All signup paths redirect to unified get-started flow */}
+              <Route path="/signup" element={<Navigate to="/get-started" replace />} />
+              <Route path="/signup/attendee" element={<Navigate to="/get-started" replace />} />
               <Route path="/thank-you" element={<ThankYou />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route

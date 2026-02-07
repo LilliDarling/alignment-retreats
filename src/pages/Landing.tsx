@@ -1,6 +1,5 @@
 import { useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
@@ -8,16 +7,11 @@ import {
   Search,
   Compass,
   Users,
-  ArrowRight,
-  ChevronRight,
-  Phone
+  ArrowRight
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { RetreatCard } from '@/components/RetreatCard';
-import { supabase } from '@/integrations/supabase/client';
 import VideoHeroSection from '@/components/VideoHeroSection';
-import { CALENDLY_BOOK_CALL_URL } from '@/config/constants';
 
 // Animated section wrapper
 const AnimatedSection = ({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) => {
@@ -40,23 +34,6 @@ const AnimatedSection = ({ children, className = '', delay = 0 }: { children: Re
 export default function Landing() {
   usePageTitle('Find Your Perfect Retreat');
   const { user, userRoles, hasRole, signOut } = useAuth();
-  const navigate = useNavigate();
-
-  // Fetch published retreats from database
-  const { data: retreats = [], isLoading } = useQuery({
-    queryKey: ['published-retreats-landing'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('retreats')
-        .select('*')
-        .eq('status', 'published')
-        .order('created_at', { ascending: false })
-        .limit(8);
-
-      if (error) throw error;
-      return (data || []) as any[];
-    },
-  });
 
   const getDashboardLink = () => {
     if (!user) return '/signup';
@@ -80,10 +57,10 @@ export default function Landing() {
         className="bg-primary text-primary-foreground py-2 px-2 sm:px-4"
       >
         <div className="container mx-auto text-center text-[11px] sm:text-sm whitespace-nowrap">
-          <span>USD at $1.40 CAD — great time to book!</span>
-          <a href="#retreats" className="font-semibold underline hover:opacity-80 ml-1 sm:ml-2">
-            Reserve
-          </a>
+          <span>Want to host retreats in 2026?</span>
+          <Link to="/get-started" className="font-semibold underline hover:opacity-80 ml-1 sm:ml-2">
+            Join now
+          </Link>
         </div>
       </motion.div>
 
@@ -118,113 +95,56 @@ export default function Landing() {
             transition={{ duration: 0.8, delay: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="flex flex-col sm:flex-row justify-center gap-4 mt-10"
           >
-            <a href="#retreats">
+            <Link to="/retreats/browse">
               <Button
                 size="lg"
                 className="text-lg px-8 py-6 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-xl transition-transform hover:scale-105"
               >
                 <Compass className="mr-2 h-5 w-5" />
-                Reserve Spot
+                Browse Retreats
               </Button>
-            </a>
-            <a href={CALENDLY_BOOK_CALL_URL} target="_blank" rel="noopener noreferrer">
+            </Link>
+            <Link to="/get-started">
               <Button
                 size="lg"
                 variant="outline"
                 className="text-lg px-8 py-6 rounded-full bg-card/80 text-foreground hover:bg-card border-2 border-white/20 shadow-xl transition-transform hover:scale-105"
               >
-                <Phone className="mr-2 h-5 w-5" />
-                Book a Call
+                <Users className="mr-2 h-5 w-5" />
+                Collaborate
               </Button>
-            </a>
+            </Link>
           </motion.div>
         </div>
       </section>
 
-      {/* Featured Retreats */}
-      <section id="retreats" className="py-8 md:py-12 px-4 scroll-mt-24">
-        <div className="container mx-auto max-w-7xl">
+      {/* Collaborate Section */}
+      <section id="collaborate" className="py-16 px-4">
+        <div className="container mx-auto max-w-4xl">
           <AnimatedSection>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6 md:mb-8">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
-                Discover Retreats
+            <div className="bg-card rounded-2xl p-8 md:p-12 shadow-sm border border-border text-center">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+                Collaborate with Alignment Retreats
               </h2>
-              <Link to="/retreats/browse">
-                <Button variant="ghost" size="sm" className="gap-1 px-0 sm:px-3">
-                  View all <ChevronRight className="h-4 w-4" />
+              <div className="text-lg text-muted-foreground space-y-4 mb-8 max-w-2xl mx-auto">
+                <p>
+                  Alignment Retreats is a cooperative platform connecting retreat hosts, facilitators, venues, and collaborators.
+                </p>
+                <p>
+                  You can join to host retreats, collaborate with others, or support retreats in different roles.
+                </p>
+                <p>
+                  Select the roles you're interested in and create a simple profile to start collaborating.
+                </p>
+              </div>
+              <Link to="/get-started">
+                <Button size="lg" className="text-lg px-8 py-6 rounded-full transition-transform hover:scale-105">
+                  <Users className="mr-2 h-5 w-5" />
+                  Collaborate
                 </Button>
               </Link>
             </div>
           </AnimatedSection>
-
-          {/* Loading State */}
-          {isLoading && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="aspect-[4/3] rounded-xl bg-accent mb-3" />
-                  <div className="h-4 bg-accent rounded w-3/4 mb-2" />
-                  <div className="h-4 bg-accent rounded w-1/2" />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!isLoading && retreats.length === 0 && (
-            <AnimatedSection delay={0.1}>
-              <div className="text-center py-16 bg-card rounded-2xl border border-border">
-                <div className="inline-flex p-4 rounded-full bg-accent mb-4">
-                  <Leaf className="h-8 w-8 text-muted-foreground" />
-                </div>
-                <h3 className="font-display text-xl font-semibold text-foreground mb-2">
-                  Retreats Coming Soon
-                </h3>
-                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                  Our community is working on amazing retreat experiences. Be the first to host or join one!
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Link to="/signup">
-                    <Button className="rounded-full">Become a Host</Button>
-                  </Link>
-                  <Link to="/retreats/browse">
-                    <Button variant="outline" className="rounded-full">Browse Retreats</Button>
-                  </Link>
-                </div>
-              </div>
-            </AnimatedSection>
-          )}
-
-          {/* Retreat Grid */}
-          {!isLoading && retreats.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {retreats.map((retreat, index) => (
-                <motion.div
-                  key={retreat.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.5, delay: index * 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
-                >
-                  <RetreatCard
-                    id={retreat.id}
-                    title={retreat.title}
-                    location={retreat.location || 'Location TBD'}
-                    image="https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&h=600&fit=crop"
-                    startDate={retreat.start_date || ''}
-                    endDate={retreat.end_date || ''}
-                    pricePerPerson={retreat.price_per_person || 0}
-                    retreatType={retreat.retreat_type || 'Retreat'}
-                    maxAttendees={retreat.max_attendees || undefined}
-                    hostName={retreat.host_name || undefined}
-                    sampleItinerary={(retreat as any).sample_itinerary}
-                    onClick={() => navigate(`/retreat/${retreat.id}`)}
-                    onBook={() => navigate(`/retreat/${retreat.id}`)}
-                  />
-                </motion.div>
-              ))}
-            </div>
-          )}
         </div>
       </section>
 
@@ -313,7 +233,7 @@ export default function Landing() {
                 </div>
                 <Link to={user ? getDashboardLink() : '/signup'} className="block mt-6">
                   <Button variant="outline" className="w-full rounded-full transition-transform hover:scale-[1.02]">
-                    {user ? 'Go to Dashboard' : 'Start Hosting'}
+                    {user ? 'Go to Dashboard' : 'Start Collaborating'}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
@@ -374,11 +294,11 @@ export default function Landing() {
 
       {/* Mobile Sticky CTA */}
       <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-card/95 backdrop-blur-sm border-t border-border md:hidden">
-        <a href="#retreats" className="block">
+        <Link to="/retreats/browse" className="block">
           <Button className="w-full rounded-full font-semibold" size="lg">
-            Reserve Your Spot
+            Browse Retreats
           </Button>
-        </a>
+        </Link>
       </div>
 
       {/* Footer */}

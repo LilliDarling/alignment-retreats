@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Home, ArrowLeft, Leaf, Handshake, Briefcase, Search, Check } from 'lucide-react';
+import { Users, Home, ArrowLeft, Leaf, Handshake, Briefcase, Search, Check, Palette } from 'lucide-react';
 import { z } from 'zod';
 
 const signupSchema = z.object({
@@ -25,10 +25,15 @@ const attendeeOption: { value: AppRole; label: string; description: string; icon
 
 const collaboratorOptions: { value: AppRole; label: string; description: string; icon: React.ElementType }[] = [
   { value: 'host', label: 'Host', description: 'Lead your own retreats', icon: Users },
-  { value: 'cohost', label: 'Co-Host', description: 'Partner with other hosts', icon: Handshake },
-  { value: 'landowner', label: 'Landowner', description: 'List your property for retreats', icon: Home },
-  { value: 'staff', label: 'Staff', description: 'Offer services like catering or wellness', icon: Briefcase },
+  { value: 'cohost', label: 'Co-Host / Facilitator', description: 'Partner with other hosts', icon: Handshake },
+  { value: 'landowner', label: 'Venue Partner', description: 'List your property for retreats', icon: Home },
+  { value: 'staff', label: 'Staff / Operations', description: 'Offer services like catering or wellness', icon: Briefcase },
 ];
+
+// Creative/Marketing option - maps to 'staff' role in the backend
+const creativeOption: { value: 'creative'; label: string; description: string; icon: React.ElementType } = {
+  value: 'creative', label: 'Creative / Marketing', description: 'Design, content, and promotion', icon: Palette
+};
 
 function RoleCheckbox({ checked }: { checked: boolean }) {
   return (
@@ -50,6 +55,7 @@ export default function Signup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [userTypes, setUserTypes] = useState<AppRole[]>([]);
+  const [isCreativeSelected, setIsCreativeSelected] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string; userTypes?: string }>({});
 
@@ -59,8 +65,11 @@ export default function Signup() {
   const { toast } = useToast();
   const { trackFormSubmit, trackSignup } = useAnalytics();
 
-  // Check for returnTo in location state
-  const returnTo = (location.state as { returnTo?: string })?.returnTo;
+  // Check for redirect URL in location state or sessionStorage (for booking flow)
+  const stateRedirect = (location.state as { returnTo?: string; redirectTo?: string })?.returnTo
+    || (location.state as { returnTo?: string; redirectTo?: string })?.redirectTo;
+  const bookingRedirect = sessionStorage.getItem('bookingRedirect');
+  const returnTo = stateRedirect || bookingRedirect;
 
   const toggleRole = (role: AppRole) => {
     setUserTypes(prev => 
@@ -74,7 +83,11 @@ export default function Signup() {
     e.preventDefault();
     setErrors({});
 
-    const validation = signupSchema.safeParse({ name, email, password, userTypes });
+    // Include creative as a valid role selection (maps to staff role)
+    const effectiveUserTypes = isCreativeSelected
+      ? (userTypes.includes('staff') ? userTypes : [...userTypes, 'staff' as AppRole])
+      : userTypes;
+    const validation = signupSchema.safeParse({ name, email, password, userTypes: effectiveUserTypes });
     if (!validation.success) {
       const fieldErrors: { name?: string; email?: string; password?: string; userTypes?: string } = {};
       validation.error.errors.forEach((err) => {
@@ -90,10 +103,14 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      const { error } = await signUp(email, password, name, userTypes);
+      // Map creative selection to staff role for backend
+      const rolesToSubmit = isCreativeSelected
+        ? (userTypes.includes('staff') ? userTypes : [...userTypes, 'staff' as AppRole])
+        : userTypes;
+      const { error } = await signUp(email, password, name, rolesToSubmit);
 
       if (error) {
-        let message = error.message;
+        let {message} = error;
         if (error.message.includes('already registered')) {
           message = 'An account with this email already exists. Please sign in instead.';
         }
@@ -113,6 +130,11 @@ export default function Signup() {
       supabase.functions.invoke('notify-new-member', {
         body: { name, email, roles: userTypes }
       });
+
+      // Clear booking redirect from sessionStorage if it was used
+      if (bookingRedirect) {
+        sessionStorage.removeItem('bookingRedirect');
+      }
 
       // Redirect to returnTo path if provided, otherwise dashboard
       navigate(returnTo || '/dashboard');
@@ -236,6 +258,24 @@ export default function Signup() {
                         </div>
                       </div>
                     ))}
+                    {/* Creative/Marketing Option */}
+                    <div
+                      className={`flex items-start gap-4 p-4 rounded-lg border cursor-pointer transition-colors ${
+                        isCreativeSelected
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:bg-accent/50'
+                      }`}
+                      onClick={() => setIsCreativeSelected(!isCreativeSelected)}
+                    >
+                      <RoleCheckbox checked={isCreativeSelected} />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <creativeOption.icon className="h-4 w-4 text-primary" />
+                          <p className="font-medium">{creativeOption.label}</p>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{creativeOption.description}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 

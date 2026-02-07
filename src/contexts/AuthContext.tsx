@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 export type AppRole = 'host' | 'cohost' | 'landowner' | 'staff' | 'attendee' | 'admin';
 
 export interface OnboardingMetadata {
+  profile?: { location: string; description: string; availability: string; coopInterest?: boolean };
   host?: { expertiseAreas: string[]; minRate: number; maxRate: number };
   cohost?: { skills: string[]; availability: string; hourlyRate: number; minRate: number; maxRate: number };
   staff?: { serviceType: string; experienceYears: number; dayRate: number; availability: string; portfolioUrl: string };

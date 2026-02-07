@@ -13,6 +13,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +27,7 @@ import { toast } from 'sonner';
 export default function RetreatDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isLiked, setIsLiked] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
 
@@ -90,9 +92,16 @@ export default function RetreatDetail() {
   };
 
   const handleBookNow = async () => {
+    // Require authentication to book
+    if (!user) {
+      // Store the retreat URL to redirect back after signup
+      sessionStorage.setItem('bookingRedirect', `/retreat/${id}`);
+      navigate('/signup', { state: { redirectTo: `/retreat/${id}` } });
+      return;
+    }
+
     setBookingLoading(true);
     try {
-      // Get session if user is logged in (optional)
       const { data: sessionData } = await supabase.auth.getSession();
 
       const headers: Record<string, string> = {};

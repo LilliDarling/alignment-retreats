@@ -14,9 +14,10 @@ interface ProfileCompletedNotification {
 const getRoleLabels = (roles: string[]): string => {
   const roleMap: Record<string, string> = {
     host: "Retreat Host",
-    cohost: "Co-Host",
-    landowner: "Landowner / Venue",
-    staff: "Staff / Contractor",
+    cohost: "Co-Host / Facilitator",
+    landowner: "Venue Partner",
+    staff: "Staff / Operations",
+    creative: "Creative / Marketing",
     attendee: "Attendee",
   };
 

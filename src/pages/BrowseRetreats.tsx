@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,6 +47,16 @@ export default function BrowseRetreats() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Announcement Banner */}
+      <div className="bg-primary text-primary-foreground py-2 px-2 sm:px-4">
+        <div className="container mx-auto text-center text-[11px] sm:text-sm whitespace-nowrap">
+          <span>Want to host retreats in 2026?</span>
+          <Link to="/get-started" className="font-semibold underline hover:opacity-80 ml-1 sm:ml-2">
+            Join now
+          </Link>
+        </div>
+      </div>
+
       <AppHeader showSignOut={!!user} />
 
       {/* Main Content */}

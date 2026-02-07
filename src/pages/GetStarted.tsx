@@ -8,12 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAuth, AppRole } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Leaf, Crown, Users, Home, Briefcase, ChevronLeft, ChevronRight, Check } from 'lucide-react';
-import { HostOnboarding } from '@/components/onboarding/HostOnboarding';
-import { CohostOnboarding } from '@/components/onboarding/CohostOnboarding';
-import { StaffOnboarding } from '@/components/onboarding/StaffOnboarding';
-import { LandownerOnboarding, LandownerOnboardingData } from '@/components/onboarding/LandownerOnboarding';
-import { CoopQuestionStep } from '@/components/onboarding/CoopQuestionStep';
+import { Leaf, Crown, Users, Home, Briefcase, ChevronLeft, ChevronRight, Check, Palette, MapPin, Search } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { z } from 'zod';
 
 const signupSchema = z.object({
@@ -22,28 +18,31 @@ const signupSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
-type CollaboratorRole = 'host' | 'cohost' | 'landowner' | 'staff';
+type SelectedRole = 'attendee' | 'host' | 'cohost' | 'landowner' | 'staff' | 'creative';
 
-interface OnboardingData {
-  host?: { expertiseAreas: string[]; minRate: number; maxRate: number };
-  cohost?: { skills: string[]; availability: string; hourlyRate: number; minRate: number; maxRate: number };
-  staff?: { serviceType: string; experienceYears: number; dayRate: number; availability: string; portfolioUrl: string };
-  landowner?: LandownerOnboardingData;
+interface ProfileData {
+  location: string;
+  description: string;
+  availability: string;
   coopInterest?: boolean;
 }
 
-const roleOptions: { value: CollaboratorRole; label: string; description: string; icon: React.ReactNode }[] = [
+const attendeeOption: { value: SelectedRole; label: string; description: string; icon: React.ReactNode } = {
+  value: 'attendee', label: 'Attendee', description: 'Discover and book retreats', icon: <Search className="h-5 w-5" />
+};
+
+const collaboratorOptions: { value: SelectedRole; label: string; description: string; icon: React.ReactNode }[] = [
   { value: 'host', label: 'Host', description: 'Lead and organize retreats', icon: <Crown className="h-5 w-5" /> },
-  { value: 'cohost', label: 'Co-Host', description: 'Support retreat leaders', icon: <Users className="h-5 w-5" /> },
-  { value: 'landowner', label: 'Venue Owner', description: 'Offer your property', icon: <Home className="h-5 w-5" /> },
-  { value: 'staff', label: 'Staff', description: 'Provide retreat services', icon: <Briefcase className="h-5 w-5" /> },
+  { value: 'cohost', label: 'Co-Host / Facilitator', description: 'Support retreat leaders', icon: <Users className="h-5 w-5" /> },
+  { value: 'landowner', label: 'Venue Partner', description: 'Offer your property', icon: <Home className="h-5 w-5" /> },
+  { value: 'staff', label: 'Staff / Operations', description: 'Provide retreat services', icon: <Briefcase className="h-5 w-5" /> },
+  { value: 'creative', label: 'Creative / Marketing', description: 'Design, content, and promotion', icon: <Palette className="h-5 w-5" /> },
 ];
 
-type FlowStep = 'role-selection' | 'coop-question' | 'role-onboarding' | 'account-creation';
+type FlowStep = 'role-selection' | 'host-message' | 'profile-creation';
 
-// Check if selected roles require co-op question (host or landowner)
-const needsCoopQuestion = (roles: CollaboratorRole[]) => 
-  roles.includes('host') || roles.includes('landowner');
+// Check if Host role is selected (show host-specific message)
+const hasHostRole = (roles: SelectedRole[]) => roles.includes('host');
 
 export default function GetStarted() {
   usePageTitle('Get Started');
@@ -53,9 +52,13 @@ export default function GetStarted() {
 
   // Flow state
   const [flowStep, setFlowStep] = useState<FlowStep>('role-selection');
-  const [selectedRoles, setSelectedRoles] = useState<CollaboratorRole[]>([]);
-  const [currentRoleIndex, setCurrentRoleIndex] = useState(0);
-  const [onboardingData, setOnboardingData] = useState<OnboardingData>({});
+  const [selectedRoles, setSelectedRoles] = useState<SelectedRole[]>([]);
+  const [profileData, setProfileData] = useState<ProfileData>({
+    location: '',
+    description: '',
+    availability: '',
+    coopInterest: undefined,
+  });
 
   // Account form state
   const [name, setName] = useState('');
@@ -70,7 +73,7 @@ export default function GetStarted() {
     }
   }, [user, navigate]);
 
-  const toggleRole = (role: CollaboratorRole) => {
+  const toggleRole = (role: SelectedRole) => {
     setSelectedRoles(prev =>
       prev.includes(role) ? prev.filter(r => r !== role) : [...prev, role]
     );
@@ -81,45 +84,26 @@ export default function GetStarted() {
       toast({ title: 'Please select at least one role', variant: 'destructive' });
       return;
     }
-    // If host or landowner selected, show co-op question first
-    if (needsCoopQuestion(selectedRoles)) {
-      setFlowStep('coop-question');
+    // If Host is selected, show host-specific message first
+    if (hasHostRole(selectedRoles)) {
+      setFlowStep('host-message');
     } else {
-      setCurrentRoleIndex(0);
-      setFlowStep('role-onboarding');
+      setFlowStep('profile-creation');
     }
   };
 
-  const handleCoopQuestionComplete = (interested: boolean) => {
-    setOnboardingData(prev => ({ ...prev, coopInterest: interested }));
-    setCurrentRoleIndex(0);
-    setFlowStep('role-onboarding');
+  const handleHostMessageContinue = (coopInterest: boolean) => {
+    setProfileData(prev => ({ ...prev, coopInterest }));
+    if (coopInterest) {
+      // Redirect to Co-Op page if interested
+      navigate('/cooperative');
+    } else {
+      setFlowStep('profile-creation');
+    }
   };
 
-  const handleCoopQuestionBack = () => {
+  const handleHostMessageBack = () => {
     setFlowStep('role-selection');
-  };
-
-  const handleRoleOnboardingComplete = (role: CollaboratorRole, data: any) => {
-    setOnboardingData(prev => ({ ...prev, [role]: data }));
-    
-    // Move to next role or account creation
-    if (currentRoleIndex < selectedRoles.length - 1) {
-      setCurrentRoleIndex(prev => prev + 1);
-    } else {
-      setFlowStep('account-creation');
-    }
-  };
-
-  const handleRoleOnboardingBack = () => {
-    if (currentRoleIndex > 0) {
-      setCurrentRoleIndex(prev => prev - 1);
-    } else if (needsCoopQuestion(selectedRoles)) {
-      // Go back to co-op question if applicable
-      setFlowStep('coop-question');
-    } else {
-      setFlowStep('role-selection');
-    }
   };
 
   const handleAccountSubmit = async (e: React.FormEvent) => {
@@ -138,11 +122,20 @@ export default function GetStarted() {
         return;
       }
 
-      // Build metadata with all onboarding data
-      const { error } = await signUp(email, password, name, selectedRoles as AppRole[], onboardingData);
+      // Build metadata with profile data
+      const onboardingData = {
+        profile: profileData,
+      };
+
+      // Map creative role to staff for the backend
+      const mappedRoles = selectedRoles.map(role =>
+        role === 'creative' ? 'staff' : role
+      ) as AppRole[];
+
+      const { error } = await signUp(email, password, name, mappedRoles, onboardingData);
 
       if (error) {
-        let message = error.message;
+        let {message} = error;
         if (message.includes('already registered')) {
           message = 'An account with this email already exists. Please sign in instead.';
         }
@@ -158,38 +151,19 @@ export default function GetStarted() {
         console.error('Admin notification failed:', error);
       });
 
-      // Build completed fields from onboarding data
+      // Build completed fields from profile data
       const completedFields: string[] = [];
-      if (onboardingData.host) {
-        completedFields.push(`Host Expertise: ${onboardingData.host.expertiseAreas.join(', ')}`);
-        completedFields.push(`Host Rate: $${onboardingData.host.minRate} - $${onboardingData.host.maxRate}`);
-      }
-      if (onboardingData.cohost) {
-        completedFields.push(`Co-Host Skills: ${onboardingData.cohost.skills.join(', ')}`);
-        completedFields.push(`Co-Host Daily Rate: $${onboardingData.cohost.hourlyRate || onboardingData.cohost.minRate}`);
-      }
-      if (onboardingData.staff) {
-        completedFields.push(`Staff Service: ${onboardingData.staff.serviceType}`);
-        completedFields.push(`Staff Experience: ${onboardingData.staff.experienceYears} years`);
-        completedFields.push(`Staff Day Rate: $${onboardingData.staff.dayRate}`);
-      }
-      if (onboardingData.landowner) {
-        completedFields.push(`Property: ${onboardingData.landowner.propertyName}`);
-        completedFields.push(`Property Type: ${onboardingData.landowner.propertyType}`);
-        if (onboardingData.landowner.location) completedFields.push(`Location: ${onboardingData.landowner.location}`);
-        if (onboardingData.landowner.basePrice) completedFields.push(`Base Price: $${onboardingData.landowner.basePrice}/night`);
-      }
-      if (onboardingData.coopInterest !== undefined) {
-        completedFields.push(`Co-op Interest: ${onboardingData.coopInterest ? 'Yes - Interested in joining' : 'No - Will pay venue deposits'}`);
-      }
+      if (profileData.location) completedFields.push(`Location: ${profileData.location}`);
+      if (profileData.description) completedFields.push(`Description: ${profileData.description}`);
+      if (profileData.availability) completedFields.push(`Availability: ${profileData.availability}`);
 
       // Send profile completion notification with all the collected data
       supabase.functions.invoke('notify-profile-completed', {
-        body: { 
-          name, 
-          email, 
+        body: {
+          name,
+          email,
           roles: selectedRoles,
-          completedFields 
+          completedFields
         }
       }).catch((error) => {
         console.error('Profile completion notification failed:', error);
@@ -197,15 +171,10 @@ export default function GetStarted() {
 
       toast({
         title: 'Account created!',
-        description: onboardingData.coopInterest 
-          ? 'Your profile has been set up. Schedule a call to discuss co-op membership!'
-          : 'Your profile has been set up with your preferences.',
+        description: 'Your profile has been set up. Welcome to Alignment Retreats!',
       });
 
-      // If co-op interested, navigate to thank you with co-op flag
-      navigate('/thank-you', { 
-        state: { coopInterest: onboardingData.coopInterest } 
-      });
+      navigate('/thank-you');
     } catch (err) {
       toast({ title: 'Error', description: 'Something went wrong', variant: 'destructive' });
     } finally {
@@ -236,30 +205,61 @@ export default function GetStarted() {
                 Select one or more roles. We'll ask a few questions to set up your profile.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {roleOptions.map(option => (
+            <CardContent className="space-y-6">
+              {/* Attendee Option */}
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Find Retreats</p>
                 <button
-                  key={option.value}
                   type="button"
-                  onClick={() => toggleRole(option.value)}
+                  onClick={() => toggleRole(attendeeOption.value)}
                   className={`w-full p-4 rounded-lg border-2 transition-all text-left flex items-center gap-4 ${
-                    selectedRoles.includes(option.value)
+                    selectedRoles.includes(attendeeOption.value)
                       ? 'border-primary bg-primary/5'
                       : 'border-border hover:border-muted-foreground/50'
                   }`}
                 >
-                  <div className={`p-2 rounded-lg ${selectedRoles.includes(option.value) ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
-                    {option.icon}
+                  <div className={`p-2 rounded-lg ${selectedRoles.includes(attendeeOption.value) ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                    {attendeeOption.icon}
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-foreground">{option.label}</p>
-                    <p className="text-sm text-muted-foreground">{option.description}</p>
+                    <p className="font-medium text-foreground">{attendeeOption.label}</p>
+                    <p className="text-sm text-muted-foreground">{attendeeOption.description}</p>
                   </div>
-                  {selectedRoles.includes(option.value) && (
+                  {selectedRoles.includes(attendeeOption.value) && (
                     <Check className="h-5 w-5 text-primary" />
                   )}
                 </button>
-              ))}
+              </div>
+
+              {/* Collaborator Options */}
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Collaborate</p>
+                <div className="space-y-3">
+                  {collaboratorOptions.map(option => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => toggleRole(option.value)}
+                      className={`w-full p-4 rounded-lg border-2 transition-all text-left flex items-center gap-4 ${
+                        selectedRoles.includes(option.value)
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-muted-foreground/50'
+                      }`}
+                    >
+                      <div className={`p-2 rounded-lg ${selectedRoles.includes(option.value) ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                        {option.icon}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-foreground">{option.label}</p>
+                        <p className="text-sm text-muted-foreground">{option.description}</p>
+                      </div>
+                      {selectedRoles.includes(option.value) && (
+                        <Check className="h-5 w-5 text-primary" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               <div className="pt-4 flex justify-between">
                 <Link to="/">
@@ -287,8 +287,8 @@ export default function GetStarted() {
     );
   }
 
-  // Render co-op question step
-  if (flowStep === 'coop-question') {
+  // Render host message step
+  if (flowStep === 'host-message') {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <nav className="border-b border-border bg-card">
@@ -303,71 +303,54 @@ export default function GetStarted() {
         </nav>
 
         <div className="flex-1 flex items-center justify-center p-4">
-          <CoopQuestionStep
-            onComplete={handleCoopQuestionComplete}
-            onBack={handleCoopQuestionBack}
-            initialValue={onboardingData.coopInterest}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // Render role-specific onboarding
-  if (flowStep === 'role-onboarding') {
-    const currentRole = selectedRoles[currentRoleIndex];
-
-    return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <nav className="border-b border-border bg-card">
-          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Leaf className="h-5 w-5 text-primary-foreground" />
+          <Card className="w-full max-w-lg">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl">Hosting on Alignment Retreats</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="bg-muted/50 rounded-lg p-4 text-muted-foreground space-y-3">
+                <p>
+                  Hosting retreats through Alignment Retreats is <span className="font-semibold text-foreground">open to everyone</span>.
+                </p>
+                <p>
+                  If you'd like to participate as a co-founder in the Alignment Retreats Co-Op — including profit sharing and governance — you may choose to join the Co-Op Foundation separately.
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium text-foreground">Note:</span> Co-Op members don't pay deposit fees for their retreats.
+                </p>
               </div>
-              <span className="text-xl font-semibold text-foreground">Alignment Retreats</span>
-            </Link>
-            <span className="text-sm text-muted-foreground">
-              Setting up: {selectedRoles.map(r => r.charAt(0).toUpperCase() + r.slice(1)).join(', ')}
-            </span>
-          </div>
-        </nav>
 
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl">
-            {currentRole === 'host' && (
-              <HostOnboarding
-                onComplete={(data) => handleRoleOnboardingComplete('host', data)}
-                onBack={handleRoleOnboardingBack}
-                initialData={onboardingData.host}
-              />
-            )}
-            {currentRole === 'cohost' && (
-              <CohostOnboarding
-                onComplete={(data) => handleRoleOnboardingComplete('cohost', data)}
-                onBack={handleRoleOnboardingBack}
-                initialData={onboardingData.cohost}
-              />
-            )}
-            {currentRole === 'staff' && (
-              <StaffOnboarding
-                onComplete={(data) => handleRoleOnboardingComplete('staff', data)}
-                onBack={handleRoleOnboardingBack}
-              />
-            )}
-            {currentRole === 'landowner' && (
-              <LandownerOnboarding
-                onComplete={(data) => handleRoleOnboardingComplete('landowner', data)}
-                onBack={handleRoleOnboardingBack}
-              />
-            )}
-          </div>
+              <div className="flex flex-col gap-3">
+                <Button
+                  onClick={() => handleHostMessageContinue(false)}
+                  className="w-full"
+                >
+                  Continue as Host
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => handleHostMessageContinue(true)}
+                  className="w-full"
+                >
+                  Learn About Co-Op Co-Founder Membership
+                </Button>
+              </div>
+
+              <div className="pt-2">
+                <Button variant="ghost" onClick={handleHostMessageBack}>
+                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  Back
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
   }
 
-  // Render account creation step
+  // Render profile creation step
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <nav className="border-b border-border bg-card">
@@ -384,15 +367,15 @@ export default function GetStarted() {
       <div className="flex-1 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Create Your Account</CardTitle>
+            <CardTitle className="text-2xl">Create Your Profile</CardTitle>
             <CardDescription>
-              Almost done! Your profile preferences are ready to be saved.
+              Tell us a bit about yourself to start collaborating.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleAccountSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">Name</Label>
                 <Input
                   id="name"
                   value={name}
@@ -417,6 +400,58 @@ export default function GetStarted() {
               </div>
 
               <div>
+                <Label htmlFor="location">Location</Label>
+                <div className="relative mt-1">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="location"
+                    value={profileData.location}
+                    onChange={e => setProfileData(prev => ({ ...prev, location: e.target.value }))}
+                    placeholder="City, Country"
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+
+              {/* Show selected roles */}
+              <div>
+                <Label>Selected Roles</Label>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {selectedRoles.map(role => {
+                    const allOptions = [attendeeOption, ...collaboratorOptions];
+                    const roleOption = allOptions.find(r => r.value === role);
+                    return (
+                      <span key={role} className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                        {roleOption?.label || role}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="description">Short Description / Experience</Label>
+                <Textarea
+                  id="description"
+                  value={profileData.description}
+                  onChange={e => setProfileData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Tell us about your background and what you'd like to contribute..."
+                  className="mt-1 min-h-[80px]"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="availability">Availability or Interests</Label>
+                <Input
+                  id="availability"
+                  value={profileData.availability}
+                  onChange={e => setProfileData(prev => ({ ...prev, availability: e.target.value }))}
+                  placeholder="e.g., Weekends, Summer 2026, Flexible..."
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
                 <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
@@ -429,28 +464,16 @@ export default function GetStarted() {
                 />
               </div>
 
-              {/* Show selected roles summary */}
-              <div className="bg-muted rounded-lg p-3">
-                <p className="text-sm font-medium text-foreground mb-2">Your Profile</p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedRoles.map(role => (
-                    <span key={role} className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-                      {role.charAt(0).toUpperCase() + role.slice(1)}
-                    </span>
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Your preferences and rates are ready to be saved
-                </p>
-              </div>
-
               <div className="flex gap-3 pt-2">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    setCurrentRoleIndex(selectedRoles.length - 1);
-                    setFlowStep('role-onboarding');
+                    if (hasHostRole(selectedRoles)) {
+                      setFlowStep('host-message');
+                    } else {
+                      setFlowStep('role-selection');
+                    }
                   }}
                   className="flex-1"
                 >

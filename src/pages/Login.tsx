@@ -33,9 +33,11 @@ export default function Login() {
   const location = useLocation();
   const { toast } = useToast();
 
-  const returnTo = (location.state as { returnTo?: string })?.returnTo;
+  const stateRedirect = (location.state as { returnTo?: string; redirectTo?: string })?.returnTo
+    || (location.state as { returnTo?: string; redirectTo?: string })?.redirectTo;
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
-  const redirectPath = returnTo || from || '/dashboard';
+  const bookingRedirect = sessionStorage.getItem('bookingRedirect');
+  const redirectPath = stateRedirect || from || bookingRedirect || '/dashboard';
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +68,11 @@ export default function Login() {
       });
       setLoading(false);
       return;
+    }
+
+    // Clear booking redirect from sessionStorage if it was used
+    if (bookingRedirect) {
+      sessionStorage.removeItem('bookingRedirect');
     }
 
     toast({

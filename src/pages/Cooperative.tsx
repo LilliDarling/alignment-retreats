@@ -12,8 +12,7 @@ import {
   Coins,
   FileText,
   ArrowRight,
-  Check,
-  Star
+  Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,48 +49,14 @@ const steps = [
   }
 ];
 
-const tiers = [
-  {
-    name: "Tier 1",
-    buyIn: "$1,000",
-    maxCharge: "$1,500",
-    weight: "1x",
-    features: [
-      "No upfront venue deposits",
-      "Host unlimited retreats",
-      "Full voting rights",
-      "Annual dividend eligibility",
-      "Member transparency reports",
-      "Resell after 12 months"
-    ]
-  },
-  {
-    name: "Tier 2",
-    buyIn: "$1,500",
-    maxCharge: "$2,000",
-    weight: "1.5x",
-    popular: true,
-    features: [
-      "Everything in Tier 1",
-      "Higher earning potential",
-      "1.5x voting weight",
-      "1.5x dividend multiplier",
-      "Priority retreat listings"
-    ]
-  },
-  {
-    name: "Tier 3",
-    buyIn: "$2,000",
-    maxCharge: "$2,500",
-    weight: "2x",
-    features: [
-      "Everything in Tier 2",
-      "Maximum earning potential",
-      "2x voting weight",
-      "2x dividend multiplier",
-      "Featured host status"
-    ]
-  }
+const membershipFeatures = [
+  "70% of net platform profit distributions",
+  "Governance and voting on profit use and projects",
+  "Long-term ownership and stewardship of the platform",
+  "No upfront venue deposits for retreats",
+  "Host unlimited retreats",
+  "Full voting rights",
+  "Member transparency reports"
 ];
 
 const benefits = [
@@ -128,12 +93,12 @@ const Cooperative = () => {
             </motion.span>
             
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-              Own a Piece of
-              <span className="block text-white/90">the Future</span>
+              Become a Co-Op
+              <span className="block text-white/90">Co-Founder</span>
             </h1>
-            
+
             <p className="text-xl md:text-2xl text-white/80 mb-10 max-w-2xl mx-auto">
-              Join 100 founding members building a member-owned retreat platform where you host, govern, and earn.
+              Alignment Retreats Co-Op is a societal enterprise operated under MADCF. Join as a co-founder and participate in profit sharing and governance.
             </p>
             
             <motion.div
@@ -227,7 +192,7 @@ const Cooperative = () => {
         </div>
       </section>
 
-      {/* Membership Tiers */}
+      {/* Co-Founder Membership */}
       <section className="py-20 md:py-28 bg-muted/30">
         <div className="container mx-auto px-4">
           <motion.div
@@ -237,69 +202,59 @@ const Cooperative = () => {
             className="text-center mb-16"
           >
             <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
-              Choose Your Tier
+              Co-Founder Membership
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Higher tiers mean more earning potential, stronger voting weight, and larger dividend shares
+              A one-time investment to become a co-owner of the platform
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {tiers.map((tier, index) => (
-              <motion.div
-                key={tier.name}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="relative"
-              >
-                {tier.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-                    <span className="inline-flex items-center gap-1 px-4 py-1 bg-primary text-primary-foreground text-sm font-semibold rounded-full shadow-lg">
-                      <Star className="h-4 w-4 fill-current" />
-                      Most Popular
-                    </span>
+          <div className="max-w-xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <Card className="border-2 border-primary shadow-xl">
+                <CardHeader className="text-center pb-4">
+                  <CardTitle className="text-xl font-bold text-foreground mb-2">
+                    Co-Op Co-Founder
+                  </CardTitle>
+                  <div className="text-4xl md:text-5xl font-bold text-primary">
+                    $2,000 CAD
                   </div>
-                )}
-                
-                <Card className={`h-full ${tier.popular ? 'border-2 border-primary shadow-xl scale-105' : 'border shadow-lg'} hover:shadow-xl transition-all duration-300`}>
-                  <CardHeader className="text-center pb-4">
-                    <CardTitle className="text-xl font-bold text-foreground mb-2">
-                      {tier.name}
-                    </CardTitle>
-                    <div className="text-4xl md:text-5xl font-bold text-primary">
-                      {tier.buyIn}
+                  <p className="text-sm text-muted-foreground">one-time buy-in</p>
+                </CardHeader>
+
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground">Your Share</p>
+                      <p className="text-2xl font-bold text-primary">70%</p>
+                      <p className="text-xs text-muted-foreground">of net profits</p>
                     </div>
-                    <p className="text-sm text-muted-foreground">one-time buy-in</p>
-                  </CardHeader>
-                  
-                  <CardContent className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
-                      <div className="text-center">
-                        <p className="text-sm text-muted-foreground">Max Charge</p>
-                        <p className="text-lg font-bold text-foreground">{tier.maxCharge}</p>
-                        <p className="text-xs text-muted-foreground">per attendee</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-sm text-muted-foreground">Weight</p>
-                        <p className="text-lg font-bold text-foreground">{tier.weight}</p>
-                        <p className="text-xs text-muted-foreground">voting & dividends</p>
-                      </div>
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground">MADCF</p>
+                      <p className="text-2xl font-bold text-foreground">30%</p>
+                      <p className="text-xs text-muted-foreground">community initiatives</p>
                     </div>
-                    
-                    <ul className="space-y-3">
-                      {tier.features.map((feature, i) => (
-                        <li key={i} className="flex items-start gap-3">
-                          <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                          <span className="text-muted-foreground">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                  </div>
+
+                  <ul className="space-y-3">
+                    {membershipFeatures.map((feature, i) => (
+                      <li key={i} className="flex items-start gap-3">
+                        <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                        <span className="text-muted-foreground">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <p className="text-sm text-muted-foreground text-center pt-2">
+                    30% of net platform profits support MADCF's societal and community initiatives.
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -363,10 +318,10 @@ const Cooperative = () => {
             className="text-center max-w-3xl mx-auto"
           >
             <h2 className="text-3xl md:text-5xl font-bold mb-6">
-              Ready to Apply?
+              Join as a Co-Op Co-Founder
             </h2>
             <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
-              Book a discovery call to learn more about membership and see if the Co-Op is right for you. Limited to 100 founding members.
+              Book a discovery call to learn more about co-founder membership and how to participate in profit sharing and governance.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -380,7 +335,7 @@ const Cooperative = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Book a Discovery Call
+                  Join as a Co-Op Co-Founder
                   <Calendar className="ml-2 h-5 w-5" />
                 </a>
               </Button>
