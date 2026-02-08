@@ -102,7 +102,9 @@ export default function Login() {
     if (error) {
       toast({
         title: 'Failed to send link',
-        description: error.message,
+        description: error.message === 'Signups not allowed for otp'
+          ? 'No account found with this email. Please sign up first.'
+          : error.message,
         variant: 'destructive',
       });
       setLoading(false);
