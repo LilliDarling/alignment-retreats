@@ -185,10 +185,10 @@ serve(async (req) => {
           console.error("Error creating payment record:", paymentError);
         }
 
-        // Get retreat start_date for payout scheduling
+        // Get retreat details for payout scheduling and confirmation email
         const { data: retreat } = await supabaseAdmin
           .from("retreats")
-          .select("start_date")
+          .select("title, start_date, end_date, max_attendees")
           .eq("id", retreat_id)
           .single();
 
@@ -235,6 +235,139 @@ serve(async (req) => {
                 });
               }
             }
+          }
+        }
+
+        // Fetch attendee profile for notifications
+        const { data: profile } = await supabaseAdmin
+          .from("profiles")
+          .select("name, email")
+          .eq("id", user_id)
+          .single();
+
+        const attendeeName = profile?.name || "Unknown";
+        const resendApiKey = Deno.env.get("RESEND_API_KEY");
+
+        // Send booking confirmation email to attendee
+        if (resendApiKey && retreat && profile?.email) {
+          try {
+            const formatDate = (d: string) =>
+              new Date(d).toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              });
+
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${resendApiKey}`,
+              },
+              body: JSON.stringify({
+                to: [profile.email],
+                template_alias: "booking-confirmation",
+                data: {
+                  name: attendeeName,
+                  retreat_title: retreat.title,
+                  start_date: retreat.start_date ? formatDate(retreat.start_date) : "TBD",
+                  end_date: retreat.end_date ? formatDate(retreat.end_date) : "TBD",
+                  amount_paid: `$${totalAmount.toFixed(2)}`,
+                  booking_ref: booking.id.split("-")[0].toUpperCase(),
+                },
+              }),
+            });
+          } catch (emailErr) {
+            console.error("Booking confirmation email failed:", emailErr);
+          }
+        }
+
+        // Notify admin: insert notification + send email
+        try {
+          await supabaseAdmin.from("admin_notifications").insert({
+            type: "new_booking",
+            title: `New Booking: ${retreat?.title || "Unknown Retreat"}`,
+            message: `${attendeeName} booked ${retreat?.title || "a retreat"} for $${totalAmount.toFixed(2)}`,
+            reference_id: booking.id,
+            reference_type: "booking",
+          });
+
+          const adminEmail = Deno.env.get("ADMIN_EMAIL");
+          if (adminEmail && resendApiKey && retreat) {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${resendApiKey}`,
+              },
+              body: JSON.stringify({
+                from: "Alignment Retreats <bookings@resend.dev>",
+                to: [adminEmail],
+                subject: `New Booking: ${retreat.title} — $${totalAmount.toFixed(2)}`,
+                html: `
+                  <!DOCTYPE html>
+                  <html>
+                  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+                  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                      <h1 style="color: #2d5016; margin-bottom: 10px;">New Booking Received!</h1>
+                    </div>
+                    <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                      <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                          <td style="padding: 8px 0; font-weight: 600; color: #555; width: 120px;">Retreat:</td>
+                          <td style="padding: 8px 0;">${retreat.title}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; font-weight: 600; color: #555;">Attendee:</td>
+                          <td style="padding: 8px 0;">${attendeeName}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; font-weight: 600; color: #555;">Amount:</td>
+                          <td style="padding: 8px 0;">$${totalAmount.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; font-weight: 600; color: #555;">Booking Ref:</td>
+                          <td style="padding: 8px 0; font-family: monospace;">${booking.id.split("-")[0].toUpperCase()}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; font-weight: 600; color: #555;">Date:</td>
+                          <td style="padding: 8px 0;">${new Date().toLocaleString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" })}</td>
+                        </tr>
+                      </table>
+                    </div>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                    <p style="font-size: 12px; color: #888; text-align: center;">This is an automated notification from Alignment Retreats.</p>
+                  </body>
+                  </html>
+                `,
+              }),
+            });
+          }
+        } catch (notifyErr) {
+          console.error("Admin booking notification failed:", notifyErr);
+        }
+
+        // Check if retreat is now full and notify admin
+        if (retreat?.max_attendees) {
+          try {
+            const { count: totalBookings } = await supabaseAdmin
+              .from("bookings")
+              .select("id", { count: "exact", head: true })
+              .eq("retreat_id", retreat_id);
+
+            if ((totalBookings ?? 0) >= retreat.max_attendees) {
+              await supabaseAdmin.from("admin_notifications").insert({
+                type: "retreat_full",
+                title: `Sold Out: ${retreat.title}`,
+                message: `${retreat.title} has reached maximum capacity (${retreat.max_attendees} attendees)`,
+                reference_id: retreat_id,
+                reference_type: "retreat",
+              });
+            }
+          } catch (fullErr) {
+            console.error("Retreat full notification failed:", fullErr);
           }
         }
 

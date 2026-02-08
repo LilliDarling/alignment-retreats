@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useRetreatAvailability } from '@/hooks/useRetreatAvailability';
 import { AppHeader } from '@/components/AppHeader';
 import { Leaf } from 'lucide-react';
 import { RetreatCard } from '@/components/RetreatCard';
@@ -44,6 +45,9 @@ export default function BrowseRetreats() {
     },
   });
 
+  const retreatIds = retreats.map((r) => r.id);
+  const { data: availabilityData = [] } = useRetreatAvailability(retreatIds);
+  const availabilityMap = new Map(availabilityData.map((a) => [a.retreat_id, a]));
 
   return (
     <div className="min-h-screen bg-background">
@@ -94,24 +98,29 @@ export default function BrowseRetreats() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {retreats.map((retreat) => (
-              <RetreatCard
-                key={retreat.id}
-                id={retreat.id}
-                title={retreat.title}
-                location={retreat.location || 'Location TBD'}
-                image="https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&h=600&fit=crop"
-                startDate={retreat.start_date || ''}
-                endDate={retreat.end_date || ''}
-                pricePerPerson={retreat.price_per_person || 0}
-                retreatType={retreat.retreat_type || 'Retreat'}
-                maxAttendees={retreat.max_attendees || undefined}
-                hostName={retreat.host_name || undefined}
-                sampleItinerary={retreat.sample_itinerary || undefined}
-                onClick={() => navigate(`/retreat/${retreat.id}`)}
-                onBook={() => navigate(`/retreat/${retreat.id}`)}
-              />
-            ))}
+            {retreats.map((retreat) => {
+              const avail = availabilityMap.get(retreat.id);
+              return (
+                <RetreatCard
+                  key={retreat.id}
+                  id={retreat.id}
+                  title={retreat.title}
+                  location={retreat.location || 'Location TBD'}
+                  image="https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&h=600&fit=crop"
+                  startDate={retreat.start_date || ''}
+                  endDate={retreat.end_date || ''}
+                  pricePerPerson={retreat.price_per_person || 0}
+                  retreatType={retreat.retreat_type || 'Retreat'}
+                  maxAttendees={retreat.max_attendees || undefined}
+                  spotsRemaining={avail?.spots_remaining ?? null}
+                  isFull={avail?.is_full ?? false}
+                  hostName={retreat.host_name || undefined}
+                  sampleItinerary={retreat.sample_itinerary || undefined}
+                  onClick={() => navigate(`/retreat/${retreat.id}`)}
+                  onBook={() => navigate(`/retreat/${retreat.id}`)}
+                />
+              );
+            })}
           </div>
         )}
       </main>

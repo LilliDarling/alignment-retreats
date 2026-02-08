@@ -195,7 +195,7 @@ serve(async (req) => {
 
       if ((count ?? 0) >= retreat.max_attendees) {
         console.warn("Retreat at capacity:", { retreat_id, count, max: retreat.max_attendees, requestId });
-        return new Response(JSON.stringify({ error: "This retreat is fully booked" }), {
+        return new Response(JSON.stringify({ error: "This retreat is fully booked", code: "RETREAT_FULL" }), {
           status: 409,
           headers: { ...corsHeaders, ...securityHeaders },
         });

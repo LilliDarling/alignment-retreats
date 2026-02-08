@@ -20,6 +20,8 @@ interface RetreatCardProps {
   hostName?: string;
   retreatType?: string;
   maxAttendees?: number;
+  spotsRemaining?: number | null;
+  isFull?: boolean;
   sampleItinerary?: string;
   onBook?: () => void;
   onCollaborate?: () => void;
@@ -39,6 +41,8 @@ export function RetreatCard({
   hostName,
   retreatType,
   maxAttendees,
+  spotsRemaining,
+  isFull,
   sampleItinerary,
   onBook,
   onCollaborate,
@@ -183,7 +187,13 @@ export function RetreatCard({
           {maxAttendees && (
             <div className="flex items-center gap-1.5">
               <Users className="h-3.5 w-3.5 shrink-0" />
-              <span>Up to {maxAttendees} attendees</span>
+              <span className={isFull ? 'text-destructive font-medium' : ''}>
+                {isFull
+                  ? 'Sold Out'
+                  : spotsRemaining != null
+                    ? `${spotsRemaining} spot${spotsRemaining !== 1 ? 's' : ''} left`
+                    : `Up to ${maxAttendees} attendees`}
+              </span>
             </div>
           )}
         </div>
@@ -227,8 +237,10 @@ export function RetreatCard({
             onClick={handleBookNow}
             className="w-full rounded-full text-sm font-semibold"
             size="sm"
+            variant={isFull ? 'secondary' : 'default'}
+            disabled={isFull}
           >
-            Reserve Spot
+            {isFull ? 'Sold Out' : 'Reserve Spot'}
           </Button>
         </div>
       </div>

@@ -15,6 +15,8 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useSingleRetreatAvailability } from '@/hooks/useRetreatAvailability';
+import { useWaitlistStatus, useJoinWaitlist, useLeaveWaitlist } from '@/hooks/useWaitlist';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -52,6 +54,15 @@ export default function RetreatDetail() {
       };
     },
   });
+
+  const { availability } = useSingleRetreatAvailability(id);
+  const { data: waitlistEntry } = useWaitlistStatus(id);
+  const joinWaitlist = useJoinWaitlist();
+  const leaveWaitlist = useLeaveWaitlist();
+
+  const isFull = availability?.is_full ?? false;
+  const spotsRemaining = availability?.spots_remaining;
+  const isOnWaitlist = !!waitlistEntry;
 
   // Set page title based on retreat
   usePageTitle(retreat?.title || 'Retreat Details');
@@ -325,8 +336,14 @@ export default function RetreatDetail() {
                 </div>
                 {retreat.max_attendees && (
                   <div className="flex items-center gap-3 text-foreground">
-                    <Users className="h-5 w-5 text-primary" />
-                    <span>Up to {retreat.max_attendees} attendees</span>
+                    <Users className={cn("h-5 w-5", isFull ? "text-destructive" : "text-primary")} />
+                    <span className={isFull ? 'text-destructive font-medium' : ''}>
+                      {isFull
+                        ? 'Sold Out'
+                        : spotsRemaining != null
+                          ? `${spotsRemaining} spot${spotsRemaining !== 1 ? 's' : ''} remaining`
+                          : `Up to ${retreat.max_attendees} attendees`}
+                    </span>
                   </div>
                 )}
               </div>
@@ -335,25 +352,70 @@ export default function RetreatDetail() {
 
               {/* CTA Buttons */}
               <div className="space-y-3">
-                <Button
-                  className="w-full rounded-full font-semibold"
-                  size="lg"
-                  onClick={handleBookNow}
-                  disabled={bookingLoading || !retreat.price_per_person}
-                >
-                  {bookingLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Redirecting to checkout...
-                    </>
+                {isFull ? (
+                  isOnWaitlist ? (
+                    <div className="space-y-2">
+                      <p className="text-center text-sm font-medium text-muted-foreground">
+                        You are #{waitlistEntry!.position} on the waitlist
+                      </p>
+                      <Button
+                        variant="outline"
+                        className="w-full rounded-full font-semibold"
+                        size="lg"
+                        onClick={() => leaveWaitlist.mutate(id!)}
+                        disabled={leaveWaitlist.isPending}
+                      >
+                        Leave Waitlist
+                      </Button>
+                    </div>
                   ) : (
-                    'Reserve Spot'
-                  )}
-                </Button>
+                    <Button
+                      variant="secondary"
+                      className="w-full rounded-full font-semibold"
+                      size="lg"
+                      onClick={() => {
+                        if (!user) {
+                          sessionStorage.setItem('bookingRedirect', `/retreat/${id}`);
+                          navigate('/signup', { state: { redirectTo: `/retreat/${id}` } });
+                          return;
+                        }
+                        joinWaitlist.mutate(id!);
+                      }}
+                      disabled={joinWaitlist.isPending}
+                    >
+                      {joinWaitlist.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Joining waitlist...
+                        </>
+                      ) : (
+                        'Join Waitlist'
+                      )}
+                    </Button>
+                  )
+                ) : (
+                  <Button
+                    className="w-full rounded-full font-semibold"
+                    size="lg"
+                    onClick={handleBookNow}
+                    disabled={bookingLoading || !retreat.price_per_person}
+                  >
+                    {bookingLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Redirecting to checkout...
+                      </>
+                    ) : (
+                      'Reserve Spot'
+                    )}
+                  </Button>
+                )}
               </div>
 
               <p className="text-center text-sm text-muted-foreground mt-4">
-                Secure checkout powered by Stripe
+                {isFull
+                  ? "We'll notify you if a spot opens up"
+                  : 'Secure checkout powered by Stripe'}
               </p>
             </div>
           </div>

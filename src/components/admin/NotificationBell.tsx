@@ -8,7 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Bell, FileText, CheckCircle2, Heart } from 'lucide-react';
+import { Bell, FileText, CheckCircle2, Heart, ShoppingCart, Users } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Notification {
@@ -107,6 +107,10 @@ export default function NotificationBell() {
         return <FileText className="h-4 w-4 text-primary" />;
       case 'attendee_wish':
         return <Heart className="h-4 w-4 text-pink-500" />;
+      case 'new_booking':
+        return <ShoppingCart className="h-4 w-4 text-green-600" />;
+      case 'retreat_full':
+        return <Users className="h-4 w-4 text-destructive" />;
       default:
         return <Bell className="h-4 w-4 text-muted-foreground" />;
     }
@@ -152,10 +156,12 @@ export default function NotificationBell() {
               <Link
                 key={notification.id}
                 to={
-                  notification.reference_type === 'retreat' 
-                    ? '/admin?tab=submissions' 
+                  notification.reference_type === 'retreat'
+                    ? '/admin?tab=submissions'
                     : notification.reference_type === 'retreat_wish'
                     ? '/admin?tab=wishes'
+                    : notification.reference_type === 'booking'
+                    ? '/admin'
                     : '#'
                 }
                 onClick={() => {
