@@ -33,5 +33,8 @@ verify_jwt = false
 [functions.notify-profile-completed]
 verify_jwt = false
 
+[functions.send-reengagement-email]
+verify_jwt = false
+
 [functions.notify-attendee-wish]
 verify_jwt = false
