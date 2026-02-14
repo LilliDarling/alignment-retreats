@@ -129,9 +129,9 @@ export default function WishesReview() {
       case 'strict':
         return 'bg-red-500/10 text-red-600 border-red-500/20';
       case 'moderate':
-        return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
+        return 'bg-primary/10 text-primary border-primary/20';
       case 'flexible':
-        return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
+        return 'bg-secondary text-secondary-foreground border-secondary';
       default:
         return 'bg-muted text-muted-foreground';
     }
@@ -232,7 +232,7 @@ export default function WishesReview() {
                   </Badge>
                   <Badge 
                     variant="outline" 
-                    className={wish.status === 'active' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted'}
+                    className={wish.status === 'active' ? 'bg-primary/10 text-primary' : 'bg-muted'}
                   >
                     {wish.status || 'active'}
                   </Badge>

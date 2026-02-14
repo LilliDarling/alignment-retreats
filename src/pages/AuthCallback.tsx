@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Leaf, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function AuthCallback() {
@@ -91,9 +91,7 @@ export default function AuthCallback() {
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
       <div className="text-center max-w-md">
         <div className="flex justify-center mb-6">
-          <div className="p-4 rounded-full bg-primary/10">
-            <Leaf className="h-12 w-12 text-primary" />
-          </div>
+          <img src="/2tb.png" alt="Alignment Retreats" className="h-16 w-16" />
         </div>
 
         {status === 'loading' && (
@@ -106,7 +104,7 @@ export default function AuthCallback() {
 
         {status === 'success' && (
           <>
-            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+            <CheckCircle className="h-12 w-12 text-primary mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-foreground mb-2">Email Verified!</h1>
             <p className="text-muted-foreground mb-4">
               Your email has been verified successfully. Redirecting to dashboard...

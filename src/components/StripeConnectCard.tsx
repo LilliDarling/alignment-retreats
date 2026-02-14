@@ -126,7 +126,7 @@ export function StripeConnectCard() {
             </div>
           </div>
           {accountStatus.status === 'active' && (
-            <Badge variant="secondary" className="bg-green-500/10 text-green-600">
+            <Badge variant="secondary" className="bg-primary/10 text-primary">
               <CheckCircle className="h-3 w-3 mr-1" />
               Connected
             </Badge>
@@ -188,7 +188,7 @@ export function StripeConnectCard() {
             <div className="flex items-center gap-4 text-sm">
               <div className="flex items-center gap-2">
                 {accountStatus.charges_enabled ? (
-                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <CheckCircle className="h-4 w-4 text-primary" />
                 ) : (
                   <AlertCircle className="h-4 w-4 text-yellow-500" />
                 )}
@@ -196,7 +196,7 @@ export function StripeConnectCard() {
               </div>
               <div className="flex items-center gap-2">
                 {accountStatus.payouts_enabled ? (
-                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <CheckCircle className="h-4 w-4 text-primary" />
                 ) : (
                   <AlertCircle className="h-4 w-4 text-yellow-500" />
                 )}

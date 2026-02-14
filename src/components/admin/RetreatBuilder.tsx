@@ -284,12 +284,12 @@ export default function RetreatBuilder({ initialSubmission }: RetreatBuilderProp
     <div className="space-y-4 sm:space-y-6">
       {/* Submission Context Banner - Host's Target Price */}
       {initialSubmission && initialSubmission.price_per_person && (
-        <Card className="border-2 border-amber-500/50 bg-amber-500/10">
+        <Card className="border-2 border-primary/50 bg-primary/10">
           <CardContent className="py-4 sm:py-6">
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-amber-600" />
+                  <DollarSign className="h-5 w-5 text-primary" />
                   <span className="text-sm font-medium">Pricing for:</span>
                   <Badge variant="secondary" className="font-semibold">{initialSubmission.title}</Badge>
                 </div>
@@ -303,12 +303,12 @@ export default function RetreatBuilder({ initialSubmission }: RetreatBuilderProp
               
               {/* Host's Target Price - PROMINENT */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-4 rounded-lg bg-amber-600/20 border border-amber-500/30">
-                  <p className="text-xs text-amber-700 dark:text-amber-300 font-medium mb-1">Host Wants to Charge</p>
-                  <p className="text-3xl sm:text-4xl font-bold text-amber-700 dark:text-amber-300">
+                <div className="p-4 rounded-lg bg-primary/20 border border-primary/30">
+                  <p className="text-xs text-primary font-medium mb-1">Host Wants to Charge</p>
+                  <p className="text-3xl sm:text-4xl font-bold text-primary">
                     ${initialSubmission.price_per_person.toLocaleString()}
                   </p>
-                  <p className="text-xs text-amber-600 dark:text-amber-400">per person</p>
+                  <p className="text-xs text-primary/80">per person</p>
                 </div>
                 
                 <div className="p-4 rounded-lg bg-background/50 border">
@@ -319,16 +319,16 @@ export default function RetreatBuilder({ initialSubmission }: RetreatBuilderProp
                   <p className="text-xs text-muted-foreground">per person @ {markupPercent}% markup</p>
                 </div>
                 
-                <div className={`p-4 rounded-lg border ${canMeetHostPrice ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-destructive/10 border-destructive/30'}`}>
+                <div className={`p-4 rounded-lg border ${canMeetHostPrice ? 'bg-primary/10 border-primary/30' : 'bg-destructive/10 border-destructive/30'}`}>
                   <p className="text-xs font-medium mb-1 text-muted-foreground">
                     {canMeetHostPrice ? 'Profit at Host Price' : 'Gap to Host Price'}
                   </p>
                   {canMeetHostPrice ? (
                     <>
-                      <p className="text-3xl sm:text-4xl font-bold text-emerald-600">
+                      <p className="text-3xl sm:text-4xl font-bold text-primary">
                         ${profitAtHostPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                       </p>
-                      <p className="text-xs text-emerald-600">
+                      <p className="text-xs text-primary">
                         {markupAtHostPrice.toFixed(0)}% effective markup
                       </p>
                     </>

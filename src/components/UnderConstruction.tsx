@@ -32,9 +32,9 @@ export function UnderConstruction({ title = 'This Page' }: UnderConstructionProp
           </p>
 
           {/* Co-Op CTA */}
-          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-6 text-left mb-6">
+          <div className="bg-secondary dark:bg-secondary/30 border border-border rounded-lg p-6 text-left mb-6">
             <div className="flex items-start gap-3">
-              <Crown className="h-6 w-6 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <Crown className="h-6 w-6 text-primary shrink-0 mt-0.5" />
               <div>
                 <h3 className="font-semibold text-foreground mb-2">
                   Want to join the Co-Op?
@@ -48,7 +48,7 @@ export function UnderConstruction({ title = 'This Page' }: UnderConstructionProp
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white">
+                  <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                     <Crown className="mr-2 h-4 w-4" />
                     Schedule Co-Op Onboarding Call
                     <ExternalLink className="ml-2 h-4 w-4" />

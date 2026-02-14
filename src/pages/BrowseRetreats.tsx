@@ -5,7 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useRetreatAvailability } from '@/hooks/useRetreatAvailability';
 import { AppHeader } from '@/components/AppHeader';
-import { Leaf } from 'lucide-react';
+
+
 import { RetreatCard } from '@/components/RetreatCard';
 
 interface DbRetreat {
@@ -87,7 +88,7 @@ export default function BrowseRetreats() {
         ) : retreats.length === 0 ? (
           <div className="text-center py-16">
             <div className="inline-flex p-4 rounded-full bg-accent mb-4">
-              <Leaf className="h-8 w-8 text-muted-foreground" />
+              <img src="/2tb.png" alt="" className="h-8 w-8 opacity-50" />
             </div>
             <h3 className="font-display text-xl font-semibold text-foreground mb-2">
               No retreats found

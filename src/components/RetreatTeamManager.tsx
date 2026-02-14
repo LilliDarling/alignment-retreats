@@ -181,7 +181,7 @@ export function RetreatTeamManager({
             </div>
             <div>
               <p className="text-muted-foreground">Your Profit</p>
-              <p className={`text-xl font-semibold ${hostProfit >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+              <p className={`text-xl font-semibold ${hostProfit >= 0 ? 'text-primary' : 'text-destructive'}`}>
                 ${hostProfit.toLocaleString()}
               </p>
             </div>

@@ -152,15 +152,15 @@ export default function CommandCenter() {
   return (
     <div className="space-y-6">
       {/* Platform Revenue Highlight */}
-      <Card className="bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 border-green-500/30">
+      <Card className="bg-gradient-to-r from-primary/10 via-primary/5 to-secondary/30 border-primary/30">
         <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-green-700 whitespace-nowrap text-base sm:text-lg">
+          <CardTitle className="flex items-center gap-2 text-primary whitespace-nowrap text-base sm:text-lg">
             <Wallet className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
             <span>Platform Revenue <span className="hidden xs:inline">(30% Fee)</span><span className="xs:hidden">(30%)</span></span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-4xl font-bold text-green-600">
+          <div className="text-4xl font-bold text-primary">
             {formatCurrency(escrowSummary?.platform_revenue || 0)}
           </div>
           <p className="text-sm text-muted-foreground mt-2">
@@ -229,7 +229,7 @@ export default function CommandCenter() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-500">
+              <div className="text-2xl font-bold text-primary">
                 {formatCurrency(escrowSummary?.total_released || 0)}
               </div>
             </CardContent>
@@ -289,7 +289,7 @@ export default function CommandCenter() {
                       </td>
                       <td className="py-3 px-2 text-center">
                         {index < 3 && host.conversion_rate >= 3 && (
-                          <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                          <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
                             ⬆️ Boost Ads
                           </Badge>
                         )}

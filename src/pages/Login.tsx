@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Leaf, ArrowLeft, Mail } from 'lucide-react';
+import { ArrowLeft, Mail } from 'lucide-react';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -171,9 +171,7 @@ export default function Login() {
         <Card className="w-full max-w-md border-border">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <div className="p-3 rounded-full bg-accent">
-                <Leaf className="h-8 w-8 text-primary" />
-              </div>
+              <img src="/2tb.png" alt="Alignment Retreats" className="h-14 w-14" />
             </div>
             <CardTitle className="font-display text-2xl">Welcome Back</CardTitle>
             <CardDescription>Sign in to your Alignment Retreats account</CardDescription>

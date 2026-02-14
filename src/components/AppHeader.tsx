@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Leaf, Users, Shield } from "lucide-react";
+import { Users, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -16,9 +16,7 @@ export function AppHeader({ showSignOut = true }: AppHeaderProps) {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Leaf className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <img src="/2tb.png" alt="Alignment Retreats" className="w-8 h-8" />
             <span className="text-xl font-semibold text-foreground">Alignment Retreats</span>
           </Link>
           {isAdmin && (

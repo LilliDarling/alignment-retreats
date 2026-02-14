@@ -15,7 +15,6 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import {
   Heart,
-  Leaf,
   ChevronLeft,
   ChevronRight,
   Users,
@@ -472,7 +471,7 @@ export function BuildRetreatWizard({ onClose, onSuccess }: BuildRetreatWizardPro
             onClick={() => handleRoleSelect('host')}
           >
             <div className="flex items-center justify-center gap-3">
-              <Leaf className="h-5 w-5 text-muted-foreground" />
+              <img src="/2tb.png" alt="" className="h-5 w-5" />
               <span className="font-medium text-muted-foreground">
                 I Want to Host
               </span>
@@ -510,7 +509,7 @@ export function BuildRetreatWizard({ onClose, onSuccess }: BuildRetreatWizardPro
           >
             <CardContent className="p-6 text-center">
               <div className="inline-flex p-3 rounded-full bg-secondary/10 mb-4 group-hover:bg-secondary/20 transition-colors">
-                <Leaf className="h-8 w-8 text-secondary" />
+                <img src="/2tb.png" alt="" className="h-8 w-8" />
               </div>
               <h2 className="text-xl font-bold text-foreground mb-2">
                 I want to HOST
@@ -1357,7 +1356,7 @@ export function BuildRetreatWizard({ onClose, onSuccess }: BuildRetreatWizardPro
       <div className="text-center mb-6">
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 text-primary mb-3">
           {(() => {
-            const Icon = currentSteps[step]?.icon || Leaf;
+            const Icon = currentSteps[step]?.icon || Compass;
             return <Icon className="w-7 h-7" />;
           })()}
         </div>

@@ -69,10 +69,10 @@ const roleIcons: Record<string, React.ReactNode> = {
 };
 
 const roleColors: Record<string, string> = {
-  host: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-  cohost: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  staff: 'bg-green-500/20 text-green-400 border-green-500/30',
-  landowner: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  host: 'bg-primary/20 text-primary border-primary/30',
+  cohost: 'bg-primary/15 text-primary/80 border-primary/20',
+  staff: 'bg-secondary text-secondary-foreground border-border',
+  landowner: 'bg-muted text-muted-foreground border-border',
 };
 
 export function CollaboratorProfile({
@@ -84,7 +84,7 @@ export function CollaboratorProfile({
   isOwnProfile,
   onSendMessage,
 }: CollaboratorProfileProps) {
-  const themeColor = profile.theme_color || '#8B5CF6';
+  const themeColor = profile.theme_color || '#4b4132';
   const layoutStyle = profile.layout_style || 'modern';
   const showSparkles = profile.profile_effects === 'sparkle';
   const showGradient = profile.profile_effects === 'gradient';
@@ -270,7 +270,7 @@ export function CollaboratorProfile({
                     <div>
                       <p className="text-muted-foreground">Rating</p>
                       <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                        <Star className="w-4 h-4 fill-primary text-primary" />
                         <span className="font-medium">{hostData.rating}</span>
                       </div>
                     </div>
@@ -322,7 +322,7 @@ export function CollaboratorProfile({
                     <div>
                       <p className="text-muted-foreground">Rating</p>
                       <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                        <Star className="w-4 h-4 fill-primary text-primary" />
                         <span className="font-medium">{cohostData.rating}</span>
                       </div>
                     </div>
@@ -368,7 +368,7 @@ export function CollaboratorProfile({
                     <div>
                       <p className="text-muted-foreground">Rating</p>
                       <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                        <Star className="w-4 h-4 fill-primary text-primary" />
                         <span className="font-medium">{staffData.rating}</span>
                       </div>
                     </div>

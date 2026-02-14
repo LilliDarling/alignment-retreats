@@ -108,7 +108,7 @@ export default function NotificationBell() {
       case 'attendee_wish':
         return <Heart className="h-4 w-4 text-pink-500" />;
       case 'new_booking':
-        return <ShoppingCart className="h-4 w-4 text-green-600" />;
+        return <ShoppingCart className="h-4 w-4 text-primary" />;
       case 'retreat_full':
         return <Users className="h-4 w-4 text-destructive" />;
       default:

@@ -13,7 +13,6 @@ import {
   TreePine, 
   Wrench, 
   Heart,
-  Leaf,
   Loader2,
   Eye,
   EyeOff
@@ -176,9 +175,7 @@ const ComingSoon = () => {
         {/* Logo & Branding */}
         <div className="text-center space-y-4">
           <div className="flex justify-center">
-            <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <Leaf className="h-8 w-8 text-primary" />
-            </div>
+            <img src="/2tb.png" alt="Alignment Retreats" className="h-16 w-16" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight">
             Alignment Retreats

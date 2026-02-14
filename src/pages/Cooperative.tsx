@@ -31,21 +31,21 @@ const steps = [
     icon: Compass,
     title: "Host",
     description: "Create and host transformative retreats. Keep your earnings, we handle the platform.",
-    color: "from-amber-500/20 to-amber-500/5"
+    color: "from-primary/15 to-primary/5"
   },
   {
     number: "03",
     icon: Vote,
     title: "Govern",
     description: "Vote annually on profit allocation and which Foundation projects get funded.",
-    color: "from-emerald-500/20 to-emerald-500/5"
+    color: "from-secondary to-secondary/50"
   },
   {
     number: "04",
     icon: TrendingUp,
     title: "Earn",
     description: "Receive dividends based on your tier weight and retreat activity.",
-    color: "from-violet-500/20 to-violet-500/5"
+    color: "from-primary/10 to-primary/3"
   }
 ];
 
@@ -146,7 +146,7 @@ const Cooperative = () => {
           {/* Steps Flow Diagram */}
           <div className="relative max-w-6xl mx-auto">
             {/* Connection Line - Desktop */}
-            <div className="hidden lg:block absolute top-1/2 left-[12%] right-[12%] h-1 bg-gradient-to-r from-primary via-amber-500 via-emerald-500 to-violet-500 rounded-full transform -translate-y-1/2 z-0" />
+            <div className="hidden lg:block absolute top-1/2 left-[12%] right-[12%] h-1 bg-gradient-to-r from-primary via-primary/60 via-secondary to-primary/40 rounded-full transform -translate-y-1/2 z-0" />
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
               {steps.map((step, index) => (

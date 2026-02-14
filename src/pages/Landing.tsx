@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
-  Leaf,
   Search,
   Compass,
   Users,
@@ -307,9 +306,7 @@ export default function Landing() {
           <div className="flex flex-col gap-6">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-primary rounded-md flex items-center justify-center">
-                  <Leaf className="h-4 w-4 text-primary-foreground" />
-                </div>
+                <img src="/2tb.png" alt="Alignment Retreats" className="w-6 h-6" />
                 <span className="text-lg font-semibold text-foreground">Alignment Retreats</span>
               </div>
               <div className="flex flex-col items-center gap-2">

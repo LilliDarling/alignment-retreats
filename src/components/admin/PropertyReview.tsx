@@ -366,7 +366,7 @@ export default function PropertyReview() {
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-muted-foreground">Interested:</span>
                       {property.interested_in_residency ? (
-                        <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                        <Badge className="bg-primary/10 text-primary border-primary/20">
                           <CheckCircle2 className="h-3 w-3 mr-1" />
                           Yes
                         </Badge>

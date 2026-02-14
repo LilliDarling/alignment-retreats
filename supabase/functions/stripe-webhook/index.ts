@@ -309,9 +309,9 @@ serve(async (req) => {
                   <!DOCTYPE html>
                   <html>
                   <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-                  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <body style="font-family: 'Source Sans 3', 'Cooper Hewitt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #4b4132; max-width: 600px; margin: 0 auto; padding: 20px;">
                     <div style="text-align: center; margin-bottom: 30px;">
-                      <h1 style="color: #2d5016; margin-bottom: 10px;">New Booking Received!</h1>
+                      <h1 style="font-family: 'Jost', 'Architype Bayer-Type', sans-serif; color: #4b4132; margin-bottom: 10px;">New Booking Received!</h1>
                     </div>
                     <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0;">
                       <table style="width: 100%; border-collapse: collapse;">

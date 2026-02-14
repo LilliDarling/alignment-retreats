@@ -53,11 +53,11 @@ interface MemberData {
 
 const roleColors: Record<string, string> = {
   host: 'bg-primary/10 text-primary border-primary/20',
-  cohost: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
-  landowner: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
-  staff: 'bg-purple-500/10 text-purple-600 border-purple-500/20',
-  attendee: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
-  admin: 'bg-red-500/10 text-red-600 border-red-500/20',
+  cohost: 'bg-primary/8 text-primary/80 border-primary/15',
+  landowner: 'bg-secondary text-secondary-foreground border-border',
+  staff: 'bg-muted text-muted-foreground border-border',
+  attendee: 'bg-secondary text-secondary-foreground border-secondary',
+  admin: 'bg-destructive/10 text-destructive border-destructive/20',
 };
 
 const roleIcons: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -287,12 +287,12 @@ export default function AdminDashboard() {
                         </TooltipContent>
                       </Tooltip>
                     </span>
-                    <DollarSign className="h-4 w-4 text-emerald-500" />
+                    <DollarSign className="h-4 w-4 text-primary" />
                   </div>
                   {metricsLoading ? (
                     <div className="h-8 w-24 bg-muted animate-pulse rounded" />
                   ) : (
-                    <div className="text-2xl sm:text-3xl font-bold text-emerald-600">
+                    <div className="text-2xl sm:text-3xl font-bold text-primary">
                       ${revenueMetrics.pipelineValue.toLocaleString()}
                     </div>
                   )}
@@ -339,12 +339,12 @@ export default function AdminDashboard() {
                         </TooltipContent>
                       </Tooltip>
                     </span>
-                    <UserCheck className="h-4 w-4 text-amber-500" />
+                    <UserCheck className="h-4 w-4 text-primary" />
                   </div>
                   {metricsLoading ? (
                     <div className="h-8 w-24 bg-muted animate-pulse rounded" />
                   ) : (
-                    <div className="text-2xl sm:text-3xl font-bold text-amber-600">
+                    <div className="text-2xl sm:text-3xl font-bold text-primary">
                       {Math.round(revenueMetrics.capacityUtilization)}%
                     </div>
                   )}

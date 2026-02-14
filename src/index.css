@@ -1,108 +1,114 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Retreat Collaboration Platform - Earth Tones Design System */
+/* Alignment Retreats - Brand Design System
+   Primary:   #4b4132 (warm dark brown)
+   Secondary: #dde6e6 (cool light gray)
+   Display font: Jost (placeholder for Architype Bayer-Type)
+   Body font: Source Sans 3 (placeholder for Cooper Hewitt)
+*/
 
 @layer base {
   :root {
-    /* Cream background */
-    --background: 42 47% 96%;
-    --foreground: 25 25% 20%;
+    /* Light cool-gray background */
+    --background: 180 10% 97%;
+    --foreground: 36 20% 25%;
 
-    /* Warm cream cards */
-    --card: 40 33% 98%;
-    --card-foreground: 25 25% 20%;
+    /* Cards - near white with slight cool tint */
+    --card: 180 8% 99%;
+    --card-foreground: 36 20% 25%;
 
-    --popover: 40 33% 98%;
-    --popover-foreground: 25 25% 20%;
+    --popover: 180 8% 99%;
+    --popover-foreground: 36 20% 25%;
 
-    /* Warm Terracotta primary */
-    --primary: 15 55% 50%;
-    --primary-foreground: 40 33% 98%;
+    /* Primary - warm dark brown (#4b4132) */
+    --primary: 36 20% 25%;
+    --primary-foreground: 180 10% 97%;
 
-    /* Warm Brown secondary */
-    --secondary: 25 24% 44%;
-    --secondary-foreground: 40 33% 98%;
+    /* Secondary - cool light gray (#dde6e6) */
+    --secondary: 180 15% 88%;
+    --secondary-foreground: 36 20% 25%;
 
-    /* Muted terracotta */
-    --muted: 15 25% 90%;
-    --muted-foreground: 25 15% 45%;
+    /* Muted - desaturated cool */
+    --muted: 180 8% 93%;
+    --muted-foreground: 36 12% 50%;
 
-    /* Accent - lighter terracotta */
-    --accent: 15 30% 85%;
-    --accent-foreground: 25 25% 20%;
+    /* Accent - slightly darker secondary */
+    --accent: 180 12% 91%;
+    --accent-foreground: 36 20% 25%;
 
     --destructive: 0 72% 51%;
-    --destructive-foreground: 40 33% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 30 20% 85%;
-    --input: 30 20% 85%;
-    --ring: 15 55% 50%;
+    --border: 180 10% 84%;
+    --input: 180 10% 84%;
+    --ring: 36 20% 25%;
 
     --radius: 0.75rem;
 
-    /* Sidebar - warm tones */
-    --sidebar-background: 40 33% 98%;
-    --sidebar-foreground: 25 25% 20%;
-    --sidebar-primary: 15 55% 50%;
-    --sidebar-primary-foreground: 40 33% 98%;
-    --sidebar-accent: 15 25% 92%;
-    --sidebar-accent-foreground: 25 25% 20%;
-    --sidebar-border: 30 20% 85%;
-    --sidebar-ring: 15 55% 50%;
+    /* Sidebar */
+    --sidebar-background: 180 8% 99%;
+    --sidebar-foreground: 36 20% 25%;
+    --sidebar-primary: 36 20% 25%;
+    --sidebar-primary-foreground: 180 10% 97%;
+    --sidebar-accent: 180 10% 93%;
+    --sidebar-accent-foreground: 36 20% 25%;
+    --sidebar-border: 180 10% 84%;
+    --sidebar-ring: 36 20% 25%;
 
-    /* Custom tokens */
-    --success: 15 50% 45%;
-    --success-foreground: 40 33% 98%;
+    /* Semantic tokens */
+    --success: 160 40% 40%;
+    --success-foreground: 0 0% 100%;
     --warning: 35 90% 55%;
-    --warning-foreground: 25 25% 20%;
+    --warning-foreground: 36 20% 25%;
   }
 
   .dark {
-    --background: 25 20% 12%;
-    --foreground: 42 30% 92%;
+    --background: 36 15% 10%;
+    --foreground: 180 10% 90%;
 
-    --card: 25 18% 16%;
-    --card-foreground: 42 30% 92%;
+    --card: 36 12% 14%;
+    --card-foreground: 180 10% 90%;
 
-    --popover: 25 18% 16%;
-    --popover-foreground: 42 30% 92%;
+    --popover: 36 12% 14%;
+    --popover-foreground: 180 10% 90%;
 
-    --primary: 15 55% 55%;
-    --primary-foreground: 25 20% 12%;
+    --primary: 36 25% 50%;
+    --primary-foreground: 36 15% 10%;
 
-    --secondary: 30 25% 35%;
-    --secondary-foreground: 42 30% 92%;
+    --secondary: 180 10% 25%;
+    --secondary-foreground: 180 10% 90%;
 
-    --muted: 25 15% 22%;
-    --muted-foreground: 42 20% 65%;
+    --muted: 36 10% 20%;
+    --muted-foreground: 180 8% 60%;
 
-    --accent: 15 25% 25%;
-    --accent-foreground: 42 30% 92%;
+    --accent: 36 12% 22%;
+    --accent-foreground: 180 10% 90%;
 
     --destructive: 0 62% 45%;
-    --destructive-foreground: 42 30% 92%;
+    --destructive-foreground: 180 10% 90%;
 
-    --border: 25 15% 25%;
-    --input: 25 15% 25%;
-    --ring: 15 55% 55%;
+    --border: 36 10% 22%;
+    --input: 36 10% 22%;
+    --ring: 36 25% 50%;
 
-    --sidebar-background: 25 18% 14%;
-    --sidebar-foreground: 42 30% 92%;
-    --sidebar-primary: 15 55% 55%;
-    --sidebar-primary-foreground: 25 20% 12%;
-    --sidebar-accent: 25 15% 20%;
-    --sidebar-accent-foreground: 42 30% 92%;
-    --sidebar-border: 25 15% 22%;
-    --sidebar-ring: 15 55% 55%;
+    --sidebar-background: 36 12% 12%;
+    --sidebar-foreground: 180 10% 90%;
+    --sidebar-primary: 36 25% 50%;
+    --sidebar-primary-foreground: 36 15% 10%;
+    --sidebar-accent: 36 10% 18%;
+    --sidebar-accent-foreground: 180 10% 90%;
+    --sidebar-border: 36 10% 20%;
+    --sidebar-ring: 36 25% 50%;
 
-    --success: 15 50% 50%;
-    --success-foreground: 25 20% 12%;
+    --success: 160 35% 45%;
+    --success-foreground: 36 15% 10%;
     --warning: 35 90% 55%;
-    --warning-foreground: 25 20% 12%;
+    --warning-foreground: 36 15% 10%;
   }
 }
 
@@ -113,12 +119,12 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Nunito Sans', sans-serif;
+    font-family: 'Source Sans 3', 'Cooper Hewitt', sans-serif;
   }
 
-  /* Prevent orphan words - balanced text wrapping */
+  /* Headings use display font */
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Nunito Sans', sans-serif;
+    font-family: 'Jost', 'Architype Bayer-Type', sans-serif;
     text-wrap: balance;
   }
 
@@ -129,10 +135,10 @@
 
 @layer utilities {
   .font-display {
-    font-family: 'Nunito Sans', sans-serif;
+    font-family: 'Jost', 'Architype Bayer-Type', sans-serif;
   }
 
   .font-sans {
-    font-family: 'Nunito Sans', sans-serif;
+    font-family: 'Source Sans 3', 'Cooper Hewitt', sans-serif;
   }
 }

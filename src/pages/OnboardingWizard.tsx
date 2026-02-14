@@ -5,7 +5,7 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-  Leaf, Users, Handshake, Home, Briefcase, Heart, Shield,
+  Users, Handshake, Home, Briefcase, Heart, Shield,
   ArrowRight, CheckCircle2, Sparkles 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -140,9 +140,7 @@ export default function OnboardingWizard() {
                 <Card className="border-border overflow-hidden">
                   <div className="bg-gradient-to-br from-primary/10 to-accent p-8 text-center">
                     <div className="flex justify-center mb-4">
-                      <div className="p-4 rounded-full bg-background shadow-lg">
-                        <Leaf className="h-12 w-12 text-primary" />
-                      </div>
+                      <img src="/2tb.png" alt="Alignment Retreats" className="h-16 w-16" />
                     </div>
                     <h1 className="font-display text-3xl md:text-4xl mb-2">
                       Welcome to Alignment Retreats, {userName}! 

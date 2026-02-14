@@ -14,9 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Nunito Sans", "sans-serif"],
-        sans: ["Nunito Sans", "sans-serif"],
-        body: ["Nunito Sans", "sans-serif"],
+        display: ["Jost", "Architype Bayer-Type", "sans-serif"],
+        sans: ["Source Sans 3", "Cooper Hewitt", "sans-serif"],
+        body: ["Source Sans 3", "Cooper Hewitt", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

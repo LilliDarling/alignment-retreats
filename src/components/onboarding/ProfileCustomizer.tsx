@@ -7,14 +7,14 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Palette, ChevronRight, ChevronLeft, Sparkles, Music } from 'lucide-react';
 
 const THEME_COLORS = [
-  { value: '#8B5CF6', name: 'Purple' },
-  { value: '#EC4899', name: 'Pink' },
-  { value: '#3B82F6', name: 'Blue' },
-  { value: '#10B981', name: 'Green' },
-  { value: '#F59E0B', name: 'Orange' },
-  { value: '#EF4444', name: 'Red' },
-  { value: '#6366F1', name: 'Indigo' },
-  { value: '#14B8A6', name: 'Teal' },
+  { value: '#4b4132', name: 'Earth' },
+  { value: '#6b6152', name: 'Warm Stone' },
+  { value: '#8B7D6B', name: 'Sand' },
+  { value: '#5C6B6B', name: 'Slate' },
+  { value: '#3D5A5A', name: 'Deep Teal' },
+  { value: '#7A6B5D', name: 'Clay' },
+  { value: '#5D4E3C', name: 'Walnut' },
+  { value: '#4A6670', name: 'Storm' },
 ];
 
 const EFFECTS_OPTIONS = [
@@ -37,7 +37,7 @@ interface ProfileCustomizerProps {
 
 export function ProfileCustomizer({ onComplete, onBack, onSkip }: ProfileCustomizerProps) {
   const [step, setStep] = useState(1);
-  const [themeColor, setThemeColor] = useState('#8B5CF6');
+  const [themeColor, setThemeColor] = useState('#4b4132');
   const [profileSongUrl, setProfileSongUrl] = useState('');
   const [profileEffects, setProfileEffects] = useState('none');
   const [layoutStyle, setLayoutStyle] = useState('modern');

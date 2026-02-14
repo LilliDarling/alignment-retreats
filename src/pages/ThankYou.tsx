@@ -1,7 +1,7 @@
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Leaf, CheckCircle, Compass, ArrowRight, Crown, ExternalLink, Home, Ticket, Calendar, PartyPopper } from 'lucide-react';
+import { CheckCircle, Compass, ArrowRight, Crown, ExternalLink, Home, Ticket, Calendar, PartyPopper } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { CALENDLY_COOP_ONBOARDING_URL } from '@/config/constants';
@@ -29,9 +29,7 @@ export default function ThankYou() {
       <nav className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Leaf className="h-5 w-5 text-primary-foreground" />
-            </div>
+            <img src="/2tb.png" alt="Alignment Retreats" className="w-8 h-8" />
             <span className="text-xl font-semibold text-foreground">Alignment Retreats</span>
           </Link>
         </div>
@@ -64,24 +62,24 @@ export default function ThankYou() {
                   Your retreat has been booked successfully. We can't wait to see you there!
                 </p>
 
-                <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-6 text-left">
+                <div className="bg-secondary dark:bg-secondary/30 border border-border rounded-lg p-6 text-left">
                   <div className="flex items-start gap-3">
-                    <Calendar className="h-6 w-6 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                    <Calendar className="h-6 w-6 text-primary shrink-0 mt-0.5" />
                     <div>
                       <h3 className="font-semibold text-foreground mb-2">
                         What happens next?
                       </h3>
                       <ul className="space-y-2 text-sm text-muted-foreground">
                         <li className="flex items-start gap-2">
-                          <ArrowRight className="h-4 w-4 mt-0.5 text-green-600 shrink-0" />
+                          <ArrowRight className="h-4 w-4 mt-0.5 text-primary shrink-0" />
                           <span>You'll receive a confirmation email with your booking details</span>
                         </li>
                         <li className="flex items-start gap-2">
-                          <ArrowRight className="h-4 w-4 mt-0.5 text-green-600 shrink-0" />
+                          <ArrowRight className="h-4 w-4 mt-0.5 text-primary shrink-0" />
                           <span>The retreat host will reach out with more information</span>
                         </li>
                         <li className="flex items-start gap-2">
-                          <ArrowRight className="h-4 w-4 mt-0.5 text-green-600 shrink-0" />
+                          <ArrowRight className="h-4 w-4 mt-0.5 text-primary shrink-0" />
                           <span>Get ready for a transformative experience!</span>
                         </li>
                       </ul>
@@ -114,9 +112,9 @@ export default function ThankYou() {
 
                 {/* Co-op CTA for interested users */}
                 {coopInterest && (
-                  <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-6 text-left">
+                  <div className="bg-secondary dark:bg-secondary/30 border border-border rounded-lg p-6 text-left">
                     <div className="flex items-start gap-3">
-                      <Crown className="h-6 w-6 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                      <Crown className="h-6 w-6 text-primary shrink-0 mt-0.5" />
                       <div>
                         <h3 className="font-semibold text-foreground mb-2">
                           Ready to become a founding member?
@@ -130,7 +128,7 @@ export default function ThankYou() {
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white">
+                          <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                             <Crown className="mr-2 h-4 w-4" />
                             Schedule Co-Op Onboarding Call
                             <ExternalLink className="ml-2 h-4 w-4" />

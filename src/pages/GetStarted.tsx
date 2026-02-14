@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAuth, AppRole } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Leaf, Crown, Users, Home, Briefcase, ChevronLeft, ChevronRight, Check, Palette, MapPin, Search } from 'lucide-react';
+import { Crown, Users, Home, Briefcase, ChevronLeft, ChevronRight, Check, Palette, MapPin, Search } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { z } from 'zod';
 
@@ -189,9 +189,7 @@ export default function GetStarted() {
         <nav className="border-b border-border bg-card">
           <div className="container mx-auto px-4 py-3 flex items-center">
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Leaf className="h-5 w-5 text-primary-foreground" />
-              </div>
+              <img src="/2tb.png" alt="Alignment Retreats" className="w-8 h-8" />
               <span className="text-xl font-semibold text-foreground">Alignment Retreats</span>
             </Link>
           </div>
@@ -294,9 +292,7 @@ export default function GetStarted() {
         <nav className="border-b border-border bg-card">
           <div className="container mx-auto px-4 py-3 flex items-center">
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Leaf className="h-5 w-5 text-primary-foreground" />
-              </div>
+              <img src="/2tb.png" alt="Alignment Retreats" className="w-8 h-8" />
               <span className="text-xl font-semibold text-foreground">Alignment Retreats</span>
             </Link>
           </div>
@@ -356,9 +352,7 @@ export default function GetStarted() {
       <nav className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-3 flex items-center">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Leaf className="h-5 w-5 text-primary-foreground" />
-            </div>
+            <img src="/2tb.png" alt="Alignment Retreats" className="w-8 h-8" />
             <span className="text-xl font-semibold text-foreground">Alignment Retreats</span>
           </Link>
         </div>

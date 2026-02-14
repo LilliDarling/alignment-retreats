@@ -225,11 +225,11 @@ export function MemberDetailDrawer({ memberId, open, onClose }: MemberDetailDraw
 
   const roleColors: Record<string, string> = {
     host: 'bg-primary/10 text-primary border-primary/20',
-    cohost: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
-    landowner: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
-    staff: 'bg-purple-500/10 text-purple-600 border-purple-500/20',
-    attendee: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
-    admin: 'bg-red-500/10 text-red-600 border-red-500/20',
+    cohost: 'bg-primary/8 text-primary/80 border-primary/15',
+    landowner: 'bg-secondary text-secondary-foreground border-border',
+    staff: 'bg-muted text-muted-foreground border-border',
+    attendee: 'bg-secondary text-secondary-foreground border-secondary',
+    admin: 'bg-destructive/10 text-destructive border-destructive/20',
   };
 
   return (
@@ -321,7 +321,7 @@ export function MemberDetailDrawer({ memberId, open, onClose }: MemberDetailDraw
                         <span className="text-xs text-muted-foreground">Verified</span>
                         <div className="flex items-center gap-2 mt-1">
                           {hostData?.verified ? (
-                            <span className="flex items-center gap-1 text-emerald-500">
+                            <span className="flex items-center gap-1 text-primary">
                               <CheckCircle className="h-4 w-4" /> Yes
                             </span>
                           ) : (
@@ -348,7 +348,7 @@ export function MemberDetailDrawer({ memberId, open, onClose }: MemberDetailDraw
                         <div>
                           <span className="text-xs text-muted-foreground">Rating</span>
                           <p className="flex items-center gap-1">
-                            <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                            <Star className="h-4 w-4 text-primary fill-primary" />
                             {hostData.rating}
                           </p>
                         </div>
@@ -405,7 +405,7 @@ export function MemberDetailDrawer({ memberId, open, onClose }: MemberDetailDraw
                         <span className="text-xs text-muted-foreground">Verified</span>
                         <div className="flex items-center gap-2 mt-1">
                           {cohostData?.verified ? (
-                            <span className="flex items-center gap-1 text-emerald-500">
+                            <span className="flex items-center gap-1 text-primary">
                               <CheckCircle className="h-4 w-4" /> Yes
                             </span>
                           ) : (
@@ -474,7 +474,7 @@ export function MemberDetailDrawer({ memberId, open, onClose }: MemberDetailDraw
                         <span className="text-xs text-muted-foreground">Verified</span>
                         <div className="flex items-center gap-2 mt-1">
                           {staffData?.verified ? (
-                            <span className="flex items-center gap-1 text-emerald-500">
+                            <span className="flex items-center gap-1 text-primary">
                               <CheckCircle className="h-4 w-4" /> Yes
                             </span>
                           ) : (

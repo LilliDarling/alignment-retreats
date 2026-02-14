@@ -131,7 +131,7 @@ export default function EmailVerificationPending({ email, onBack }: EmailVerific
                   </>
                 ) : resendSuccess && cooldown > 0 ? (
                   <>
-                    <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
+                    <CheckCircle className="h-4 w-4 mr-2 text-primary" />
                     Sent! Resend in {cooldown}s
                   </>
                 ) : cooldown > 0 ? (

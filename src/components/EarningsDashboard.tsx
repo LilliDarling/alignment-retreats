@@ -53,7 +53,7 @@ export function EarningsDashboard() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-primary" />;
       case 'pending':
       case 'scheduled':
         return <Clock className="h-4 w-4 text-yellow-500" />;
@@ -67,7 +67,7 @@ export function EarningsDashboard() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
-        return <Badge variant="secondary" className="bg-green-500/10 text-green-600">Completed</Badge>;
+        return <Badge variant="secondary" className="bg-primary/10 text-primary">Completed</Badge>;
       case 'pending':
       case 'scheduled':
         return <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600">Scheduled</Badge>;
@@ -96,7 +96,7 @@ export function EarningsDashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Total Earned</CardDescription>
-            <CardTitle className="text-2xl text-green-600">
+            <CardTitle className="text-2xl text-primary">
               ${totalEarned.toLocaleString()}
             </CardTitle>
           </CardHeader>
