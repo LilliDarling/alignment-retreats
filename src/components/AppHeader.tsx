@@ -16,7 +16,7 @@ export function AppHeader({ showSignOut = true }: AppHeaderProps) {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center gap-2">
-            <img src="/2tb.png" alt="Alignment Retreats" className="w-8 h-8" />
+            <img src="/2tb.svg" alt="Alignment Retreats" className="w-12 h-12" />
             <span className="text-xl font-semibold text-foreground">Alignment Retreats</span>
           </Link>
           {isAdmin && (

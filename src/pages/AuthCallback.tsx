@@ -91,7 +91,7 @@ export default function AuthCallback() {
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
       <div className="text-center max-w-md">
         <div className="flex justify-center mb-6">
-          <img src="/2tb.png" alt="Alignment Retreats" className="h-16 w-16" />
+          <img src="/2tb.svg" alt="Alignment Retreats" className="h-24 w-24" />
         </div>
 
         {status === 'loading' && (

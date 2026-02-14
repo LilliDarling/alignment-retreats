@@ -471,7 +471,7 @@ export function BuildRetreatWizard({ onClose, onSuccess }: BuildRetreatWizardPro
             onClick={() => handleRoleSelect('host')}
           >
             <div className="flex items-center justify-center gap-3">
-              <img src="/2tb.png" alt="" className="h-5 w-5" />
+              <img src="/2tb.svg" alt="" className="h-12 w-12" />
               <span className="font-medium text-muted-foreground">
                 I Want to Host
               </span>
@@ -509,7 +509,7 @@ export function BuildRetreatWizard({ onClose, onSuccess }: BuildRetreatWizardPro
           >
             <CardContent className="p-6 text-center">
               <div className="inline-flex p-3 rounded-full bg-secondary/10 mb-4 group-hover:bg-secondary/20 transition-colors">
-                <img src="/2tb.png" alt="" className="h-8 w-8" />
+                <img src="/2tb.svg" alt="" className="h-12 w-12" />
               </div>
               <h2 className="text-xl font-bold text-foreground mb-2">
                 I want to HOST

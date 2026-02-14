@@ -189,7 +189,7 @@ export default function GetStarted() {
         <nav className="border-b border-border bg-card">
           <div className="container mx-auto px-4 py-3 flex items-center">
             <Link to="/" className="flex items-center gap-2">
-              <img src="/2tb.png" alt="Alignment Retreats" className="w-8 h-8" />
+              <img src="/2tb.svg" alt="Alignment Retreats" className="w-12 h-12" />
               <span className="text-xl font-semibold text-foreground">Alignment Retreats</span>
             </Link>
           </div>
@@ -292,7 +292,7 @@ export default function GetStarted() {
         <nav className="border-b border-border bg-card">
           <div className="container mx-auto px-4 py-3 flex items-center">
             <Link to="/" className="flex items-center gap-2">
-              <img src="/2tb.png" alt="Alignment Retreats" className="w-8 h-8" />
+              <img src="/2tb.svg" alt="Alignment Retreats" className="w-12 h-12" />
               <span className="text-xl font-semibold text-foreground">Alignment Retreats</span>
             </Link>
           </div>
@@ -352,7 +352,7 @@ export default function GetStarted() {
       <nav className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-3 flex items-center">
           <Link to="/" className="flex items-center gap-2">
-            <img src="/2tb.png" alt="Alignment Retreats" className="w-8 h-8" />
+            <img src="/2tb.svg" alt="Alignment Retreats" className="w-12 h-12" />
             <span className="text-xl font-semibold text-foreground">Alignment Retreats</span>
           </Link>
         </div>

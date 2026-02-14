@@ -171,7 +171,7 @@ export default function Login() {
         <Card className="w-full max-w-md border-border">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <img src="/2tb.png" alt="Alignment Retreats" className="h-14 w-14" />
+              <img src="/2tb.svg" alt="Alignment Retreats" className="h-20 w-20" />
             </div>
             <CardTitle className="font-display text-2xl">Welcome Back</CardTitle>
             <CardDescription>Sign in to your Alignment Retreats account</CardDescription>

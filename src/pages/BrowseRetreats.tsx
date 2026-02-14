@@ -88,7 +88,7 @@ export default function BrowseRetreats() {
         ) : retreats.length === 0 ? (
           <div className="text-center py-16">
             <div className="inline-flex p-4 rounded-full bg-accent mb-4">
-              <img src="/2tb.png" alt="" className="h-8 w-8 opacity-50" />
+              <img src="/2tb.svg" alt="" className="h-12 w-12 opacity-50" />
             </div>
             <h3 className="font-display text-xl font-semibold text-foreground mb-2">
               No retreats found

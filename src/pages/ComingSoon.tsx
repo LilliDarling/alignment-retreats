@@ -175,7 +175,7 @@ const ComingSoon = () => {
         {/* Logo & Branding */}
         <div className="text-center space-y-4">
           <div className="flex justify-center">
-            <img src="/2tb.png" alt="Alignment Retreats" className="h-16 w-16" />
+            <img src="/2tb.svg" alt="Alignment Retreats" className="h-24 w-24" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight">
             Alignment Retreats

@@ -306,7 +306,7 @@ export default function Landing() {
           <div className="flex flex-col gap-6">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-2">
-                <img src="/2tb.png" alt="Alignment Retreats" className="w-6 h-6" />
+                <img src="/2tb.svg" alt="Alignment Retreats" className="w-10 h-10" />
                 <span className="text-lg font-semibold text-foreground">Alignment Retreats</span>
               </div>
               <div className="flex flex-col items-center gap-2">

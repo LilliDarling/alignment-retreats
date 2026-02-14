@@ -170,7 +170,7 @@ export default function Signup() {
         <Card className="w-full max-w-lg">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <img src="/2tb.png" alt="Alignment Retreats" className="h-12 w-12" />
+              <img src="/2tb.svg" alt="Alignment Retreats" className="h-20 w-20" />
             </div>
             <CardTitle className="font-display text-2xl">Create Your Account</CardTitle>
             <CardDescription>
