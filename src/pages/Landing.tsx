@@ -37,13 +37,7 @@ export default function Landing() {
 
   const getDashboardLink = () => {
     if (!user) return '/signup';
-    if (userRoles.length > 1) return '/dashboard';
-    if (hasRole('host')) return '/dashboard/host';
-    if (hasRole('cohost')) return '/dashboard/cohost';
-    if (hasRole('landowner')) return '/dashboard/landowner';
-    if (hasRole('staff')) return '/dashboard/staff';
-    if (hasRole('attendee')) return '/dashboard/attendee';
-    if (hasRole('admin')) return '/admin';
+    if (hasRole('admin') && userRoles.length === 1) return '/admin';
     return '/dashboard';
   };
 

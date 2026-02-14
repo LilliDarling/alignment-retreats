@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Leaf, Users } from "lucide-react";
+import { Leaf, Users, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -23,8 +23,15 @@ export function AppHeader({ showSignOut = true }: AppHeaderProps) {
           </Link>
           {isAdmin && (
             <nav className="hidden md:flex items-center gap-4">
-              <Link 
-                to="/directory" 
+              <Link
+                to="/admin"
+                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Shield className="w-4 h-4" />
+                Admin
+              </Link>
+              <Link
+                to="/directory"
                 className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Users className="w-4 h-4" />

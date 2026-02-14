@@ -104,7 +104,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     const emailResponse = await resend.emails.send({
-      from: "Alignment Retreats <onboarding@resend.dev>",
+      from: "Alignment Retreats <onboarding@alignmentretreats.xyz>",
       to: [ADMIN_EMAIL],
       subject: `💜 New Dream Retreat Request from ${data.submitterName}`,
       html: emailHtml,

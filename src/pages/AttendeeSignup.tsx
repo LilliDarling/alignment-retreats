@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import EmailVerificationPending from '@/components/auth/EmailVerificationPending';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +26,7 @@ export default function AttendeeSignup() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string }>({});
+  const [signupSuccess, setSignupSuccess] = useState(false);
 
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -78,8 +80,8 @@ export default function AttendeeSignup() {
         body: { name, email, roles: ['attendee'] }
       });
 
-      // Redirect to returnTo path if provided, otherwise dashboard
-      navigate(returnTo || '/dashboard');
+      // Show email verification screen
+      setSignupSuccess(true);
     } catch {
       toast({
         title: 'Sign up failed',
@@ -90,6 +92,10 @@ export default function AttendeeSignup() {
       setLoading(false);
     }
   };
+
+  if (signupSuccess) {
+    return <EmailVerificationPending email={email} />;
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

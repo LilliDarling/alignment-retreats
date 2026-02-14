@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth, AppRole } from '@/contexts/AuthContext';
+import EmailVerificationPending from '@/components/auth/EmailVerificationPending';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -7,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { user, userRoles, loading, hasAnyRole } = useAuth();
+  const { user, loading, hasAnyRole } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -20,6 +21,10 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
 
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (!user.email_confirmed_at) {
+    return <EmailVerificationPending email={user.email || ''} />;
   }
 
   if (allowedRoles && !hasAnyRole(allowedRoles)) {

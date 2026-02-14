@@ -302,7 +302,7 @@ serve(async (req) => {
                 Authorization: `Bearer ${resendApiKey}`,
               },
               body: JSON.stringify({
-                from: "Alignment Retreats <bookings@resend.dev>",
+                from: "Alignment Retreats <bookings@alignmentretreats.xyz>",
                 to: [adminEmail],
                 subject: `New Booking: ${retreat.title} — $${totalAmount.toFixed(2)}`,
                 html: `

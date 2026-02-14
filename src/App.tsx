@@ -14,11 +14,6 @@ import Login from "./pages/Login";
 import ThankYou from "./pages/ThankYou";
 import OnboardingWizard from "./pages/OnboardingWizard";
 import Dashboard from "./pages/Dashboard";
-import HostDashboard from "./pages/HostDashboard";
-import CohostDashboard from "./pages/CohostDashboard";
-import LandownerDashboard from "./pages/LandownerDashboard";
-import StaffDashboard from "./pages/StaffDashboard";
-import AttendeeDashboard from "./pages/AttendeeDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import CreateRetreat from "./pages/CreateRetreat";
 import SubmitRetreat from "./pages/SubmitRetreat";
@@ -100,46 +95,12 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/dashboard/host"
-                element={
-                  <ProtectedRoute allowedRoles={['host']}>
-                    <HostDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/cohost"
-                element={
-                  <ProtectedRoute allowedRoles={['cohost']}>
-                    <CohostDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/landowner"
-                element={
-                  <ProtectedRoute allowedRoles={['landowner']}>
-                    <LandownerDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/staff"
-                element={
-                  <ProtectedRoute allowedRoles={['staff']}>
-                    <StaffDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/attendee"
-                element={
-                  <ProtectedRoute allowedRoles={['attendee']}>
-                    <AttendeeDashboard />
-                  </ProtectedRoute>
-                }
-              />
+              {/* Legacy role-specific dashboard URLs redirect to unified dashboard */}
+              <Route path="/dashboard/host" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard/cohost" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard/landowner" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard/staff" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard/attendee" element={<Navigate to="/dashboard" replace />} />
               <Route
                 path="/retreats/create"
                 element={

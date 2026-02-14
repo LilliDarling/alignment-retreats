@@ -129,7 +129,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Alignment Retreats <onboarding@resend.dev>",
+        from: "Alignment Retreats <onboarding@alignmentretreats.xyz>",
         to: [email],
         subject: subject,
         html: htmlContent,

@@ -305,7 +305,7 @@ export function BuildRetreatWizard({ onClose, onSuccess }: BuildRetreatWizardPro
       
       onSuccess?.();
       onClose?.();
-      navigate('/dashboard/host');
+      navigate('/dashboard');
     } catch (error) {
       console.error('Error submitting retreat:', error);
       toast({
@@ -398,7 +398,7 @@ export function BuildRetreatWizard({ onClose, onSuccess }: BuildRetreatWizardPro
       
       onSuccess?.();
       onClose?.();
-      navigate('/dashboard/attendee');
+      navigate('/dashboard');
     } catch (error) {
       console.error('Error submitting wish:', error);
       toast({
