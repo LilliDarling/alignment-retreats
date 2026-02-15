@@ -24,9 +24,9 @@ const getCollaboratorEmailContent = (name: string, roles: string[]): string => {
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
-    <body style="font-family: 'Source Sans 3', 'Cooper Hewitt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #4b4132; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <body style="font-family: 'Barlow', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #3E2723; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="text-align: center; margin-bottom: 30px;">
-        <h1 style="font-family: 'Jost', 'Architype Bayer-Type', sans-serif; color: #4b4132; margin-bottom: 10px;">Welcome to Alignment Retreats! 🌿</h1>
+        <h1 style="font-family: 'Tenor Sans', sans-serif; color: #3E2723; margin-bottom: 10px;">Welcome to Alignment Retreats! 🌿</h1>
       </div>
       
       <p style="font-size: 16px;">Hi ${name},</p>
@@ -64,9 +64,9 @@ const getAttendeeEmailContent = (name: string): string => {
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
-    <body style="font-family: 'Source Sans 3', 'Cooper Hewitt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #4b4132; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <body style="font-family: 'Barlow', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #3E2723; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="text-align: center; margin-bottom: 30px;">
-        <h1 style="font-family: 'Jost', 'Architype Bayer-Type', sans-serif; color: #4b4132; margin-bottom: 10px;">Ready for Your Next Journey? 🌿</h1>
+        <h1 style="font-family: 'Tenor Sans', sans-serif; color: #3E2723; margin-bottom: 10px;">Ready for Your Next Journey? 🌿</h1>
       </div>
       
       <p style="font-size: 16px;">Hi ${name},</p>

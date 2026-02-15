@@ -14,9 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Jost", "Architype Bayer-Type", "sans-serif"],
-        sans: ["Source Sans 3", "Cooper Hewitt", "sans-serif"],
-        body: ["Source Sans 3", "Cooper Hewitt", "sans-serif"],
+        display: ["Tenor Sans", "sans-serif"],
+        sans: ["Barlow", "sans-serif"],
+        body: ["Barlow", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

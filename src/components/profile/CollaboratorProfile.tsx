@@ -84,7 +84,7 @@ export function CollaboratorProfile({
   isOwnProfile,
   onSendMessage,
 }: CollaboratorProfileProps) {
-  const themeColor = profile.theme_color || '#4b4132';
+  const themeColor = profile.theme_color || '#2E4600';
   const layoutStyle = profile.layout_style || 'modern';
   const showSparkles = profile.profile_effects === 'sparkle';
   const showGradient = profile.profile_effects === 'gradient';

@@ -43,9 +43,9 @@ const handler = async (req: Request): Promise<Response> => {
     }).join("\n");
 
     const emailHtml = `
-      <div style="font-family: 'Source Sans 3', 'Cooper Hewitt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #4b4132;">
-        <div style="background: linear-gradient(135deg, #4b4132, #6b6152); padding: 30px; border-radius: 12px 12px 0 0;">
-          <h1 style="font-family: 'Jost', 'Architype Bayer-Type', sans-serif; color: white; margin: 0; font-size: 24px;">🌿 New Retreat Submission!</h1>
+      <div style="font-family: 'Barlow', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #3E2723;">
+        <div style="background: linear-gradient(135deg, #3E2723, #818D60); padding: 30px; border-radius: 12px 12px 0 0;">
+          <h1 style="font-family: 'Tenor Sans', sans-serif; color: white; margin: 0; font-size: 24px;">🌿 New Retreat Submission!</h1>
         </div>
         
         <div style="background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">

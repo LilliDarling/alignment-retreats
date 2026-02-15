@@ -66,9 +66,9 @@ const handler = async (req: Request): Promise<Response> => {
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
-      <body style="font-family: 'Source Sans 3', 'Cooper Hewitt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #4b4132; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <body style="font-family: 'Barlow', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #3E2723; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="font-family: 'Jost', 'Architype Bayer-Type', sans-serif; color: #4b4132; margin-bottom: 10px;">🎉 New Member Joined!</h1>
+          <h1 style="font-family: 'Tenor Sans', sans-serif; color: #3E2723; margin-bottom: 10px;">🎉 New Member Joined!</h1>
         </div>
         
         <p style="font-size: 16px;">Great news! A new member has joined Alignment Retreats.</p>
@@ -81,7 +81,7 @@ const handler = async (req: Request): Promise<Response> => {
             </tr>
             <tr>
               <td style="padding: 8px 0; font-weight: 600; color: #555;">Email:</td>
-              <td style="padding: 8px 0;"><a href="mailto:${email}" style="color: #4b4132;">${email}</a></td>
+              <td style="padding: 8px 0;"><a href="mailto:${email}" style="color: #3E2723;">${email}</a></td>
             </tr>
             <tr>
               <td style="padding: 8px 0; font-weight: 600; color: #555;">Roles:</td>

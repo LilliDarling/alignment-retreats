@@ -1,114 +1,122 @@
-@import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Tenor+Sans&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* Alignment Retreats - Brand Design System
-   Primary:   #4b4132 (warm dark brown)
-   Secondary: #dde6e6 (cool light gray)
-   Display font: Jost (placeholder for Architype Bayer-Type)
-   Body font: Source Sans 3 (placeholder for Cooper Hewitt)
+   Deep Cedar:  #3E2723 — headings/foreground
+   Forest Moss: #2E4600 — primary (buttons, accents)
+   Sage Leaf:   #818D60 — secondary elements
+   Parchment:   #F5F2ED — backgrounds
+   Gold Leaf:   #C5A059 — CTA highlights
+   Display font: Cormorant Infant (headings)
+   Body font: Barlow (body text)
 */
 
 @layer base {
   :root {
-    /* Light cool-gray background */
-    --background: 180 10% 97%;
-    --foreground: 36 20% 25%;
+    /* Parchment background */
+    --background: 37 29% 95%;
+    /* Deep Cedar — bumped to 26% L, 42% S so it reads warm brown, not black */
+    --foreground: 14 42% 26%;
 
-    /* Cards - near white with slight cool tint */
-    --card: 180 8% 99%;
-    --card-foreground: 36 20% 25%;
+    /* Cards */
+    --card: 37 33% 98%;
+    --card-foreground: 14 42% 26%;
 
-    --popover: 180 8% 99%;
-    --popover-foreground: 36 20% 25%;
+    --popover: 37 33% 98%;
+    --popover-foreground: 14 42% 26%;
 
-    /* Primary - warm dark brown (#4b4132) */
-    --primary: 36 20% 25%;
-    --primary-foreground: 180 10% 97%;
+    /* Primary — Forest Moss lifted to 22% L so green actually shows */
+    --primary: 94 27% 18%;
+    --primary-foreground: 37 29% 95%;
 
-    /* Secondary - cool light gray (#dde6e6) */
-    --secondary: 180 15% 88%;
-    --secondary-foreground: 36 20% 25%;
+    /* Secondary — real Sage Leaf tint, 30% sat / 82% L so it's visibly green */
+    --secondary: 76 30% 82%;
+    --secondary-foreground: 14 42% 26%;
 
-    /* Muted - desaturated cool */
-    --muted: 180 8% 93%;
-    --muted-foreground: 36 12% 50%;
+    /* Muted — sage-parchment blend */
+    --muted: 70 16% 88%;
+    --muted-foreground: 14 25% 42%;
 
-    /* Accent - slightly darker secondary */
-    --accent: 180 12% 91%;
-    --accent-foreground: 36 20% 25%;
+    /* Accent — Gold Leaf */
+    --accent: 39 48% 56%;
+    --accent-foreground: 14 42% 26%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 180 10% 84%;
-    --input: 180 10% 84%;
-    --ring: 36 20% 25%;
+    /* Borders pick up a hint of sage */
+    --border: 70 12% 82%;
+    --input: 70 12% 82%;
+    --ring: 94 27% 18%;
 
     --radius: 0.75rem;
 
     /* Sidebar */
-    --sidebar-background: 180 8% 99%;
-    --sidebar-foreground: 36 20% 25%;
-    --sidebar-primary: 36 20% 25%;
-    --sidebar-primary-foreground: 180 10% 97%;
-    --sidebar-accent: 180 10% 93%;
-    --sidebar-accent-foreground: 36 20% 25%;
-    --sidebar-border: 180 10% 84%;
-    --sidebar-ring: 36 20% 25%;
+    --sidebar-background: 37 33% 98%;
+    --sidebar-foreground: 14 42% 26%;
+    --sidebar-primary: 94 27% 18%;
+    --sidebar-primary-foreground: 37 29% 95%;
+    --sidebar-accent: 76 25% 85%;
+    --sidebar-accent-foreground: 14 42% 26%;
+    --sidebar-border: 70 12% 82%;
+    --sidebar-ring: 94 27% 18%;
 
     /* Semantic tokens */
-    --success: 160 40% 40%;
+    --success: 84 60% 30%;
     --success-foreground: 0 0% 100%;
-    --warning: 35 90% 55%;
-    --warning-foreground: 36 20% 25%;
+    --warning: 39 48% 56%;
+    --warning-foreground: 14 42% 26%;
   }
 
   .dark {
-    --background: 36 15% 10%;
-    --foreground: 180 10% 90%;
+    --background: 14 18% 9%;
+    --foreground: 37 22% 88%;
 
-    --card: 36 12% 14%;
-    --card-foreground: 180 10% 90%;
+    --card: 14 14% 13%;
+    --card-foreground: 37 22% 88%;
 
-    --popover: 36 12% 14%;
-    --popover-foreground: 180 10% 90%;
+    --popover: 14 14% 13%;
+    --popover-foreground: 37 22% 88%;
 
-    --primary: 36 25% 50%;
-    --primary-foreground: 36 15% 10%;
+    /* Forest Moss — vivid in dark mode */
+    --primary: 84 55% 38%;
+    --primary-foreground: 14 18% 9%;
 
-    --secondary: 180 10% 25%;
-    --secondary-foreground: 180 10% 90%;
+    /* Sage — rich tint in dark */
+    --secondary: 76 18% 24%;
+    --secondary-foreground: 37 22% 88%;
 
-    --muted: 36 10% 20%;
-    --muted-foreground: 180 8% 60%;
+    --muted: 14 10% 18%;
+    --muted-foreground: 37 14% 58%;
 
-    --accent: 36 12% 22%;
-    --accent-foreground: 180 10% 90%;
+    /* Gold Leaf */
+    --accent: 39 48% 50%;
+    --accent-foreground: 14 18% 9%;
 
     --destructive: 0 62% 45%;
-    --destructive-foreground: 180 10% 90%;
+    --destructive-foreground: 37 22% 88%;
 
-    --border: 36 10% 22%;
-    --input: 36 10% 22%;
-    --ring: 36 25% 50%;
+    --border: 14 10% 20%;
+    --input: 14 10% 20%;
+    --ring: 84 55% 38%;
 
-    --sidebar-background: 36 12% 12%;
-    --sidebar-foreground: 180 10% 90%;
-    --sidebar-primary: 36 25% 50%;
-    --sidebar-primary-foreground: 36 15% 10%;
-    --sidebar-accent: 36 10% 18%;
-    --sidebar-accent-foreground: 180 10% 90%;
-    --sidebar-border: 36 10% 20%;
-    --sidebar-ring: 36 25% 50%;
+    --sidebar-background: 14 14% 11%;
+    --sidebar-foreground: 37 22% 88%;
+    --sidebar-primary: 84 55% 38%;
+    --sidebar-primary-foreground: 14 18% 9%;
+    --sidebar-accent: 76 12% 18%;
+    --sidebar-accent-foreground: 37 22% 88%;
+    --sidebar-border: 14 10% 18%;
+    --sidebar-ring: 84 55% 38%;
 
-    --success: 160 35% 45%;
-    --success-foreground: 36 15% 10%;
-    --warning: 35 90% 55%;
-    --warning-foreground: 36 15% 10%;
+    --success: 84 45% 40%;
+    --success-foreground: 14 18% 9%;
+    --warning: 39 48% 56%;
+    --warning-foreground: 14 18% 9%;
   }
 }
 
@@ -119,13 +127,17 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Source Sans 3', 'Cooper Hewitt', sans-serif;
+    font-family: 'Barlow', sans-serif;
+    line-height: 1.6;
+    letter-spacing: 0.01em;
   }
 
   /* Headings use display font */
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Jost', 'Architype Bayer-Type', sans-serif;
+    font-family: 'Tenor Sans', sans-serif;
     text-wrap: balance;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
   }
 
   p, span, a, li, label, button {
@@ -135,10 +147,10 @@
 
 @layer utilities {
   .font-display {
-    font-family: 'Jost', 'Architype Bayer-Type', sans-serif;
+    font-family: 'Tenor Sans', sans-serif;
   }
 
   .font-sans {
-    font-family: 'Source Sans 3', 'Cooper Hewitt', sans-serif;
+    font-family: 'Barlow', sans-serif;
   }
 }

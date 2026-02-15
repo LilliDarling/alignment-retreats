@@ -7,7 +7,7 @@ interface AudioPlayerProps {
   themeColor?: string;
 }
 
-export function AudioPlayer({ url, themeColor = '#4b4132' }: AudioPlayerProps) {
+export function AudioPlayer({ url, themeColor = '#2E4600' }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);

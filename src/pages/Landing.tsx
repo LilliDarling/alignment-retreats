@@ -47,7 +47,7 @@ export default function Landing() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-primary text-primary-foreground py-2 px-2 sm:px-4"
+        className="bg-accent text-accent-foreground py-2 px-2 sm:px-4"
       >
         <div className="container mx-auto text-center text-[11px] sm:text-sm whitespace-nowrap">
           <span>Want to host retreats in 2026?</span>
@@ -101,7 +101,7 @@ export default function Landing() {
               <Button
                 size="lg"
                 variant="outline"
-                className="text-lg px-8 py-6 rounded-full bg-card/80 text-foreground hover:bg-card border-2 border-white/20 shadow-xl transition-transform hover:scale-105"
+                className="text-lg px-8 py-6 rounded-full bg-card/80 text-foreground hover:bg-accent hover:text-accent-foreground border-2 border-white/20 shadow-xl transition-all hover:scale-105"
               >
                 <Users className="mr-2 h-5 w-5" />
                 Collaborate
