@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 const SITE_NAME = 'Alignment Retreats';
 const SITE_URL = 'https://alignmentretreats.xyz';
 const DEFAULT_DESCRIPTION = 'Discover transformative retreat experiences for alignment, wellness, and personal growth.';
-const DEFAULT_IMAGE = `${SITE_URL}/1tb.png`;
+const DEFAULT_IMAGE = `${SITE_URL}/1.png`;
 
 interface SEOProps {
   title?: string;
