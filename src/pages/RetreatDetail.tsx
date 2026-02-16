@@ -3,7 +3,6 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { differenceInCalendarDays, format } from 'date-fns';
 import {
-  Heart,
   Calendar,
   Users,
   MapPin,
@@ -22,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { ItineraryDisplay } from '@/components/ItineraryDisplay';
+import { SEO } from '@/components/SEO';
 import { cn } from '@/lib/utils';
 import { parseDateOnly } from '@/lib/dateOnly';
 import { toast } from 'sonner';
@@ -30,7 +30,7 @@ export default function RetreatDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [isLiked, setIsLiked] = useState(false);
+
   const [bookingLoading, setBookingLoading] = useState(false);
 
   // Fetch retreat from database only
@@ -146,8 +146,48 @@ export default function RetreatDetail() {
 
   const hostName = (retreat as any).host_name || 'Retreat Host';
 
+  const retreatJsonLd = retreat ? {
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    name: retreat.title,
+    description: retreat.description || undefined,
+    startDate: retreat.start_date || undefined,
+    endDate: retreat.end_date || undefined,
+    location: {
+      '@type': 'Place',
+      name: retreat.location || 'Location TBD',
+    },
+    organizer: {
+      '@type': 'Person',
+      name: hostName,
+    },
+    ...(retreat.price_per_person && {
+      offers: {
+        '@type': 'Offer',
+        price: retreat.price_per_person,
+        priceCurrency: 'USD',
+        availability: isFull
+          ? 'https://schema.org/SoldOut'
+          : 'https://schema.org/InStock',
+        url: `https://alignmentretreats.xyz/retreat/${id}`,
+      },
+    }),
+    ...(retreat.max_attendees && {
+      maximumAttendeeCapacity: retreat.max_attendees,
+    }),
+  } : undefined;
+
   return (
     <div className="min-h-screen bg-background">
+      {retreat && (
+        <SEO
+          title={retreat.title}
+          description={retreat.description?.slice(0, 160) || `${retreat.title} - a retreat experience hosted by ${hostName}.`}
+          canonical={`/retreat/${id}`}
+          type="article"
+          jsonLd={retreatJsonLd}
+        />
+      )}
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -164,16 +204,6 @@ export default function RetreatDetail() {
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon">
               <Share2 className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => setIsLiked(!isLiked)}
-            >
-              <Heart className={cn(
-                "h-4 w-4",
-                isLiked ? "fill-red-500 stroke-red-500" : ""
-              )} />
             </Button>
           </div>
         </div>

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { SEO } from '@/components/SEO';
 import VideoHeroSection from '@/components/VideoHeroSection';
 
 // Animated section wrapper
@@ -42,6 +43,18 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Find Your Perfect Retreat"
+        description="Discover transformative retreat experiences for alignment, wellness, and personal growth. Browse retreats, connect with hosts, and book your next experience."
+        canonical="/"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'Organization',
+          name: 'Alignment Retreats',
+          url: 'https://alignmentretreats.xyz',
+          description: 'Transformative retreat experiences for alignment, wellness, and personal growth.',
+        }}
+      />
       {/* Announcement Banner */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}

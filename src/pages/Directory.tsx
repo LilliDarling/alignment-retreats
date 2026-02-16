@@ -6,6 +6,7 @@ import { Search, Filter, Star, CheckCircle, Lock, Users, Briefcase, Home, ChefHa
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppHeader } from '@/components/AppHeader';
+import { SEO } from '@/components/SEO';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -86,6 +87,7 @@ export default function Directory() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [visibleCount, setVisibleCount] = useState(12);
 
   // Check if current user is admin
   const { hasRole } = useAuth();
@@ -119,9 +121,20 @@ export default function Directory() {
     },
   });
 
+  // Reset visible count when filters change
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setVisibleCount(12);
+  };
+
+  const handleRoleFilterChange = (value: string) => {
+    setRoleFilter(value);
+    setVisibleCount(12);
+  };
+
   // Filter profiles
   const filteredProfiles = profiles?.filter(profile => {
-    const matchesSearch = !searchQuery || 
+    const matchesSearch = !searchQuery ||
       profile.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       profile.bio?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       profile.skills?.some(s => s.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -134,6 +147,9 @@ export default function Directory() {
 
     return matchesSearch && matchesRole;
   });
+
+  const visibleProfiles = filteredProfiles?.slice(0, visibleCount);
+  const hasMore = (filteredProfiles?.length ?? 0) > visibleCount;
 
   const formatPriceRange = (min: number | null, max: number | null, unit: string) => {
     if (min && max) {
@@ -186,6 +202,7 @@ export default function Directory() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Member Directory" noindex />
       <AppHeader />
       
       <main className="container mx-auto px-4 py-8">
@@ -204,19 +221,19 @@ export default function Directory() {
             <Input
               placeholder="Search by name, skills, or expertise..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-10"
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery('')}
+                onClick={() => handleSearchChange('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 <X className="h-4 w-4" />
               </button>
             )}
           </div>
-          <Select value={roleFilter} onValueChange={setRoleFilter}>
+          <Select value={roleFilter} onValueChange={handleRoleFilterChange}>
             <SelectTrigger className="w-full sm:w-[180px]">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Filter by role" />
@@ -274,7 +291,7 @@ export default function Directory() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProfiles?.map((profile) => (
+            {visibleProfiles?.map((profile) => (
               <Card 
                 key={profile.id} 
                 className="hover:shadow-lg transition-shadow cursor-pointer group"
@@ -421,6 +438,22 @@ export default function Directory() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        )}
+
+        {/* Load More */}
+        {hasMore && (
+          <div className="mt-8 text-center">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => setVisibleCount(prev => prev + 12)}
+            >
+              Load More
+            </Button>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Showing {visibleCount} of {filteredProfiles?.length ?? 0} members
+            </p>
           </div>
         )}
       </main>

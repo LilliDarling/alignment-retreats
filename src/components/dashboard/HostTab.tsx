@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { HostOnboarding } from '@/components/onboarding/HostOnboarding';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,7 +19,10 @@ import {
   Calendar,
   MapPin,
   Link as LinkIcon,
-  Image
+  Image,
+  Users,
+  Check,
+  X
 } from 'lucide-react';
 
 interface HostProfile {
@@ -35,6 +39,39 @@ interface HostProfile {
   preferred_regions: string | null;
 }
 
+interface TeamApplication {
+  id: string;
+  role: string;
+  fee_amount: number;
+  fee_type: string;
+  description: string | null;
+  user_id: string;
+  retreat_id: string;
+  retreat_title: string;
+  applicant_name: string | null;
+  applicant_photo: string | null;
+}
+
+const roleLabels: Record<string, string> = {
+  host: 'Host',
+  cohost: 'Co-Host',
+  venue: 'Venue',
+  chef: 'Chef',
+  staff: 'Staff',
+  other: 'Other',
+};
+
+function feeLabel(feeType: string): string {
+  switch (feeType) {
+    case 'per_person': return '/person';
+    case 'per_night': return '/night';
+    case 'per_person_per_night': return '/person/night';
+    case 'flat': return ' flat';
+    case 'percentage': return '%';
+    default: return '';
+  }
+}
+
 interface HostTabProps {
   profile: {
     name: string | null;
@@ -48,6 +85,52 @@ export default function HostTab({ profile, onProfileUpdate }: HostTabProps) {
   const [hostProfile, setHostProfile] = useState<HostProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [pendingApplications, setPendingApplications] = useState<TeamApplication[]>([]);
+
+  const fetchApplications = async () => {
+    if (!user) return;
+
+    // Get host's retreats, then find pending team applications
+    const { data: myRetreats } = await supabase
+      .from('retreats')
+      .select('id, title')
+      .eq('host_user_id', user.id);
+
+    if (!myRetreats || myRetreats.length === 0) {
+      setPendingApplications([]);
+      return;
+    }
+
+    const retreatIds = myRetreats.map(r => r.id);
+    const retreatMap = new Map(myRetreats.map(r => [r.id, r.title]));
+
+    const { data: applications } = await supabase
+      .from('retreat_team')
+      .select('id, role, fee_amount, fee_type, description, user_id, retreat_id')
+      .in('retreat_id', retreatIds)
+      .eq('agreed', false);
+
+    if (!applications || applications.length === 0) {
+      setPendingApplications([]);
+      return;
+    }
+
+    // Fetch applicant profiles
+    const userIds = [...new Set(applications.map(a => a.user_id))];
+    const { data: profiles } = await supabase
+      .rpc('get_public_profiles', { profile_ids: userIds });
+
+    const profileMap = new Map(
+      (profiles || []).map((p: { id: string; name: string | null; profile_photo: string | null }) => [p.id, p])
+    );
+
+    setPendingApplications(applications.map(a => ({
+      ...a,
+      retreat_title: retreatMap.get(a.retreat_id) || 'Retreat',
+      applicant_name: (profileMap.get(a.user_id) as { name: string | null } | undefined)?.name || null,
+      applicant_photo: (profileMap.get(a.user_id) as { profile_photo: string | null } | undefined)?.profile_photo || null,
+    })));
+  };
 
   useEffect(() => {
     const fetchHostData = async () => {
@@ -71,11 +154,40 @@ export default function HostTab({ profile, onProfileUpdate }: HostTabProps) {
         setShowOnboarding(true);
       }
 
+      await fetchApplications();
       setLoading(false);
     };
 
     fetchHostData();
   }, [user, profile.onboarding_completed?.host]);
+
+  const handleAcceptApplication = async (applicationId: string) => {
+    const { error } = await supabase
+      .from('retreat_team')
+      .update({ agreed: true, agreed_at: new Date().toISOString() })
+      .eq('id', applicationId);
+
+    if (error) {
+      toast.error('Failed to accept application.');
+      return;
+    }
+    toast.success('Application accepted!');
+    fetchApplications();
+  };
+
+  const handleDeclineApplication = async (applicationId: string) => {
+    const { error } = await supabase
+      .from('retreat_team')
+      .delete()
+      .eq('id', applicationId);
+
+    if (error) {
+      toast.error('Failed to decline application.');
+      return;
+    }
+    toast.success('Application declined.');
+    fetchApplications();
+  };
 
   const handleOnboardingComplete = async (data: {
     expertiseAreas: string[];
@@ -253,6 +365,22 @@ export default function HostTab({ profile, onProfileUpdate }: HostTabProps) {
         </CardContent>
       </Card>
 
+      {/* Submit Retreat CTA */}
+      <Card className="bg-gradient-to-r from-accent/10 to-transparent border border-border shadow-sm">
+        <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div>
+            <h2 className="font-display text-2xl font-semibold text-foreground mb-1">Submit a Retreat</h2>
+            <p className="text-muted-foreground">Have a retreat idea? Submit it for review and start building your team.</p>
+          </div>
+          <Button size="lg" className="whitespace-nowrap" asChild>
+            <Link to="/retreats/submit">
+              <Sparkles className="h-5 w-5 mr-2" />
+              Submit Retreat
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Co-Op CTA */}
       <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
         <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -361,6 +489,78 @@ export default function HostTab({ profile, onProfileUpdate }: HostTabProps) {
                 <p className="text-sm text-foreground whitespace-pre-line">{hostProfile.portfolio_links}</p>
               </div>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Team Applications */}
+      {pendingApplications.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-display text-xl flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              Team Applications
+            </CardTitle>
+            <CardDescription>
+              {pendingApplications.length} pending application{pendingApplications.length !== 1 ? 's' : ''} for your retreats
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {pendingApplications.map((app) => (
+                <div
+                  key={app.id}
+                  className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-lg border border-border gap-4"
+                >
+                  <div className="flex items-center gap-3 flex-1">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                        {(app.applicant_name || '?')[0].toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-foreground">
+                          {app.applicant_name || 'Unknown'}
+                        </span>
+                        <Badge variant="outline" className="text-xs">
+                          {roleLabels[app.role] || app.role}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                        <span>{app.retreat_title}</span>
+                        <span className="flex items-center gap-0.5">
+                          <DollarSign className="h-3 w-3" />
+                          {app.fee_amount}{feeLabel(app.fee_type)}
+                        </span>
+                      </div>
+                      {app.description && (
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                          {app.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => handleAcceptApplication(app.id)}
+                    >
+                      <Check className="h-4 w-4 mr-1" />
+                      Accept
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDeclineApplication(app.id)}
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Decline
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}

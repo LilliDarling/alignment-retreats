@@ -147,11 +147,11 @@ export default function SubmissionReview() {
     }
   };
 
-  const handleStatusChange = async (submissionId: string, newStatus: 'draft' | 'cancelled') => {
+  const handleStatusChange = async (submissionId: string, newStatus: 'approved' | 'cancelled') => {
     try {
       const { error } = await supabase
         .from('retreats')
-        .update({ 
+        .update({
           status: newStatus,
           admin_notes: adminNotes[submissionId] || null,
           reviewed_at: new Date().toISOString(),
@@ -161,9 +161,9 @@ export default function SubmissionReview() {
       if (error) throw error;
 
       toast({
-        title: newStatus === 'draft' ? 'Approved!' : 'Declined',
-        description: newStatus === 'draft' 
-          ? 'Submission moved to Retreat Builder for matching.' 
+        title: newStatus === 'approved' ? 'Approved!' : 'Declined',
+        description: newStatus === 'approved'
+          ? 'Retreat is now visible to hosts, co-hosts, staff & venue owners for team building.'
           : 'Host will be notified.',
       });
 
@@ -337,7 +337,7 @@ export default function SubmissionReview() {
                   {/* Actions */}
                   <div className="flex flex-wrap gap-2 pt-2">
                     <Button 
-                      onClick={() => handleStatusChange(submission.id, 'draft')}
+                      onClick={() => handleStatusChange(submission.id, 'approved')}
                       className="flex-1 sm:flex-none"
                     >
                       <Check className="h-4 w-4 mr-2" />

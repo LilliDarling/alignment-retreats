@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { SEO } from '@/components/SEO';
 import { useAuth, AppRole } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Crown, Users, Home, Briefcase, ChevronLeft, ChevronRight, Check, Palette, MapPin, Search } from 'lucide-react';
@@ -46,6 +47,13 @@ const hasHostRole = (roles: SelectedRole[]) => roles.includes('host');
 
 export default function GetStarted() {
   usePageTitle('Get Started');
+  const seo = (
+    <SEO
+      title="Get Started"
+      description="Create your Alignment Retreats account. Join as a host, co-host, staff member, or attendee and start your retreat journey."
+      canonical="/get-started"
+    />
+  );
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signUp, user } = useAuth();
@@ -186,6 +194,7 @@ export default function GetStarted() {
   if (flowStep === 'role-selection') {
     return (
       <div className="min-h-screen bg-background flex flex-col">
+        {seo}
         <nav className="border-b border-border bg-card">
           <div className="container mx-auto px-4 py-3 flex items-center">
             <Link to="/" className="flex items-center gap-2">
@@ -289,6 +298,7 @@ export default function GetStarted() {
   if (flowStep === 'host-message') {
     return (
       <div className="min-h-screen bg-background flex flex-col">
+        {seo}
         <nav className="border-b border-border bg-card">
           <div className="container mx-auto px-4 py-3 flex items-center">
             <Link to="/" className="flex items-center gap-2">
@@ -349,6 +359,7 @@ export default function GetStarted() {
   // Render profile creation step
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {seo}
       <nav className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-3 flex items-center">
           <Link to="/" className="flex items-center gap-2">

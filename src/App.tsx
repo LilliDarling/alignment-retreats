@@ -1,6 +1,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -18,6 +19,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import CreateRetreat from "./pages/CreateRetreat";
 import SubmitRetreat from "./pages/SubmitRetreat";
 import BrowseRetreats from "./pages/BrowseRetreats";
+import BrowseOpportunities from "./pages/BrowseOpportunities";
 import RetreatDetail from "./pages/RetreatDetail";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
@@ -32,6 +34,7 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => (
+  <HelmetProvider>
   <QueryClientProvider client={queryClient}>
     <ErrorBoundary>
       <TooltipProvider>
@@ -59,6 +62,14 @@ const App = () => (
                 }
               />
               <Route path="/retreats/browse" element={<BrowseRetreats />} />
+              <Route
+                path="/opportunities"
+                element={
+                  <ProtectedRoute>
+                    <BrowseOpportunities />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/build-retreat" element={<BuildRetreat />} />
               <Route path="/get-started" element={<GetStarted />} />
               <Route 
@@ -133,6 +144,7 @@ const App = () => (
       </TooltipProvider>
     </ErrorBoundary>
   </QueryClientProvider>
+  </HelmetProvider>
 );
 
 export default App;

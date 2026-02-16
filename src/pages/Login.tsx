@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -115,9 +116,18 @@ export default function Login() {
     setLoading(false);
   };
 
+  const seo = (
+    <SEO
+      title="Sign In"
+      description="Sign in to your Alignment Retreats account to manage your retreats, bookings, and profile."
+      canonical="/login"
+    />
+  );
+
   if (magicLinkSent) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
+        {seo}
         <div className="p-4">
           <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="h-4 w-4" />
@@ -160,6 +170,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {seo}
       <div className="p-4">
         <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="h-4 w-4" />

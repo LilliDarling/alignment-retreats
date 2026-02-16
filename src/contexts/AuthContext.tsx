@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, clearAuthStorage } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export type AppRole = 'host' | 'cohost' | 'landowner' | 'staff' | 'attendee' | 'admin';
@@ -77,11 +77,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      // Handle token refresh errors gracefully
-      if (event === 'TOKEN_REFRESHED' && !session) {
+      // Explicit sign-out or token refresh failure — clear everything
+      if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !session)) {
         setUser(null);
         setSession(null);
         setUserRoles([]);
+        clearAuthStorage();
         setLoading(false);
         return;
       }
@@ -108,7 +109,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // If there's a refresh token error, clear the stale session
       if (error) {
         console.error('Session error:', error);
-        supabase.auth.signOut();
+        clearAuthStorage();
+        supabase.auth.signOut().catch(() => {});
+        setUser(null);
+        setSession(null);
+        setUserRoles([]);
+        setLoading(false);
+        return;
+      }
+
+      // Session exists but token is expired and couldn't be refreshed
+      if (session?.expires_at && session.expires_at * 1000 < Date.now() && !session.access_token) {
+        console.warn('Session expired, clearing auth state');
+        clearAuthStorage();
+        supabase.auth.signOut().catch(() => {});
+        setUser(null);
+        setSession(null);
+        setUserRoles([]);
         setLoading(false);
         return;
       }
@@ -182,10 +199,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    setUserRoles([]);
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error('Sign out error:', err);
+    } finally {
+      // Always clear state and storage, even if signOut API fails
+      setUser(null);
+      setSession(null);
+      setUserRoles([]);
+      clearAuthStorage();
+    }
   };
 
   const hasRole = (role: AppRole) => userRoles.includes(role);

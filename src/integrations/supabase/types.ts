@@ -1482,12 +1482,10 @@ export type Database = {
         | "cancelled"
       property_type: "land" | "retreat_center" | "venue"
       retreat_status:
-        | "draft"
-        | "published"
-        | "full"
-        | "completed"
-        | "cancelled"
         | "pending_review"
+        | "approved"
+        | "published"
+        | "cancelled"
       server_role: "owner" | "admin" | "member"
       stripe_account_status:
         | "pending"
@@ -1642,12 +1640,10 @@ export const Constants = {
       ],
       property_type: ["land", "retreat_center", "venue"],
       retreat_status: [
-        "draft",
-        "published",
-        "full",
-        "completed",
-        "cancelled",
         "pending_review",
+        "approved",
+        "published",
+        "cancelled",
       ],
       server_role: ["owner", "admin", "member"],
       stripe_account_status: [

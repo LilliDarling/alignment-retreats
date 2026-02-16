@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /onboarding
+Disallow: /profile/edit
+Disallow: /messages
+Disallow: /auth/callback
+Disallow: /retreats/create
+Disallow: /retreats/submit
+
+Sitemap: https://alignmentretreats.xyz/sitemap.xml

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Users, Shield } from "lucide-react";
+import { Users, Shield, Briefcase, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -8,8 +8,9 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ showSignOut = true }: AppHeaderProps) {
-  const { signOut, hasRole } = useAuth();
+  const { user, signOut, hasRole, hasAnyRole } = useAuth();
   const isAdmin = hasRole('admin');
+  const showOpportunities = hasAnyRole(['host', 'cohost', 'staff', 'landowner']);
 
   return (
     <header className="bg-card border-b border-border px-6 py-4">
@@ -19,24 +20,44 @@ export function AppHeader({ showSignOut = true }: AppHeaderProps) {
             <img src="/2tb.svg" alt="Alignment Retreats" className="w-12 h-12" />
             <span className="text-xl font-semibold text-foreground">Alignment Retreats</span>
           </Link>
-          {isAdmin && (
-            <nav className="hidden md:flex items-center gap-4">
+          <nav className="hidden md:flex items-center gap-4">
+            {user && (
               <Link
-                to="/admin"
+                to="/dashboard"
                 className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                <Shield className="w-4 h-4" />
-                Admin
+                <LayoutDashboard className="w-4 h-4" />
+                Dashboard
               </Link>
+            )}
+            {showOpportunities && (
               <Link
-                to="/directory"
+                to="/opportunities"
                 className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                <Users className="w-4 h-4" />
-                Directory
+                <Briefcase className="w-4 h-4" />
+                Opportunities
               </Link>
-            </nav>
-          )}
+            )}
+            {isAdmin && (
+              <>
+                <Link
+                  to="/admin"
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Shield className="w-4 h-4" />
+                  Admin
+                </Link>
+                <Link
+                  to="/directory"
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Users className="w-4 h-4" />
+                  Directory
+                </Link>
+              </>
+            )}
+          </nav>
         </div>
         {showSignOut && (
           <Button variant="outline" onClick={signOut}>

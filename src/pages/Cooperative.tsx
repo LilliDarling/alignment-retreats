@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { SEO } from "@/components/SEO";
 import {
   Key,
   Compass,
@@ -72,6 +73,11 @@ const Cooperative = () => {
   usePageTitle('Join the Co-Op');
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Join the Co-Op"
+        description="Join the Alignment Retreats cooperative. Co-own the platform, vote on decisions, and share in the success of a community-driven retreat network."
+        canonical="/cooperative"
+      />
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-primary-foreground">
         <div className="absolute inset-0 bg-primary/10 opacity-50" />

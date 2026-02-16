@@ -1,13 +1,17 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useRetreatAvailability } from '@/hooks/useRetreatAvailability';
 import { AppHeader } from '@/components/AppHeader';
-
+import { SEO } from '@/components/SEO';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 import { RetreatCard } from '@/components/RetreatCard';
+
+const PAGE_SIZE = 12;
 
 interface DbRetreat {
   id: string;
@@ -29,29 +33,48 @@ export default function BrowseRetreats() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Fetch published retreats from database
-  const { data: retreats = [], isLoading } = useQuery({
+  // Fetch published retreats with pagination
+  const {
+    data,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ['published-retreats'],
-    queryFn: async () => {
+    queryFn: async ({ pageParam = 0 }) => {
+      const from = pageParam * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
       const { data, error } = await supabase
         .from('retreats')
         .select(
           'id,title,description,retreat_type,start_date,end_date,max_attendees,price_per_person,sample_itinerary,status,location,host_name'
         )
         .eq('status', 'published')
-        .order('start_date', { ascending: true });
+        .order('start_date', { ascending: true })
+        .range(from, to);
 
       if (error) throw error;
       return (data || []) as unknown as DbRetreat[];
     },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length === PAGE_SIZE ? allPages.length : undefined,
   });
 
+  const retreats = data?.pages.flat() ?? [];
   const retreatIds = retreats.map((r) => r.id);
   const { data: availabilityData = [] } = useRetreatAvailability(retreatIds);
   const availabilityMap = new Map(availabilityData.map((a) => [a.retreat_id, a]));
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Browse Retreats"
+        description="Browse and book transformative retreats for alignment, wellness, and personal growth. Find your perfect retreat experience."
+        canonical="/retreats/browse"
+      />
       {/* Announcement Banner */}
       <div className="bg-primary text-primary-foreground py-2 px-2 sm:px-4">
         <div className="container mx-auto text-center text-[11px] sm:text-sm whitespace-nowrap">
@@ -69,7 +92,7 @@ export default function BrowseRetreats() {
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">
-            {retreats.length} retreat{retreats.length !== 1 ? 's' : ''} available
+            {retreats.length} retreat{retreats.length !== 1 ? 's' : ''} loaded
           </p>
         </div>
 
@@ -98,31 +121,54 @@ export default function BrowseRetreats() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {retreats.map((retreat) => {
-              const avail = availabilityMap.get(retreat.id);
-              return (
-                <RetreatCard
-                  key={retreat.id}
-                  id={retreat.id}
-                  title={retreat.title}
-                  location={retreat.location || 'Location TBD'}
-                  image="https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&h=600&fit=crop"
-                  startDate={retreat.start_date || ''}
-                  endDate={retreat.end_date || ''}
-                  pricePerPerson={retreat.price_per_person || 0}
-                  retreatType={retreat.retreat_type || 'Retreat'}
-                  maxAttendees={retreat.max_attendees || undefined}
-                  spotsRemaining={avail?.spots_remaining ?? null}
-                  isFull={avail?.is_full ?? false}
-                  hostName={retreat.host_name || undefined}
-                  sampleItinerary={retreat.sample_itinerary || undefined}
-                  onClick={() => navigate(`/retreat/${retreat.id}`)}
-                  onBook={() => navigate(`/retreat/${retreat.id}`)}
-                />
-              );
-            })}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {retreats.map((retreat) => {
+                const avail = availabilityMap.get(retreat.id);
+                return (
+                  <RetreatCard
+                    key={retreat.id}
+                    id={retreat.id}
+                    title={retreat.title}
+                    location={retreat.location || 'Location TBD'}
+                    image="https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&h=600&fit=crop"
+                    startDate={retreat.start_date || ''}
+                    endDate={retreat.end_date || ''}
+                    pricePerPerson={retreat.price_per_person || 0}
+                    retreatType={retreat.retreat_type || 'Retreat'}
+                    maxAttendees={retreat.max_attendees || undefined}
+                    spotsRemaining={avail?.spots_remaining ?? null}
+                    isFull={avail?.is_full ?? false}
+                    hostName={retreat.host_name || undefined}
+                    sampleItinerary={retreat.sample_itinerary || undefined}
+                    onClick={() => navigate(`/retreat/${retreat.id}`)}
+                    onBook={() => navigate(`/retreat/${retreat.id}`)}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Load More */}
+            {hasNextPage && (
+              <div className="mt-8 text-center">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                >
+                  {isFetchingNextPage ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    'Load More'
+                  )}
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>

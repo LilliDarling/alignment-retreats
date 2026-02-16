@@ -13,5 +13,23 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: true,
   }
 });
+
+/**
+ * Force-clear all Supabase auth tokens from localStorage.
+ * Used as a safety net when signOut fails or tokens are stale.
+ */
+export function clearAuthStorage() {
+  const keysToRemove: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && (key.startsWith('sb-') || key.includes('supabase'))) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+  sessionStorage.removeItem('bookingRedirect');
+  sessionStorage.removeItem('authRedirectTo');
+}

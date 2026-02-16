@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Star, Calendar, Users, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
+import { Star, Calendar, Users, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
 import { differenceInCalendarDays, format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { parseDateOnly } from '@/lib/dateOnly';
@@ -50,7 +50,7 @@ export function RetreatCard({
 }: RetreatCardProps) {
   const navigate = useNavigate();
   const [showItinerary, setShowItinerary] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
+
   const [imageLoaded, setImageLoaded] = useState(false);
 
   const formatDateRange = () => {
@@ -119,25 +119,6 @@ export function RetreatCard({
             {retreatType}
           </Badge>
         )}
-
-        {/* Wishlist Heart */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsLiked(!isLiked);
-          }}
-          className="absolute top-3 right-3 p-2 rounded-full hover:scale-110 transition-transform bg-card/20 backdrop-blur-sm"
-          aria-label={isLiked ? 'Remove from wishlist' : 'Add to wishlist'}
-        >
-          <Heart
-            className={cn(
-              'h-5 w-5 transition-colors',
-              isLiked 
-                ? 'fill-red-500 stroke-red-500' 
-                : 'fill-transparent stroke-white stroke-2'
-            )}
-          />
-        </button>
 
         {/* Duration Badge */}
         <div className="absolute bottom-3 left-3 flex items-center gap-1.5 text-white text-sm font-medium">

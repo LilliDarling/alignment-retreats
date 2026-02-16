@@ -585,10 +585,10 @@ export function MemberDetailDrawer({ memberId, open, onClose }: MemberDetailDraw
                       <CardTitle className="text-sm flex items-center justify-between">
                         <span>{sub.title}</span>
                         <Badge 
-                          variant={sub.status === 'published' ? 'default' : sub.status === 'pending_review' ? 'secondary' : 'outline'} 
+                          variant={sub.status === 'published' ? 'default' : sub.status === 'approved' ? 'secondary' : sub.status === 'pending_review' ? 'outline' : 'destructive'}
                           className="text-xs"
                         >
-                          {sub.status?.replace('_', ' ') || 'draft'}
+                          {sub.status?.replace('_', ' ') || 'pending review'}
                         </Badge>
                       </CardTitle>
                     </CardHeader>
