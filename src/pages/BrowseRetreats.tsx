@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -7,7 +8,8 @@ import { useRetreatAvailability } from '@/hooks/useRetreatAvailability';
 import { AppHeader } from '@/components/AppHeader';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2, MapPin, X } from 'lucide-react';
 
 import { RetreatCard } from '@/components/RetreatCard';
 
@@ -32,8 +34,24 @@ export default function BrowseRetreats() {
   usePageTitle('Browse Retreats');
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
 
-  // Fetch published retreats with pagination
+  // Fetch published venues for filter
+  const { data: venues } = useQuery({
+    queryKey: ['published-venues'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('properties')
+        .select('id, name, location')
+        .eq('status', 'published')
+        .order('name');
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Fetch published retreats with pagination and optional venue filter
   const {
     data,
     isLoading,
@@ -41,17 +59,24 @@ export default function BrowseRetreats() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ['published-retreats'],
+    queryKey: ['published-retreats', selectedVenueId],
     queryFn: async ({ pageParam = 0 }) => {
       const from = pageParam * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('retreats')
         .select(
           'id,title,description,retreat_type,start_date,end_date,max_attendees,price_per_person,sample_itinerary,status,location,host_name'
         )
-        .eq('status', 'published')
+        .eq('status', 'published');
+
+      // Apply venue filter if selected
+      if (selectedVenueId) {
+        query = query.eq('property_id', selectedVenueId);
+      }
+
+      const { data, error } = await query
         .order('start_date', { ascending: true })
         .range(from, to);
 
@@ -89,10 +114,61 @@ export default function BrowseRetreats() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Filter Section */}
+        <div className="mb-6 flex items-center gap-4 flex-wrap">
+          <div className="flex-1 min-w-[200px] max-w-xs">
+            <Select
+              value={selectedVenueId || 'all'}
+              onValueChange={(value) => setSelectedVenueId(value === 'all' ? null : value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by venue" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  <span className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    All Venues
+                  </span>
+                </SelectItem>
+                {venues?.map(venue => (
+                  <SelectItem key={venue.id} value={venue.id}>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <span>{venue.name}</span>
+                      {venue.location && (
+                        <span className="text-xs text-muted-foreground">
+                          ({venue.location})
+                        </span>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Active Filter Badge */}
+          {selectedVenueId && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedVenueId(null)}
+              className="gap-2"
+            >
+              <span className="text-sm">
+                {venues?.find(v => v.id === selectedVenueId)?.name}
+              </span>
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">
             {retreats.length} retreat{retreats.length !== 1 ? 's' : ''} loaded
+            {selectedVenueId && ' at this venue'}
           </p>
         </div>
 

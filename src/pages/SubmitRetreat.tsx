@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { AppHeader } from '@/components/AppHeader';
+import { VenueSelector } from '@/components/VenueSelector';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -64,6 +65,8 @@ export default function SubmitRetreat() {
   const [whatYouOffer, setWhatYouOffer] = useState('');
   const [selectedNeeds, setSelectedNeeds] = useState<string[]>([]);
   const [needsNotes, setNeedsNotes] = useState<Record<string, string>>({});
+  const [propertyId, setPropertyId] = useState<string | null>(null);
+  const [customVenueName, setCustomVenueName] = useState('');
   const [earningsPerPerson, setEarningsPerPerson] = useState('');
   const [preferredDates, setPreferredDates] = useState('');
   const [datesFlexible, setDatesFlexible] = useState(true);
@@ -127,6 +130,8 @@ export default function SubmitRetreat() {
           preferred_dates_flexible: datesFlexible,
           retreat_type: selectedExpertise[0] || 'wellness',
           price_per_person: earningsPerPerson ? parseFloat(earningsPerPerson) : null,
+          property_id: propertyId,
+          custom_venue_name: customVenueName || null,
           status: 'pending_review',
         })
         .select()
@@ -273,6 +278,18 @@ export default function SubmitRetreat() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Venue Selection */}
+            <div className="pt-4 border-t">
+              <VenueSelector
+                value={propertyId}
+                onChange={setPropertyId}
+                onCustomVenueChange={setCustomVenueName}
+                customVenueValue={customVenueName}
+                label="Select a Venue (Optional)"
+                description="If you already have a venue in mind or have secured one, select it here. Otherwise, we'll help you find one!"
+              />
             </div>
           </div>
         );

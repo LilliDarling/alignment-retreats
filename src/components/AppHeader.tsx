@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Users, Shield, Briefcase, LayoutDashboard } from "lucide-react";
+import { Users, Shield, Briefcase, LayoutDashboard, Calendar, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -21,6 +21,20 @@ export function AppHeader({ showSignOut = true }: AppHeaderProps) {
             <span className="text-xl font-semibold text-foreground">Alignment Retreats</span>
           </Link>
           <nav className="hidden md:flex items-center gap-4">
+            <Link
+              to="/retreats/browse"
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Calendar className="w-4 h-4" />
+              Retreats
+            </Link>
+            <Link
+              to="/venues/browse"
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <MapPin className="w-4 h-4" />
+              Venues
+            </Link>
             {user && (
               <Link
                 to="/dashboard"

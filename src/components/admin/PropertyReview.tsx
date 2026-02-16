@@ -4,19 +4,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { 
-  Home, 
-  MapPin, 
-  Users, 
-  DollarSign, 
-  Mail, 
-  Instagram, 
+import { useToast } from '@/hooks/use-toast';
+import {
+  Home,
+  MapPin,
+  Users,
+  DollarSign,
+  Mail,
+  Instagram,
   Video,
   Camera,
   Calendar,
   ExternalLink,
   CheckCircle2,
-  Loader2
+  Loader2,
+  Check,
+  X
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -27,7 +30,11 @@ interface Property {
   location: string | null;
   capacity: number | null;
   base_price: number | null;
+  min_rate: number | null;
+  max_rate: number | null;
   description: string | null;
+  photos: string[] | null;
+  videos: string[] | null;
   amenities: string[] | null;
   contact_name: string | null;
   contact_email: string | null;
@@ -39,6 +46,7 @@ interface Property {
   interested_in_residency: boolean | null;
   residency_available_dates: string | null;
   property_features: string[] | null;
+  status: string | null;
   created_at: string | null;
   owner_user_id: string;
   owner_name?: string | null;
@@ -48,6 +56,8 @@ interface Property {
 export default function PropertyReview() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchProperties();
@@ -55,10 +65,11 @@ export default function PropertyReview() {
 
   const fetchProperties = async () => {
     try {
-      // Fetch all properties
+      // Fetch pending properties
       const { data: propertiesData, error } = await supabase
         .from('properties')
         .select('*')
+        .eq('status', 'pending_review')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -117,6 +128,65 @@ export default function PropertyReview() {
     return status === 'has_content' ? 'Has Content Ready' : 'Needs Content Creation';
   };
 
+  const handleApprove = async (propertyId: string, propertyName: string) => {
+    setActionLoading(propertyId);
+    try {
+      const { error } = await supabase
+        .from('properties')
+        .update({ status: 'published' })
+        .eq('id', propertyId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Venue approved!',
+        description: `${propertyName} is now published and visible to users.`,
+      });
+
+      // Refresh the list
+      fetchProperties();
+    } catch (error) {
+      console.error('Error approving property:', error);
+      toast({
+        title: 'Approval failed',
+        description: error instanceof Error ? error.message : 'Please try again',
+        variant: 'destructive',
+      });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleReject = async (propertyId: string, propertyName: string) => {
+    setActionLoading(propertyId);
+    try {
+      const { error } = await supabase
+        .from('properties')
+        .update({ status: 'rejected' })
+        .eq('id', propertyId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Venue rejected',
+        description: `${propertyName} has been rejected.`,
+        variant: 'destructive',
+      });
+
+      // Refresh the list
+      fetchProperties();
+    } catch (error) {
+      console.error('Error rejecting property:', error);
+      toast({
+        title: 'Rejection failed',
+        description: error instanceof Error ? error.message : 'Please try again',
+        variant: 'destructive',
+      });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -129,9 +199,9 @@ export default function PropertyReview() {
     return (
       <Card>
         <CardContent className="py-12 text-center">
-          <Home className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No Properties Yet</h3>
-          <p className="text-muted-foreground">Properties submitted by landowners will appear here.</p>
+          <CheckCircle2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">All Caught Up!</h3>
+          <p className="text-muted-foreground">No pending venue submissions to review.</p>
         </CardContent>
       </Card>
     );
@@ -141,8 +211,10 @@ export default function PropertyReview() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">Property Submissions</h2>
-          <p className="text-sm text-muted-foreground">{properties.length} propert{properties.length === 1 ? 'y' : 'ies'} submitted</p>
+          <h2 className="text-xl font-semibold">Pending Venue Submissions</h2>
+          <p className="text-sm text-muted-foreground">
+            {properties.length} pending submission{properties.length !== 1 && 's'} awaiting review
+          </p>
         </div>
       </div>
 
@@ -407,6 +479,102 @@ export default function PropertyReview() {
                     )}
                   </div>
                 </div>
+              </div>
+
+              {/* Photos & Videos */}
+              {((property.photos && property.photos.length > 0) || (property.videos && property.videos.length > 0)) && (
+                <div className="space-y-4 pt-4 border-t">
+                  <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                    <Camera className="h-4 w-4" />
+                    Photos & Videos
+                  </h4>
+
+                  {/* Photos */}
+                  {property.photos && property.photos.length > 0 && (
+                    <div>
+                      <span className="text-sm text-muted-foreground">
+                        Photos ({property.photos.length})
+                      </span>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mt-2">
+                        {property.photos.map((photo, index) => (
+                          <a
+                            key={index}
+                            href={photo}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group relative aspect-square rounded-lg overflow-hidden border border-border hover:border-primary transition-colors"
+                          >
+                            <img
+                              src={photo}
+                              alt={`Property photo ${index + 1}`}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                              <ExternalLink className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Videos */}
+                  {property.videos && property.videos.length > 0 && (
+                    <div>
+                      <span className="text-sm text-muted-foreground flex items-center gap-1">
+                        <Video className="h-3 w-3" />
+                        Videos ({property.videos.length})
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
+                        {property.videos.map((video, index) => (
+                          <div
+                            key={index}
+                            className="relative aspect-video rounded-lg overflow-hidden border border-border"
+                          >
+                            <video
+                              src={video}
+                              controls
+                              className="w-full h-full object-cover"
+                            >
+                              Your browser does not support the video tag.
+                            </video>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3 pt-4 border-t">
+                <Button
+                  onClick={() => handleApprove(property.id, property.name)}
+                  disabled={actionLoading === property.id}
+                  className="flex-1"
+                  size="lg"
+                >
+                  {actionLoading === property.id ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Check className="h-4 w-4 mr-2" />
+                  )}
+                  Approve & Publish
+                </Button>
+                <Button
+                  onClick={() => handleReject(property.id, property.name)}
+                  disabled={actionLoading === property.id}
+                  variant="destructive"
+                  className="flex-1"
+                  size="lg"
+                >
+                  {actionLoading === property.id ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <X className="h-4 w-4 mr-2" />
+                  )}
+                  Reject
+                </Button>
               </div>
             </AccordionContent>
           </AccordionItem>

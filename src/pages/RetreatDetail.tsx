@@ -33,13 +33,13 @@ export default function RetreatDetail() {
 
   const [bookingLoading, setBookingLoading] = useState(false);
 
-  // Fetch retreat from database only
+  // Fetch retreat from database with property data
   const { data: retreat, isLoading, error } = useQuery({
     queryKey: ['retreat', id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('retreats')
-        .select('*')
+        .select('*, property:properties(*)')
         .eq('id', id)
         .single();
 
@@ -47,8 +47,8 @@ export default function RetreatDetail() {
 
       return {
         ...data,
-        location: (data as any).location || 'Location TBD',
-        image: 'https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&h=600&fit=crop',
+        location: (data as any).location || data.property?.location || 'Location TBD',
+        image: data.property?.photos?.[0] || 'https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&h=600&fit=crop',
         amenities: ['Daily sessions', 'Healthy meals', 'Guided activities'],
         schedule: [],
       };
@@ -268,6 +268,61 @@ export default function RetreatDetail() {
                 </Link>
               </div>
             </div>
+
+            {/* Venue Info */}
+            {(retreat.property || retreat.custom_venue_name) && (
+              <div className="p-6 bg-card rounded-xl border border-border">
+                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-primary" />
+                  Venue
+                </h3>
+                {retreat.property ? (
+                  <div className="flex gap-4">
+                    {/* Venue Thumbnail */}
+                    {retreat.property.photos && retreat.property.photos.length > 0 && (
+                      <img
+                        src={retreat.property.photos[0]}
+                        alt={retreat.property.name}
+                        className="w-24 h-24 rounded-lg object-cover"
+                      />
+                    )}
+
+                    {/* Venue Details */}
+                    <div className="flex-1 space-y-2">
+                      <Link
+                        to={`/venue/${retreat.property.id}`}
+                        className="font-semibold text-foreground hover:text-primary transition-colors text-lg"
+                      >
+                        {retreat.property.name}
+                      </Link>
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                        {retreat.property.location && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-4 w-4" />
+                            {retreat.property.location}
+                          </span>
+                        )}
+                        {retreat.property.capacity && (
+                          <span className="flex items-center gap-1">
+                            <Users className="h-4 w-4" />
+                            Up to {retreat.property.capacity}
+                          </span>
+                        )}
+                      </div>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to={`/venue/${retreat.property.id}`}>View Venue Details</Link>
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Custom Venue */
+                  <div className="flex items-center gap-2 text-foreground">
+                    <Home className="h-5 w-5 text-muted-foreground" />
+                    <span className="font-medium">{retreat.custom_venue_name}</span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Description */}
             <section>

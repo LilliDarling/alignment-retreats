@@ -24,7 +24,7 @@ const steps = [
     number: "01",
     icon: Key,
     title: "Join",
-    description: "Become a founding member with a one-time buy-in. Only 100 seats available.",
+    description: "Become a founding member with a one-time buy-in. Only 94 seats available.",
     color: "from-primary/20 to-primary/5"
   },
   {

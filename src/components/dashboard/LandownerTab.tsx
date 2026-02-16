@@ -29,6 +29,8 @@ export default function LandownerTab() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [savingProperty, setSavingProperty] = useState(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState<Record<string, boolean>>({});
+  const [editingPropertyId, setEditingPropertyId] = useState<string | null>(null);
+  const [editingPropertyData, setEditingPropertyData] = useState<LandownerOnboardingData | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -66,21 +68,115 @@ export default function LandownerTab() {
     fetchData();
   }, [user]);
 
+  const handleEditProperty = async (propertyId: string) => {
+    try {
+      const { data: property, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('id', propertyId)
+        .single();
+
+      if (error) throw error;
+
+      if (property) {
+        // Convert property data to onboarding format
+        const onboardingData: LandownerOnboardingData = {
+          propertyName: property.name,
+          propertyType: property.property_type,
+          capacity: property.capacity || undefined,
+          location: property.location || undefined,
+          basePrice: property.base_price || 0,
+          minRate: property.min_rate || null,
+          maxRate: property.max_rate || null,
+          description: property.description || undefined,
+          photos: property.photos || [],
+          videos: property.videos || [],
+          amenities: property.amenities || [],
+          contactName: property.contact_name || undefined,
+          contactEmail: property.contact_email || undefined,
+          instagramHandle: property.instagram_handle || undefined,
+          tiktokHandle: property.tiktok_handle || undefined,
+          contentStatus: property.content_status || undefined,
+          existingContentLink: property.existing_content_link || undefined,
+          contentDescription: property.content_description || undefined,
+          interestedInResidency: property.interested_in_residency || false,
+          residencyAvailableDates: property.residency_available_dates || undefined,
+          propertyFeatures: property.property_features || [],
+        };
+
+        setEditingPropertyId(propertyId);
+        setEditingPropertyData(onboardingData);
+        setShowOnboarding(true);
+      }
+    } catch (error) {
+      console.error('Error fetching property:', error);
+      toast.error('Failed to load property data');
+    }
+  };
+
   const handleOnboardingComplete = async (data: LandownerOnboardingData) => {
     if (!user) return;
 
     setSavingProperty(true);
     try {
-      const { data: newProperty, error } = await supabase
-        .from('properties')
-        .insert({
+      // Check if we're editing or creating
+      if (editingPropertyId) {
+        // Update existing property
+        const { data: updatedProperty, error } = await supabase
+          .from('properties')
+          .update({
+            name: data.propertyName,
+            property_type: data.propertyType as 'land' | 'retreat_center' | 'venue',
+            capacity: data.capacity || null,
+            location: data.location || null,
+            base_price: data.basePrice,
+            min_rate: data.minRate,
+            max_rate: data.maxRate,
+            description: data.description || null,
+            photos: data.photos,
+            videos: data.videos,
+            amenities: data.amenities,
+            contact_name: data.contactName || null,
+            contact_email: data.contactEmail || null,
+            instagram_handle: data.instagramHandle || null,
+            tiktok_handle: data.tiktokHandle || null,
+            content_status: data.contentStatus || null,
+            existing_content_link: data.existingContentLink || null,
+            content_description: data.contentDescription || null,
+            interested_in_residency: data.interestedInResidency,
+            residency_available_dates: data.residencyAvailableDates || null,
+            property_features: data.propertyFeatures,
+          })
+          .eq('id', editingPropertyId)
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        if (updatedProperty) {
+          setProperties(prev => prev.map(p => p.id === editingPropertyId ? updatedProperty : p));
+          toast.success('Property updated successfully!');
+        }
+
+        setEditingPropertyId(null);
+        setEditingPropertyData(null);
+        setShowOnboarding(false);
+      } else {
+        // Create new property
+        const { data: newProperty, error } = await supabase
+          .from('properties')
+          .insert({
           owner_user_id: user.id,
           name: data.propertyName,
           property_type: data.propertyType as 'land' | 'retreat_center' | 'venue',
           capacity: data.capacity || null,
           location: data.location || null,
           base_price: data.basePrice,
+          min_rate: data.minRate,
+          max_rate: data.maxRate,
           description: data.description || null,
+          photos: data.photos,
+          videos: data.videos,
           amenities: data.amenities,
           contact_name: data.contactName || null,
           contact_email: data.contactEmail || null,
@@ -104,16 +200,16 @@ export default function LandownerTab() {
         .update({ onboarding_completed: updatedOnboarding })
         .eq('id', user.id);
 
-      if (newProperty) {
-        setProperties(prev => [newProperty, ...prev]);
-      }
-      setOnboardingCompleted(updatedOnboarding);
-      setShowOnboarding(false);
-      toast.success('Property created successfully!');
+        if (newProperty) {
+          setProperties(prev => [newProperty, ...prev]);
+        }
+        setOnboardingCompleted(updatedOnboarding);
+        setShowOnboarding(false);
+        toast.success('Property created successfully!');
 
-      // Send admin notification
-      const userEmail = await supabase.rpc('get_auth_email');
-      supabase.functions.invoke('notify-profile-completed', {
+        // Send admin notification only for new properties
+        const userEmail = await supabase.rpc('get_auth_email');
+        supabase.functions.invoke('notify-profile-completed', {
         body: {
           name: data.contactName || 'Landowner',
           email: data.contactEmail || userEmail.data || '',
@@ -129,12 +225,13 @@ export default function LandownerTab() {
             data.interestedInResidency ? 'Interested in Creator Residencies' : null
           ].filter(Boolean)
         }
-      }).then(({ error }) => {
-        if (error) console.error('Profile completion notification failed:', error);
-      });
+        }).then(({ error }) => {
+          if (error) console.error('Profile completion notification failed:', error);
+        });
+      }
     } catch (error) {
-      console.error('Error creating property:', error);
-      toast.error('Failed to create property. Please try again.');
+      console.error('Error saving property:', error);
+      toast.error(editingPropertyId ? 'Failed to update property. Please try again.' : 'Failed to create property. Please try again.');
     } finally {
       setSavingProperty(false);
     }
@@ -159,7 +256,12 @@ export default function LandownerTab() {
         ) : (
           <LandownerOnboarding
             onComplete={handleOnboardingComplete}
-            onBack={() => setShowOnboarding(false)}
+            onBack={() => {
+              setShowOnboarding(false);
+              setEditingPropertyId(null);
+              setEditingPropertyData(null);
+            }}
+            initialData={editingPropertyData || undefined}
           />
         )}
       </div>
@@ -235,7 +337,11 @@ export default function LandownerTab() {
                       )}
                     </div>
                   </div>
-                  <Button variant="outline" size="sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditProperty(property.id)}
+                  >
                     Edit Property
                   </Button>
                 </div>

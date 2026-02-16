@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { OnboardingStep } from './OnboardingStep';
+import { VenueMediaUpload } from '@/components/VenueMediaUpload';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -54,45 +55,52 @@ export interface LandownerOnboardingData {
   interestedInResidency: boolean;
   residencyAvailableDates: string;
   propertyFeatures: string[];
+  photos: string[];
+  videos: string[];
 }
 
 interface LandownerOnboardingProps {
   onComplete: (data: LandownerOnboardingData) => void;
   onBack: () => void;
+  initialData?: LandownerOnboardingData;
 }
 
-export function LandownerOnboarding({ onComplete, onBack }: LandownerOnboardingProps) {
+export function LandownerOnboarding({ onComplete, onBack, initialData }: LandownerOnboardingProps) {
   const [step, setStep] = useState(1);
-  const totalSteps = 5;
+  const totalSteps = 6;
 
   // Step 1: Property Identity
-  const [propertyName, setPropertyName] = useState('');
-  const [propertyType, setPropertyType] = useState('');
-  const [contactName, setContactName] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
-  const [instagramHandle, setInstagramHandle] = useState('');
-  const [tiktokHandle, setTiktokHandle] = useState('');
+  const [propertyName, setPropertyName] = useState(initialData?.propertyName || '');
+  const [propertyType, setPropertyType] = useState(initialData?.propertyType || '');
+  const [contactName, setContactName] = useState(initialData?.contactName || '');
+  const [contactEmail, setContactEmail] = useState(initialData?.contactEmail || '');
+  const [instagramHandle, setInstagramHandle] = useState(initialData?.instagramHandle || '');
+  const [tiktokHandle, setTiktokHandle] = useState(initialData?.tiktokHandle || '');
 
   // Step 2: Property Details
-  const [capacity, setCapacity] = useState('');
-  const [location, setLocation] = useState('');
-  const [basePrice, setBasePrice] = useState('');
-  const [minRate, setMinRate] = useState('');
-  const [maxRate, setMaxRate] = useState('');
-  const [description, setDescription] = useState('');
+  const [capacity, setCapacity] = useState(initialData?.capacity?.toString() || '');
+  const [location, setLocation] = useState(initialData?.location || '');
+  const [basePrice, setBasePrice] = useState(initialData?.basePrice?.toString() || '');
+  const [minRate, setMinRate] = useState(initialData?.minRate?.toString() || '');
+  const [maxRate, setMaxRate] = useState(initialData?.maxRate?.toString() || '');
+  const [description, setDescription] = useState(initialData?.description || '');
 
-  // Step 3: Amenities
-  const [amenities, setAmenities] = useState<string[]>([]);
+  // Step 3: Photos & Videos
+  const [photos, setPhotos] = useState<string[]>(initialData?.photos || []);
+  const [videos, setVideos] = useState<string[]>(initialData?.videos || []);
 
-  // Step 4: Content Audit
-  const [contentStatus, setContentStatus] = useState('');
-  const [existingContentLink, setExistingContentLink] = useState('');
-  const [contentDescription, setContentDescription] = useState('');
+  // Step 4: Amenities
+  const [amenities, setAmenities] = useState<string[]>(initialData?.amenities || []);
 
-  // Step 5: Production Residency
-  const [interestedInResidency, setInterestedInResidency] = useState(false);
-  const [residencyAvailableDates, setResidencyAvailableDates] = useState('');
-  const [propertyFeatures, setPropertyFeatures] = useState<string[]>([]);
+  // Step 5: Content Audit
+  const [contentStatus, setContentStatus] = useState(initialData?.contentStatus || '');
+  const [existingContentLink, setExistingContentLink] = useState(initialData?.existingContentLink || '');
+  const [contentDescription, setContentDescription] = useState(initialData?.contentDescription || '');
+
+  // Step 6: Production Residency
+  const [interestedInResidency, setInterestedInResidency] = useState(initialData?.interestedInResidency || false);
+  const [residencyAvailableDates, setResidencyAvailableDates] = useState(initialData?.residencyAvailableDates || '');
+  const [propertyFeatures, setPropertyFeatures] = useState<string[]>(initialData?.propertyFeatures || []);
 
   const toggleAmenity = (amenity: string) => {
     setAmenities(prev =>
@@ -116,6 +124,8 @@ export function LandownerOnboarding({ onComplete, onBack }: LandownerOnboardingP
       minRate: minRate ? parseFloat(minRate) : null,
       maxRate: maxRate ? parseFloat(maxRate) : null,
       description,
+      photos,
+      videos,
       amenities,
       contactName,
       contactEmail,
@@ -132,6 +142,7 @@ export function LandownerOnboarding({ onComplete, onBack }: LandownerOnboardingP
 
   const canProceedStep1 = propertyName && propertyType && contactName && contactEmail;
   const canProceedStep2 = capacity;
+  const canProceedStep3 = photos.length > 0;
 
   // Step 1: Property Identity
   if (step === 1) {
@@ -348,13 +359,44 @@ export function LandownerOnboarding({ onComplete, onBack }: LandownerOnboardingP
     );
   }
 
-  // Step 3: Amenities
+  // Step 3: Photos & Videos
   if (step === 3) {
+    return (
+      <OnboardingStep
+        title="Photos & Videos"
+        description="Upload photos and videos of your property"
+        currentStep={3}
+        totalSteps={totalSteps}
+        icon={<Camera className="w-8 h-8" />}
+      >
+        <VenueMediaUpload
+          onPhotosChange={setPhotos}
+          onVideosChange={setVideos}
+          existingPhotos={photos}
+          existingVideos={videos}
+        />
+
+        <div className="flex justify-between pt-8">
+          <Button variant="ghost" onClick={() => setStep(2)}>
+            <ChevronLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+          <Button onClick={() => setStep(4)} disabled={!canProceedStep3}>
+            Continue
+            <ChevronRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
+      </OnboardingStep>
+    );
+  }
+
+  // Step 4: Amenities
+  if (step === 4) {
     return (
       <OnboardingStep
         title="Amenities"
         description="Select all the amenities available at your property"
-        currentStep={3}
+        currentStep={4}
         totalSteps={totalSteps}
         icon={<Home className="w-8 h-8" />}
       >
@@ -372,11 +414,11 @@ export function LandownerOnboarding({ onComplete, onBack }: LandownerOnboardingP
         </div>
 
         <div className="flex justify-between pt-8">
-          <Button variant="ghost" onClick={() => setStep(2)}>
+          <Button variant="ghost" onClick={() => setStep(3)}>
             <ChevronLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <Button onClick={() => setStep(4)}>
+          <Button onClick={() => setStep(5)}>
             Continue
             <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
@@ -385,13 +427,13 @@ export function LandownerOnboarding({ onComplete, onBack }: LandownerOnboardingP
     );
   }
 
-  // Step 4: Content Audit
-  if (step === 4) {
+  // Step 5: Content Audit
+  if (step === 5) {
     return (
       <OnboardingStep
         title="Content Audit"
         description="Help us understand what content you have available"
-        currentStep={4}
+        currentStep={5}
         totalSteps={totalSteps}
         icon={<Camera className="w-8 h-8" />}
       >
@@ -410,7 +452,7 @@ export function LandownerOnboarding({ onComplete, onBack }: LandownerOnboardingP
           </div>
 
           <div>
-            <Label htmlFor="contentLink">Existing File Link</Label>
+            <Label htmlFor="contentLink">Existing File Link (Optional)</Label>
             <Input
               id="contentLink"
               value={existingContentLink}
@@ -419,7 +461,7 @@ export function LandownerOnboarding({ onComplete, onBack }: LandownerOnboardingP
               className="mt-2"
             />
             <p className="text-sm text-muted-foreground mt-2">
-              Please send <strong>Hard Files</strong> only (original high-resolution files, not compressed screenshots)
+              Additional content link if you have more files to share
             </p>
           </div>
 
@@ -436,11 +478,11 @@ export function LandownerOnboarding({ onComplete, onBack }: LandownerOnboardingP
         </div>
 
         <div className="flex justify-between pt-8">
-          <Button variant="ghost" onClick={() => setStep(3)}>
+          <Button variant="ghost" onClick={() => setStep(4)}>
             <ChevronLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <Button onClick={() => setStep(5)}>
+          <Button onClick={() => setStep(6)}>
             Continue
             <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
@@ -449,12 +491,12 @@ export function LandownerOnboarding({ onComplete, onBack }: LandownerOnboardingP
     );
   }
 
-  // Step 5: Production Residency
+  // Step 6: Production Residency
   return (
     <OnboardingStep
       title="Production Residency"
       description="The 'Netflix' Split — Let us create stunning content at your property"
-      currentStep={5}
+      currentStep={6}
       totalSteps={totalSteps}
       icon={<Video className="w-8 h-8" />}
     >
@@ -508,7 +550,7 @@ export function LandownerOnboarding({ onComplete, onBack }: LandownerOnboardingP
       </div>
 
       <div className="flex justify-between pt-8">
-        <Button variant="ghost" onClick={() => setStep(4)}>
+        <Button variant="ghost" onClick={() => setStep(5)}>
           <ChevronLeft className="w-4 h-4 mr-2" />
           Back
         </Button>

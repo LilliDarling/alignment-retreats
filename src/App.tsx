@@ -21,6 +21,9 @@ import SubmitRetreat from "./pages/SubmitRetreat";
 import BrowseRetreats from "./pages/BrowseRetreats";
 import BrowseOpportunities from "./pages/BrowseOpportunities";
 import RetreatDetail from "./pages/RetreatDetail";
+import SubmitVenue from "./pages/SubmitVenue";
+import BrowseVenues from "./pages/BrowseVenues";
+import VenueDetail from "./pages/VenueDetail";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import Directory from "./pages/Directory";
@@ -62,6 +65,16 @@ const App = () => (
                 }
               />
               <Route path="/retreats/browse" element={<BrowseRetreats />} />
+              <Route path="/venues/browse" element={<BrowseVenues />} />
+              <Route path="/venue/:id" element={<VenueDetail />} />
+              <Route
+                path="/venues/submit"
+                element={
+                  <ProtectedRoute>
+                    <SubmitVenue />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/opportunities"
                 element={
