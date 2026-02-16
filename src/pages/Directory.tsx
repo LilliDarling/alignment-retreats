@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { Search, Filter, Star, CheckCircle, Lock, Users, Briefcase, Home, ChefHat, X, Building, MapPin } from 'lucide-react';
+import { Search, Filter, X, Users, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppHeader } from '@/components/AppHeader';
@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -20,65 +20,42 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+const PAGE_SIZE = 12;
+
 interface DirectoryProfile {
   id: string;
-  name: string | null;
+  name: string;
+  email: string;
   profile_photo: string | null;
-  bio: string | null;
-  roles: string[];
-  host_verified: boolean | null;
-  expertise_areas: string[] | null;
-  host_rating: number | null;
-  past_retreats_count: number | null;
-  host_min_rate: number | null;
-  host_max_rate: number | null;
-  cohost_verified: boolean | null;
-  skills: string[] | null;
-  cohost_hourly_rate: number | null;
-  cohost_min_rate: number | null;
-  cohost_max_rate: number | null;
-  cohost_rating: number | null;
-  cohost_availability: string | null;
-  past_collaborations_count: number | null;
-  staff_verified: boolean | null;
-  service_type: string | null;
-  staff_day_rate: number | null;
-  staff_min_rate: number | null;
-  staff_max_rate: number | null;
-  staff_rating: number | null;
-  experience_years: number | null;
-  staff_availability: string | null;
-  portfolio_url: string | null;
-  is_verified: boolean;
-  // Landowner/property fields
-  property_name: string | null;
-  property_location: string | null;
-  property_capacity: number | null;
-  property_base_price: number | null;
-  property_type: string | null;
-  property_min_rate: number | null;
-  property_max_rate: number | null;
+  bio: string;
+  user_roles: string[];
+  expertise_areas: string[];
+  location: string;
+  years_experience: number | null;
+  availability_status: string;
+  verified: boolean;
+  profile_completed: boolean;
 }
 
-const roleIcons: Record<string, React.ReactNode> = {
-  host: <Home className="h-3 w-3" />,
-  cohost: <Users className="h-3 w-3" />,
-  staff: <Briefcase className="h-3 w-3" />,
-  landowner: <Building className="h-3 w-3" />,
-};
-
-const roleLabels: Record<string, string> = {
-  host: 'Host',
+const ROLE_LABELS: Record<string, string> = {
+  host: 'Retreat Host',
   cohost: 'Co-Host',
-  staff: 'Staff',
-  landowner: 'Landowner',
+  chef: 'Chef/Cook',
+  photographer: 'Photographer',
+  videographer: 'Videographer',
+  yoga_instructor: 'Yoga Instructor',
+  meditation_guide: 'Meditation Guide',
+  facilitator: 'Workshop Facilitator',
+  massage_therapist: 'Massage Therapist',
+  sound_healer: 'Sound Healer',
+  attendee: 'Retreat Attendee',
 };
 
-const roleColors: Record<string, string> = {
-  host: 'bg-primary/10 text-primary border-primary/20',
-  cohost: 'bg-secondary/10 text-secondary border-secondary/20',
-  staff: 'bg-accent text-accent-foreground border-border',
-  landowner: 'bg-chart-4/10 text-chart-4 border-chart-4/20',
+const AVAILABILITY_LABELS: Record<string, { label: string; color: string }> = {
+  available: { label: 'Available', color: 'bg-green-500/10 text-green-700 border-green-500/20' },
+  limited: { label: 'Limited', color: 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20' },
+  booked: { label: 'Booked', color: 'bg-red-500/10 text-red-700 border-red-500/20' },
+  not_available: { label: 'Unavailable', color: 'bg-gray-500/10 text-gray-700 border-gray-500/20' },
 };
 
 export default function Directory() {
@@ -87,130 +64,72 @@ export default function Directory() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [visibleCount, setVisibleCount] = useState(12);
 
-  // Check if current user is admin
-  const { hasRole } = useAuth();
-  const isAdmin = hasRole('admin');
+  // Fetch profiles with pagination
+  const {
+    data,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['directory-profiles', searchQuery, roleFilter],
+    queryFn: async ({ pageParam = 0 }) => {
+      const from = pageParam * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
 
-  // Check if current user is verified (or admin)
-  const { data: isViewerVerified } = useQuery({
-    queryKey: ['isViewerVerified', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return false;
-      const { data, error } = await supabase.rpc('is_user_verified', { _user_id: user.id });
-      if (error) {
-        console.error('Error checking verification:', error);
-        return false;
+      let query = supabase
+        .from('profiles')
+        .select('id, name, email, profile_photo, bio, user_roles, expertise_areas, location, years_experience, availability_status, verified, profile_completed')
+        .eq('profile_completed', true);
+
+      // Apply role filter if not "all"
+      if (roleFilter !== 'all') {
+        query = query.contains('user_roles', [roleFilter]);
       }
-      return data ?? false;
-    },
-    enabled: !!user?.id && !isAdmin, // Skip if admin
-  });
 
-  // Admins always see rates
-  const canSeeRates = isAdmin || isViewerVerified;
+      // Apply search filter
+      if (searchQuery) {
+        query = query.or(`name.ilike.%${searchQuery}%,bio.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%`);
+      }
 
-  // Fetch directory profiles
-  const { data: profiles, isLoading } = useQuery({
-    queryKey: ['directoryProfiles'],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_directory_profiles');
+      const { data, error } = await query
+        .order('name', { ascending: true })
+        .range(from, to);
+
       if (error) throw error;
-      return data as DirectoryProfile[];
+      return (data || []) as DirectoryProfile[];
     },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length === PAGE_SIZE ? allPages.length : undefined,
   });
 
-  // Reset visible count when filters change
+  const profiles = data?.pages.flat() ?? [];
+
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
-    setVisibleCount(12);
   };
 
   const handleRoleFilterChange = (value: string) => {
     setRoleFilter(value);
-    setVisibleCount(12);
-  };
-
-  // Filter profiles
-  const filteredProfiles = profiles?.filter(profile => {
-    const matchesSearch = !searchQuery ||
-      profile.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      profile.bio?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      profile.skills?.some(s => s.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      profile.expertise_areas?.some(e => e.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      profile.service_type?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      profile.property_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      profile.property_location?.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesRole = roleFilter === 'all' || profile.roles.includes(roleFilter);
-
-    return matchesSearch && matchesRole;
-  });
-
-  const visibleProfiles = filteredProfiles?.slice(0, visibleCount);
-  const hasMore = (filteredProfiles?.length ?? 0) > visibleCount;
-
-  const formatPriceRange = (min: number | null, max: number | null, unit: string) => {
-    if (min && max) {
-      return `$${min} - $${max}${unit}`;
-    } else if (min) {
-      return `From $${min}${unit}`;
-    } else if (max) {
-      return `Up to $${max}${unit}`;
-    }
-    return null;
-  };
-
-  const getRating = (profile: DirectoryProfile) => {
-    return profile.host_rating || profile.cohost_rating || profile.staff_rating;
-  };
-
-  const getPriceDisplay = (profile: DirectoryProfile) => {
-    const prices: string[] = [];
-    
-    // Host rates
-    const hostRate = formatPriceRange(profile.host_min_rate, profile.host_max_rate, '/retreat');
-    if (hostRate) prices.push(hostRate);
-    
-    // Cohost rates
-    if (profile.cohost_hourly_rate) {
-      prices.push(`$${profile.cohost_hourly_rate}/hr`);
-    } else {
-      const cohostRate = formatPriceRange(profile.cohost_min_rate, profile.cohost_max_rate, '/hr');
-      if (cohostRate) prices.push(cohostRate);
-    }
-    
-    // Staff rates
-    if (profile.staff_day_rate) {
-      prices.push(`$${profile.staff_day_rate}/day`);
-    } else {
-      const staffRate = formatPriceRange(profile.staff_min_rate, profile.staff_max_rate, '/day');
-      if (staffRate) prices.push(staffRate);
-    }
-    
-    // Property/landowner rates
-    if (profile.property_base_price) {
-      prices.push(`$${profile.property_base_price}/night`);
-    } else {
-      const propertyRate = formatPriceRange(profile.property_min_rate, profile.property_max_rate, '/night');
-      if (propertyRate) prices.push(propertyRate);
-    }
-    
-    return prices.length > 0 ? prices.join(' • ') : 'Rates not set';
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <SEO title="Member Directory" noindex />
-      <AppHeader />
-      
-      <main className="container mx-auto px-4 py-8">
+      <SEO
+        title="Member Directory"
+        description="Browse and connect with retreat hosts, co-hosts, facilitators, and service providers in the Alignment Retreats community."
+        canonical="/directory"
+      />
+      <AppHeader showSignOut={!!user} />
+
+      <main className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Member Directory</h1>
+          <h1 className="text-3xl font-display font-bold mb-2">Member Directory</h1>
           <p className="text-muted-foreground">
-            Find and connect with hosts, co-hosts, staff, and property owners
+            Find and connect with hosts, facilitators, and service providers
           </p>
         </div>
 
@@ -219,7 +138,7 @@ export default function Directory() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name, skills, or expertise..."
+              placeholder="Search by name, bio, or location..."
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-10"
@@ -234,227 +153,160 @@ export default function Directory() {
             )}
           </div>
           <Select value={roleFilter} onValueChange={handleRoleFilterChange}>
-            <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectTrigger className="w-full sm:w-[200px]">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Filter by role" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Roles</SelectItem>
-              <SelectItem value="host">Hosts</SelectItem>
+              <SelectItem value="host">Retreat Hosts</SelectItem>
               <SelectItem value="cohost">Co-Hosts</SelectItem>
-              <SelectItem value="staff">Staff</SelectItem>
-              <SelectItem value="landowner">Landowners</SelectItem>
+              <SelectItem value="chef">Chefs</SelectItem>
+              <SelectItem value="photographer">Photographers</SelectItem>
+              <SelectItem value="videographer">Videographers</SelectItem>
+              <SelectItem value="yoga_instructor">Yoga Instructors</SelectItem>
+              <SelectItem value="meditation_guide">Meditation Guides</SelectItem>
+              <SelectItem value="facilitator">Facilitators</SelectItem>
+              <SelectItem value="massage_therapist">Massage Therapists</SelectItem>
+              <SelectItem value="sound_healer">Sound Healers</SelectItem>
+              <SelectItem value="attendee">Attendees</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        {/* Verification Notice */}
-        {!canSeeRates && (
-          <div className="bg-accent/50 border border-border rounded-xl p-4 mb-8 flex items-start gap-3">
-            <Lock className="h-5 w-5 text-muted-foreground mt-0.5" />
-            <div>
-              <p className="font-medium text-foreground">Pricing is hidden</p>
-              <p className="text-sm text-muted-foreground">
-                Get verified to see service provider rates. Contact an admin to request verification.
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* Results Count */}
-        <div className="mb-4 text-sm text-muted-foreground">
-          {filteredProfiles?.length ?? 0} members found
+        <div className="mb-6 text-sm text-muted-foreground">
+          {profiles.length} member{profiles.length !== 1 ? 's' : ''} found
         </div>
 
         {/* Profile Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <Card key={i} className="animate-pulse">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="h-16 w-16 rounded-full bg-muted" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 w-32 bg-muted rounded" />
-                      <div className="h-3 w-24 bg-muted rounded" />
-                    </div>
-                  </div>
-                </CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <Card key={i} className="p-6 animate-pulse">
+                <div className="flex flex-col items-center space-y-3">
+                  <div className="h-20 w-20 rounded-full bg-accent" />
+                  <div className="h-4 w-32 bg-accent rounded" />
+                  <div className="h-3 w-24 bg-accent rounded" />
+                </div>
               </Card>
             ))}
           </div>
-        ) : filteredProfiles?.length === 0 ? (
+        ) : profiles.length === 0 ? (
           <div className="text-center py-16">
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-foreground mb-2">No profiles found</h3>
+            <h3 className="text-lg font-semibold mb-2">No profiles found</h3>
             <p className="text-muted-foreground">Try adjusting your search or filters</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {visibleProfiles?.map((profile) => (
-              <Card 
-                key={profile.id} 
-                className="hover:shadow-lg transition-shadow cursor-pointer group"
-                onClick={() => navigate(`/profile/${profile.id}`)}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <Avatar className="h-16 w-16 border-2 border-border">
-                      <AvatarImage src={profile.profile_photo || undefined} />
-                      <AvatarFallback className="bg-primary text-primary-foreground text-lg font-bold">
-                        {profile.name?.charAt(0) || '?'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-                          {profile.name || 'Unnamed'}
-                        </h3>
-                        {profile.is_verified && (
-                          <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
-                        )}
-                      </div>
-                      
-                      {/* Roles */}
-                      <div className="flex flex-wrap gap-1.5 mt-2">
-                        {profile.roles.filter(r => ['host', 'cohost', 'staff', 'landowner'].includes(r)).map((role) => (
-                          <Badge 
-                            key={role} 
-                            variant="outline" 
-                            className={`text-xs ${roleColors[role] || ''}`}
-                          >
-                            {roleIcons[role]}
-                            <span className="ml-1">{roleLabels[role] || role}</span>
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {profiles.map((profile) => {
+                const availInfo = AVAILABILITY_LABELS[profile.availability_status] || AVAILABILITY_LABELS.not_available;
 
-                  {/* Bio */}
-                  {profile.bio && (
-                    <p className="text-sm text-muted-foreground mt-4 line-clamp-2">
-                      {profile.bio}
-                    </p>
-                  )}
+                return (
+                  <Card
+                    key={profile.id}
+                    className="p-6 hover:shadow-lg transition-all cursor-pointer group"
+                    onClick={() => navigate(`/profile/${profile.id}`)}
+                  >
+                    <div className="flex flex-col items-center text-center">
+                      {/* Avatar */}
+                      <Avatar className="h-20 w-20 mb-4 border-2 border-border">
+                        <AvatarImage src={profile.profile_photo || undefined} alt={profile.name} />
+                        <AvatarFallback className="text-xl">
+                          {profile.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
 
-                  {/* Skills/Expertise/Property Info */}
-                  <div className="mt-4">
-                    {/* Property info for landowners */}
-                    {profile.property_name && (
+                      {/* Name & Verification */}
                       <div className="mb-2">
-                        <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-                          <Building className="h-3.5 w-3.5" />
-                          {profile.property_name}
+                        <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
+                          {profile.name}
+                        </h3>
+                        {profile.verified && (
+                          <Badge variant="default" className="mt-1 text-xs">
+                            Verified
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Location & Experience */}
+                      <div className="text-sm text-muted-foreground mb-3 space-y-1">
+                        {profile.location && <div>{profile.location}</div>}
+                        {profile.years_experience && (
+                          <div>{profile.years_experience} years experience</div>
+                        )}
+                      </div>
+
+                      {/* Roles */}
+                      <div className="flex flex-wrap justify-center gap-1.5 mb-3">
+                        {profile.user_roles.slice(0, 3).map((role) => (
+                          <Badge key={role} variant="secondary" className="text-xs">
+                            {ROLE_LABELS[role] || role}
+                          </Badge>
+                        ))}
+                        {profile.user_roles.length > 3 && (
+                          <Badge variant="secondary" className="text-xs">
+                            +{profile.user_roles.length - 3}
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Expertise */}
+                      {profile.expertise_areas.length > 0 && (
+                        <div className="flex flex-wrap justify-center gap-1 mb-3">
+                          {profile.expertise_areas.slice(0, 2).map((area) => (
+                            <Badge key={area} variant="outline" className="text-xs">
+                              {area}
+                            </Badge>
+                          ))}
+                          {profile.expertise_areas.length > 2 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{profile.expertise_areas.length - 2}
+                            </Badge>
+                          )}
                         </div>
-                        {profile.property_location && (
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
-                            <MapPin className="h-3 w-3" />
-                            {profile.property_location}
-                          </div>
-                        )}
-                        {profile.property_capacity && (
-                          <div className="text-xs text-muted-foreground mt-0.5">
-                            Capacity: {profile.property_capacity} guests
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    
-                    {(profile.expertise_areas?.length ?? 0) > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {profile.expertise_areas?.slice(0, 3).map((area) => (
-                          <Badge key={area} variant="secondary" className="text-xs">
-                            {area}
-                          </Badge>
-                        ))}
-                        {(profile.expertise_areas?.length ?? 0) > 3 && (
-                          <Badge variant="secondary" className="text-xs">
-                            +{(profile.expertise_areas?.length ?? 0) - 3}
-                          </Badge>
-                        )}
-                      </div>
-                    )}
-                    {(profile.skills?.length ?? 0) > 0 && !profile.expertise_areas?.length && (
-                      <div className="flex flex-wrap gap-1">
-                        {profile.skills?.slice(0, 3).map((skill) => (
-                          <Badge key={skill} variant="secondary" className="text-xs">
-                            {skill}
-                          </Badge>
-                        ))}
-                        {(profile.skills?.length ?? 0) > 3 && (
-                          <Badge variant="secondary" className="text-xs">
-                            +{(profile.skills?.length ?? 0) - 3}
-                          </Badge>
-                        )}
-                      </div>
-                    )}
-                    {profile.service_type && !profile.expertise_areas?.length && !profile.skills?.length && (
-                      <Badge variant="secondary" className="text-xs">
-                        {profile.service_type}
+                      )}
+
+                      {/* Bio */}
+                      {profile.bio && (
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                          {profile.bio}
+                        </p>
+                      )}
+
+                      {/* Availability */}
+                      <Badge variant="outline" className={`text-xs ${availInfo.color}`}>
+                        {availInfo.label}
                       </Badge>
-                    )}
-                  </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
 
-                  {/* Rating & Price */}
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-                    {/* Rating */}
-                    {getRating(profile) ? (
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 fill-warning text-warning" />
-                        <span className="text-sm font-medium text-foreground">
-                          {getRating(profile)?.toFixed(1)}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">No reviews yet</span>
-                    )}
-
-                    {/* Pricing */}
-                    {canSeeRates ? (
-                      <span className="text-sm font-medium text-foreground">
-                        {getPriceDisplay(profile)}
-                      </span>
-                    ) : (
-                      <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <Lock className="h-3.5 w-3.5" />
-                        <span className="text-xs">Verify to see rates</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Experience/Stats */}
-                  <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-                    {profile.past_retreats_count ? (
-                      <span>{profile.past_retreats_count} retreats hosted</span>
-                    ) : null}
-                    {profile.past_collaborations_count ? (
-                      <span>{profile.past_collaborations_count} collaborations</span>
-                    ) : null}
-                    {profile.experience_years ? (
-                      <span>{profile.experience_years}+ years experience</span>
-                    ) : null}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {/* Load More */}
-        {hasMore && (
-          <div className="mt-8 text-center">
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => setVisibleCount(prev => prev + 12)}
-            >
-              Load More
-            </Button>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Showing {visibleCount} of {filteredProfiles?.length ?? 0} members
-            </p>
-          </div>
+            {/* Load More */}
+            {hasNextPage && (
+              <div className="mt-8 text-center">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                >
+                  {isFetchingNextPage ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    'Load More'
+                  )}
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>

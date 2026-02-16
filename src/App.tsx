@@ -26,6 +26,7 @@ import BrowseVenues from "./pages/BrowseVenues";
 import VenueDetail from "./pages/VenueDetail";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
+import ProfileCompletePage from "./pages/ProfileCompletePage";
 import Directory from "./pages/Directory";
 import Messages from "./pages/Messages";
 import BuildRetreat from "./pages/BuildRetreat";
@@ -100,6 +101,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <EditProfile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile/complete"
+                element={
+                  <ProtectedRoute>
+                    <ProfileCompletePage />
                   </ProtectedRoute>
                 }
               />

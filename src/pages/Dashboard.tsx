@@ -12,13 +12,15 @@ import StaffTab from '@/components/dashboard/StaffTab';
 import AttendeeTab from '@/components/dashboard/AttendeeTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Shield, Crown, Handshake, Home, Briefcase, Heart } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Shield, Crown, Handshake, Home, Briefcase, Heart, UserCircle, AlertCircle } from 'lucide-react';
 
 interface ProfileData {
   name: string | null;
   bio: string | null;
   profile_photo: string | null;
   onboarding_completed: { [key: string]: boolean | undefined } | null;
+  profile_completed: boolean | null;
 }
 
 const roleLabels: Record<string, string> = {
@@ -52,7 +54,7 @@ export default function Dashboard() {
 
       const { data } = await supabase
         .from('profiles')
-        .select('name, bio, profile_photo, onboarding_completed')
+        .select('name, bio, profile_photo, onboarding_completed, profile_completed')
         .eq('id', user.id)
         .single();
 
@@ -62,6 +64,7 @@ export default function Dashboard() {
           bio: data.bio,
           profile_photo: data.profile_photo,
           onboarding_completed: data.onboarding_completed as ProfileData['onboarding_completed'],
+          profile_completed: data.profile_completed,
         });
       }
 
@@ -104,6 +107,33 @@ export default function Dashboard() {
           }}
           roles={userRoles}
         />
+
+        {/* Profile Completion Banner */}
+        {!profile?.profile_completed && (
+          <Card className="mb-6 p-6 border-primary/50 bg-primary/5">
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-full bg-primary/10">
+                <UserCircle className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold mb-1 flex items-center gap-2">
+                  Complete Your Profile
+                  <AlertCircle className="h-4 w-4 text-primary" />
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Help others discover what you offer and what you're looking for by completing your profile.
+                  Add your bio, expertise, portfolio, and more to stand out in the community.
+                </p>
+                <Button asChild>
+                  <Link to="/profile/complete">
+                    <UserCircle className="h-4 w-4 mr-2" />
+                    Complete Profile
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {hasRole('admin') && (
           <Button variant="outline" className="mb-6" asChild>

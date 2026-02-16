@@ -95,7 +95,7 @@ const Cooperative = () => {
               transition={{ delay: 0.2 }}
               className="inline-block px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium mb-6"
             >
-              Only 100 Founding Seats Available
+              Only 94 Founding Seats Available
             </motion.span>
             
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">

@@ -7,8 +7,8 @@ import { AppHeader } from '@/components/AppHeader';
 import { ProfileOnboarding } from '@/components/ProfileOnboarding';
 import { Loader2 } from 'lucide-react';
 
-export default function EditProfile() {
-  usePageTitle('Edit Profile');
+export default function ProfileCompletePage() {
+  usePageTitle('Complete Your Profile');
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -44,8 +44,7 @@ export default function EditProfile() {
   };
 
   const handleComplete = () => {
-    // Navigate to the user's own profile page
-    navigate(`/profile/${user?.id}`);
+    navigate('/dashboard');
   };
 
   if (loading) {
@@ -64,7 +63,7 @@ export default function EditProfile() {
         <ProfileOnboarding
           initialData={profileData}
           onComplete={handleComplete}
-          isEditMode={true}
+          isEditMode={false}
         />
       </main>
     </div>
