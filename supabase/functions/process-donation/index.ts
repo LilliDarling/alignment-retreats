@@ -7,11 +7,11 @@ import {
   getClientIP,
   securityHeaders
 } from "../_shared/security.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: getCorsHeaders(req) });
   }
 
   const clientIP = getClientIP(req);
@@ -31,7 +31,7 @@ serve(async (req) => {
       }), {
         status: 429,
         headers: {
-          ...corsHeaders,
+          ...getCorsHeaders(req),
           ...securityHeaders,
           "Retry-After": Math.ceil(rateLimitResult.resetIn / 1000).toString()
         },
@@ -43,7 +43,7 @@ serve(async (req) => {
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Authentication required" }), {
         status: 401,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
@@ -61,7 +61,7 @@ serve(async (req) => {
     if (!user) {
       return new Response(JSON.stringify({ error: "Invalid authentication" }), {
         status: 401,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
@@ -72,7 +72,7 @@ serve(async (req) => {
     } catch {
       return new Response(JSON.stringify({ error: "Invalid request body" }), {
         status: 400,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
@@ -82,7 +82,7 @@ serve(async (req) => {
     if (!amount || typeof amount !== "number" || amount < 1 || amount > 10000) {
       return new Response(JSON.stringify({ error: "Invalid donation amount. Must be between $1 and $10,000." }), {
         status: 400,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
@@ -94,14 +94,14 @@ serve(async (req) => {
     if (success_url && !isValidReturnUrl(success_url, allowedOrigins)) {
       return new Response(JSON.stringify({ error: "Invalid success URL" }), {
         status: 400,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
     if (cancel_url && !isValidReturnUrl(cancel_url, allowedOrigins)) {
       return new Response(JSON.stringify({ error: "Invalid cancel URL" }), {
         status: 400,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
@@ -178,7 +178,7 @@ serve(async (req) => {
       url: session.url,
     }), {
       status: 200,
-      headers: { ...corsHeaders, ...securityHeaders },
+      headers: { ...getCorsHeaders(req), ...securityHeaders },
     });
   } catch (error: unknown) {
     console.error("Donation processing error:", {
@@ -189,7 +189,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ error: "Donation processing failed" }), {
       status: 500,
-      headers: { ...corsHeaders, ...securityHeaders },
+      headers: { ...getCorsHeaders(req), ...securityHeaders },
     });
   }
 });

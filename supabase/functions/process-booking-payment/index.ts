@@ -8,11 +8,11 @@ import {
   getClientIP,
   securityHeaders
 } from "../_shared/security.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: getCorsHeaders(req) });
   }
 
   const clientIP = getClientIP(req);
@@ -33,7 +33,7 @@ serve(async (req) => {
       }), {
         status: 429,
         headers: {
-          ...corsHeaders,
+          ...getCorsHeaders(req),
           ...securityHeaders,
           "Retry-After": Math.ceil(rateLimitResult.resetIn / 1000).toString()
         },
@@ -71,7 +71,7 @@ serve(async (req) => {
             error: "Payment limit reached. Please try again later."
           }), {
             status: 429,
-            headers: { ...corsHeaders, ...securityHeaders },
+            headers: { ...getCorsHeaders(req), ...securityHeaders },
           });
         }
       }
@@ -90,7 +90,7 @@ serve(async (req) => {
     } catch {
       return new Response(JSON.stringify({ error: "Invalid request body" }), {
         status: 400,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
@@ -101,7 +101,7 @@ serve(async (req) => {
       if (typeof donation_amount !== "number" || donation_amount < 0 || donation_amount > 10000) {
         return new Response(JSON.stringify({ error: "Invalid donation amount" }), {
           status: 400,
-          headers: { ...corsHeaders, ...securityHeaders },
+          headers: { ...getCorsHeaders(req), ...securityHeaders },
         });
       }
     }
@@ -111,7 +111,7 @@ serve(async (req) => {
       console.warn("Invalid retreat_id format:", { retreat_id, requestId });
       return new Response(JSON.stringify({ error: "Invalid retreat ID" }), {
         status: 400,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
@@ -124,7 +124,7 @@ serve(async (req) => {
       console.warn("Invalid success_url:", { success_url, requestId });
       return new Response(JSON.stringify({ error: "Invalid success URL" }), {
         status: 400,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
@@ -132,7 +132,7 @@ serve(async (req) => {
       console.warn("Invalid cancel_url:", { cancel_url, requestId });
       return new Response(JSON.stringify({ error: "Invalid cancel URL" }), {
         status: 400,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
@@ -154,7 +154,7 @@ serve(async (req) => {
       console.warn("Retreat not found or not published:", { retreat_id, requestId });
       return new Response(JSON.stringify({ error: "Retreat not found or not available" }), {
         status: 404,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
@@ -165,7 +165,7 @@ serve(async (req) => {
         console.warn("Booking attempt for past/started retreat:", { retreat_id, start_date: retreat.start_date, requestId });
         return new Response(JSON.stringify({ error: "This retreat has already started and is no longer accepting bookings" }), {
           status: 410,
-          headers: { ...corsHeaders, ...securityHeaders },
+          headers: { ...getCorsHeaders(req), ...securityHeaders },
         });
       }
     }
@@ -183,7 +183,7 @@ serve(async (req) => {
         console.warn("Duplicate booking attempt:", { userId: user.id, retreat_id, requestId });
         return new Response(JSON.stringify({ error: "You already have a booking for this retreat" }), {
           status: 409,
-          headers: { ...corsHeaders, ...securityHeaders },
+          headers: { ...getCorsHeaders(req), ...securityHeaders },
         });
       }
     }
@@ -199,7 +199,7 @@ serve(async (req) => {
         console.error("Error checking booking count:", { retreat_id, requestId, error: countError.message });
         return new Response(JSON.stringify({ error: "Unable to verify availability" }), {
           status: 500,
-          headers: { ...corsHeaders, ...securityHeaders },
+          headers: { ...getCorsHeaders(req), ...securityHeaders },
         });
       }
 
@@ -207,7 +207,7 @@ serve(async (req) => {
         console.warn("Retreat at capacity:", { retreat_id, count, max: retreat.max_attendees, requestId });
         return new Response(JSON.stringify({ error: "This retreat is fully booked", code: "RETREAT_FULL" }), {
           status: 409,
-          headers: { ...corsHeaders, ...securityHeaders },
+          headers: { ...getCorsHeaders(req), ...securityHeaders },
         });
       }
     }
@@ -217,7 +217,7 @@ serve(async (req) => {
     if (donationCents > 0 && !retreat.allow_donations) {
       return new Response(JSON.stringify({ error: "Donations are not enabled for this retreat" }), {
         status: 400,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
@@ -228,7 +228,7 @@ serve(async (req) => {
       console.error("Invalid price:", { pricePerPerson, retreat_id, requestId });
       return new Response(JSON.stringify({ error: "Invalid price configuration" }), {
         status: 400,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
@@ -331,7 +331,7 @@ serve(async (req) => {
       url: session.url,
     }), {
       status: 200,
-      headers: { ...corsHeaders, ...securityHeaders },
+      headers: { ...getCorsHeaders(req), ...securityHeaders },
     });
   } catch (error: unknown) {
     console.error("Payment processing error:", { 
@@ -343,7 +343,7 @@ serve(async (req) => {
     // Don't expose internal error details
     return new Response(JSON.stringify({ error: "Payment processing failed" }), {
       status: 500,
-      headers: { ...corsHeaders, ...securityHeaders },
+      headers: { ...getCorsHeaders(req), ...securityHeaders },
     });
   }
 });

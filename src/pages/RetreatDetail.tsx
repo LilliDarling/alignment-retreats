@@ -64,11 +64,8 @@ export default function RetreatDetail() {
     queryFn: async () => {
       if (!retreat?.host_user_id) return null;
       const { data } = await supabase
-        .from('profiles')
-        .select('name, profile_photo')
-        .eq('id', retreat.host_user_id)
-        .single();
-      return data;
+        .rpc('get_public_profiles', { profile_ids: [retreat.host_user_id] });
+      return (data as any[])?.[0] || null;
     },
     enabled: !!retreat?.host_user_id,
   });

@@ -7,14 +7,14 @@ import {
   getClientIP,
   securityHeaders
 } from "../_shared/security.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 const VALID_ACTIONS = ["create_account", "check_status", "create_login_link"] as const;
 type ValidAction = typeof VALID_ACTIONS[number];
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: getCorsHeaders(req) });
   }
 
   const clientIP = getClientIP(req);
@@ -35,7 +35,7 @@ serve(async (req) => {
       }), {
         status: 429,
         headers: { 
-          ...corsHeaders, 
+          ...getCorsHeaders(req), 
           ...securityHeaders,
           "Retry-After": Math.ceil(rateLimitResult.resetIn / 1000).toString()
         },
@@ -53,7 +53,7 @@ serve(async (req) => {
       console.warn("Missing or invalid auth header:", { requestId });
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
@@ -64,7 +64,7 @@ serve(async (req) => {
       console.warn("Invalid token:", { requestId, error: userError?.message });
       return new Response(JSON.stringify({ error: "Invalid token" }), {
         status: 401,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
@@ -80,7 +80,7 @@ serve(async (req) => {
         error: "Request limit reached. Please try again later." 
       }), {
         status: 429,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
@@ -95,7 +95,7 @@ serve(async (req) => {
     } catch {
       return new Response(JSON.stringify({ error: "Invalid request body" }), {
         status: 400,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
@@ -106,7 +106,7 @@ serve(async (req) => {
       console.warn("Invalid action:", { action, requestId });
       return new Response(JSON.stringify({ error: "Invalid action" }), {
         status: 400,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
@@ -119,7 +119,7 @@ serve(async (req) => {
       console.warn("Invalid return_url:", { return_url, requestId });
       return new Response(JSON.stringify({ error: "Invalid return URL" }), {
         status: 400,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
@@ -172,7 +172,7 @@ serve(async (req) => {
 
       return new Response(JSON.stringify({ url: accountLink.url }), {
         status: 200,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
@@ -186,7 +186,7 @@ serve(async (req) => {
       if (!accountData) {
         return new Response(JSON.stringify({ status: "not_connected" }), {
           status: 200,
-          headers: { ...corsHeaders, ...securityHeaders },
+          headers: { ...getCorsHeaders(req), ...securityHeaders },
         });
       }
 
@@ -215,7 +215,7 @@ serve(async (req) => {
         details_submitted: account.details_submitted,
       }), {
         status: 200,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
@@ -229,7 +229,7 @@ serve(async (req) => {
       if (!accountData) {
         return new Response(JSON.stringify({ error: "No connected account" }), {
           status: 400,
-          headers: { ...corsHeaders, ...securityHeaders },
+          headers: { ...getCorsHeaders(req), ...securityHeaders },
         });
       }
 
@@ -237,13 +237,13 @@ serve(async (req) => {
 
       return new Response(JSON.stringify({ url: loginLink.url }), {
         status: 200,
-        headers: { ...corsHeaders, ...securityHeaders },
+        headers: { ...getCorsHeaders(req), ...securityHeaders },
       });
     }
 
     return new Response(JSON.stringify({ error: "Invalid action" }), {
       status: 400,
-      headers: { ...corsHeaders, ...securityHeaders },
+      headers: { ...getCorsHeaders(req), ...securityHeaders },
     });
   } catch (error: unknown) {
     console.error("Stripe Connect error:", { 
@@ -255,7 +255,7 @@ serve(async (req) => {
     // Don't expose internal error details
     return new Response(JSON.stringify({ error: "Request failed" }), {
       status: 500,
-      headers: { ...corsHeaders, ...securityHeaders },
+      headers: { ...getCorsHeaders(req), ...securityHeaders },
     });
   }
 });
