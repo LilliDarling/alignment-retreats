@@ -11,6 +11,7 @@ import {
   Check,
   Loader2,
   Home,
+  Heart,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
 import { ItineraryDisplay } from '@/components/ItineraryDisplay';
 import { SEO } from '@/components/SEO';
 import { cn } from '@/lib/utils';
@@ -33,6 +35,7 @@ export default function RetreatDetail() {
   const { user } = useAuth();
 
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [donationAmount, setDonationAmount] = useState<string>('');
 
   // Fetch retreat from database with property data
   const { data: retreat, isLoading, error } = useQuery({
@@ -135,11 +138,13 @@ export default function RetreatDetail() {
         headers.Authorization = `Bearer ${sessionData.session.access_token}`;
       }
 
+      const parsedDonation = parseFloat(donationAmount) || 0;
       const { data, error } = await supabase.functions.invoke('process-booking-payment', {
         body: {
           retreat_id: id,
           success_url: `${window.location.origin}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${window.location.origin}/retreat/${id}`,
+          ...(parsedDonation > 0 && { donation_amount: parsedDonation }),
         },
         headers,
       });
@@ -449,6 +454,39 @@ export default function RetreatDetail() {
               </div>
 
               <Separator className="my-6" />
+
+              {/* Optional Donation */}
+              {retreat.allow_donations && retreat.price_per_person && (
+                <div className="mb-6 p-4 rounded-lg bg-accent/30 border border-border">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Heart className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-foreground">Add a donation</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Optionally contribute extra to support our community
+                  </p>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      value={donationAmount}
+                      onChange={(e) => setDonationAmount(e.target.value)}
+                      className="pl-7"
+                      min={0}
+                      max={10000}
+                    />
+                  </div>
+                  {parseFloat(donationAmount) > 0 && (
+                    <div className="mt-3 pt-3 border-t border-border flex justify-between text-sm">
+                      <span className="text-muted-foreground">Total</span>
+                      <span className="font-semibold text-foreground">
+                        ${(retreat.price_per_person + parseFloat(donationAmount)).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* CTA Buttons */}
               <div className="space-y-3">

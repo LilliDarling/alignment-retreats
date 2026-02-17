@@ -16,6 +16,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import {
   Calendar,
   MapPin,
@@ -72,6 +74,7 @@ interface ApprovedRetreatRaw {
   what_you_offer: string | null;
   what_you_want: string | null;
   sample_itinerary: string | null;
+  allow_donations: boolean;
 }
 
 interface ApprovedRetreat extends ApprovedRetreatRaw {
@@ -108,7 +111,7 @@ export default function ApprovedRetreats() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('retreats')
-        .select('id, title, description, retreat_type, start_date, end_date, max_attendees, location, host_user_id, looking_for, reviewed_at, reviewed_by, created_at, price_per_person, what_you_offer, what_you_want, sample_itinerary')
+        .select('id, title, description, retreat_type, start_date, end_date, max_attendees, location, host_user_id, looking_for, reviewed_at, reviewed_by, created_at, price_per_person, what_you_offer, what_you_want, sample_itinerary, allow_donations')
         .eq('status', 'approved')
         .order('created_at', { ascending: false });
 
@@ -184,6 +187,23 @@ export default function ApprovedRetreats() {
     onError: (error) => {
       console.error('Error publishing retreat:', error);
       toast.error('Failed to publish retreat');
+    },
+  });
+
+  const toggleDonationsMutation = useMutation({
+    mutationFn: async ({ retreatId, allow }: { retreatId: string; allow: boolean }) => {
+      const { error } = await supabase
+        .from('retreats')
+        .update({ allow_donations: allow })
+        .eq('id', retreatId);
+      if (error) throw error;
+    },
+    onSuccess: (_, { allow }) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-approved-retreats'] });
+      toast.success(allow ? 'Donations enabled' : 'Donations disabled');
+    },
+    onError: () => {
+      toast.error('Failed to update donation setting');
     },
   });
 
@@ -415,6 +435,20 @@ export default function ApprovedRetreats() {
                       </div>
                     </div>
                   )}
+
+                  {/* Settings */}
+                  <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
+                    <Switch
+                      id={`donations-${retreat.id}`}
+                      checked={retreat.allow_donations}
+                      onCheckedChange={(checked) =>
+                        toggleDonationsMutation.mutate({ retreatId: retreat.id, allow: checked })
+                      }
+                    />
+                    <Label htmlFor={`donations-${retreat.id}`} className="text-sm cursor-pointer">
+                      Allow optional donations at checkout
+                    </Label>
+                  </div>
 
                   {/* Actions */}
                   <div className="flex flex-wrap gap-2 pt-2">

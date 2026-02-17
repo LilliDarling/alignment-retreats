@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Users, Shield, Briefcase, LayoutDashboard, Calendar, MapPin, MessageSquare, Menu } from "lucide-react";
+import { Users, Shield, Briefcase, LayoutDashboard, Calendar, MapPin, MessageSquare, Menu, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";

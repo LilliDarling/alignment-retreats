@@ -84,7 +84,7 @@ serve(async (req) => {
     });
 
     // Parse and validate request body
-    let body: { retreat_id?: string; success_url?: string; cancel_url?: string };
+    let body: { retreat_id?: string; success_url?: string; cancel_url?: string; donation_amount?: number };
     try {
       body = await req.json();
     } catch {
@@ -94,7 +94,17 @@ serve(async (req) => {
       });
     }
 
-    const { retreat_id, success_url, cancel_url } = body;
+    const { retreat_id, success_url, cancel_url, donation_amount } = body;
+
+    // Validate donation amount if provided
+    if (donation_amount !== undefined) {
+      if (typeof donation_amount !== "number" || donation_amount < 0 || donation_amount > 10000) {
+        return new Response(JSON.stringify({ error: "Invalid donation amount" }), {
+          status: 400,
+          headers: { ...corsHeaders, ...securityHeaders },
+        });
+      }
+    }
 
     // Validate retreat_id format
     if (!retreat_id || !isValidUUID(retreat_id)) {
@@ -135,7 +145,7 @@ serve(async (req) => {
     // Fetch retreat details
     const { data: retreat, error: retreatError } = await supabaseAdmin
       .from("retreats")
-      .select("id, title, retreat_type, price_per_person, status, max_attendees, start_date, retreat_team(*)")
+      .select("id, title, retreat_type, price_per_person, status, max_attendees, start_date, allow_donations, retreat_team(*)")
       .eq("id", retreat_id)
       .eq("status", "published") // Only allow booking published retreats
       .single();
@@ -202,6 +212,15 @@ serve(async (req) => {
       }
     }
 
+    // Validate donation is allowed for this retreat
+    const donationCents = donation_amount ? Math.round(donation_amount * 100) : 0;
+    if (donationCents > 0 && !retreat.allow_donations) {
+      return new Response(JSON.stringify({ error: "Donations are not enabled for this retreat" }), {
+        status: 400,
+        headers: { ...corsHeaders, ...securityHeaders },
+      });
+    }
+
     const pricePerPerson = retreat.price_per_person || 0;
     const totalAmount = Math.round(pricePerPerson * 100); // Convert to cents
 
@@ -213,28 +232,45 @@ serve(async (req) => {
       });
     }
 
-    // Calculate platform fee (30%)
+    // Calculate platform fee (30%) - only on retreat price, not donation
     const platformFee = Math.round(totalAmount * 0.30);
 
     // Build checkout session options
     const idempotencyKey = `checkout_${user?.id || clientIP}_${retreat_id}_${Date.now()}`;
 
     // Checkout session configuration
+    // Build line items
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+      {
+        price_data: {
+          currency: "cad",
+          product_data: {
+            name: retreat.title,
+            description: `Retreat booking - ${retreat.retreat_type || "Retreat"}`,
+          },
+          unit_amount: totalAmount,
+        },
+        quantity: 1,
+      },
+    ];
+
+    if (donationCents > 0) {
+      lineItems.push({
+        price_data: {
+          currency: "cad",
+          product_data: {
+            name: "Optional Donation",
+            description: "Voluntary donation to support Alignment Retreats",
+          },
+          unit_amount: donationCents,
+        },
+        quantity: 1,
+      });
+    }
+
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "cad",
-            product_data: {
-              name: retreat.title,
-              description: `Retreat booking - ${retreat.retreat_type || "Retreat"}`,
-            },
-            unit_amount: totalAmount,
-          },
-          quantity: 1,
-        },
-      ],
+      line_items: lineItems,
       mode: "payment",
       success_url: success_url || `${origin}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: cancel_url || `${origin}/retreat/${retreat_id}`,
@@ -242,12 +278,14 @@ serve(async (req) => {
         retreat_id,
         user_id: user?.id || "guest",
         platform_fee: platformFee.toString(),
+        donation_amount: donationCents.toString(),
         request_id: requestId,
       },
       payment_intent_data: {
         metadata: {
           retreat_id,
           user_id: user?.id || "guest",
+          donation_amount: donationCents.toString(),
           request_id: requestId,
         },
       },

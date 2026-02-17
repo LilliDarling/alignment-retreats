@@ -1,0 +1,1 @@
+ALTER TABLE retreats ADD COLUMN IF NOT EXISTS allow_donations BOOLEAN DEFAULT false;

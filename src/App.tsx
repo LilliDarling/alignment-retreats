@@ -31,6 +31,7 @@ import Directory from "./pages/Directory";
 import Messages from "./pages/Messages";
 import BuildRetreat from "./pages/BuildRetreat";
 import GetStarted from "./pages/GetStarted";
+import Donate from "./pages/Donate";
 import AuthCallback from "./pages/AuthCallback";
 
 import NotFound from "./pages/NotFound";
@@ -86,6 +87,14 @@ const App = () => (
               />
               <Route path="/build-retreat" element={<BuildRetreat />} />
               <Route path="/get-started" element={<GetStarted />} />
+              <Route
+                path="/donate"
+                element={
+                  <ProtectedRoute>
+                    <Donate />
+                  </ProtectedRoute>
+                }
+              />
               <Route 
                 path="/directory" 
                 element={
