@@ -9,7 +9,8 @@ import {
   ArrowLeft,
   Share2,
   Check,
-  Loader2
+  Loader2,
+  Home,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,12 +48,26 @@ export default function RetreatDetail() {
 
       return {
         ...data,
-        location: (data as any).location || data.property?.location || 'Location TBD',
+        location: (data as any).custom_venue_name || data.property?.location || data.property?.name || 'Location TBD',
         image: data.property?.photos?.[0] || 'https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&h=600&fit=crop',
         amenities: ['Daily sessions', 'Healthy meals', 'Guided activities'],
         schedule: [],
       };
     },
+  });
+
+  const { data: hostProfile } = useQuery({
+    queryKey: ['host-profile', retreat?.host_user_id],
+    queryFn: async () => {
+      if (!retreat?.host_user_id) return null;
+      const { data } = await supabase
+        .from('profiles')
+        .select('name, profile_photo')
+        .eq('id', retreat.host_user_id)
+        .single();
+      return data;
+    },
+    enabled: !!retreat?.host_user_id,
   });
 
   const { availability } = useSingleRetreatAvailability(id);
@@ -144,7 +159,7 @@ export default function RetreatDetail() {
     }
   };
 
-  const hostName = (retreat as any).host_name || 'Retreat Host';
+  const hostName = hostProfile?.name || 'Retreat Host';
 
   const retreatJsonLd = retreat ? {
     '@context': 'https://schema.org',
@@ -270,7 +285,7 @@ export default function RetreatDetail() {
             </div>
 
             {/* Venue Info */}
-            {(retreat.property || retreat.custom_venue_name) && (
+            {(retreat.property || (retreat as any).custom_venue_name) && (
               <div className="p-6 bg-card rounded-xl border border-border">
                 <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                   <MapPin className="h-5 w-5 text-primary" />
@@ -318,7 +333,7 @@ export default function RetreatDetail() {
                   /* Custom Venue */
                   <div className="flex items-center gap-2 text-foreground">
                     <Home className="h-5 w-5 text-muted-foreground" />
-                    <span className="font-medium">{retreat.custom_venue_name}</span>
+                    <span className="font-medium">{(retreat as any).custom_venue_name}</span>
                   </div>
                 )}
               </div>

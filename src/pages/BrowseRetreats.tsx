@@ -26,8 +26,8 @@ interface DbRetreat {
   price_per_person: number | null;
   sample_itinerary: string | null;
   status: string;
-  location: string | null;
-  host_name: string | null;
+  custom_venue_name: string | null;
+  host_user_id: string;
 }
 
 export default function BrowseRetreats() {
@@ -44,7 +44,7 @@ export default function BrowseRetreats() {
         .from('properties')
         .select('id, name, location')
         .eq('status', 'published')
-        .order('name');
+        .order('name') as unknown as { data: { id: string; name: string; location: string | null }[] | null; error: unknown };
 
       if (error) throw error;
       return data || [];
@@ -67,7 +67,7 @@ export default function BrowseRetreats() {
       let query = supabase
         .from('retreats')
         .select(
-          'id,title,description,retreat_type,start_date,end_date,max_attendees,price_per_person,sample_itinerary,status,location,host_name'
+          'id,title,description,retreat_type,start_date,end_date,max_attendees,price_per_person,sample_itinerary,status,custom_venue_name,host_user_id'
         )
         .eq('status', 'published');
 
@@ -92,6 +92,18 @@ export default function BrowseRetreats() {
   const retreatIds = retreats.map((r) => r.id);
   const { data: availabilityData = [] } = useRetreatAvailability(retreatIds);
   const availabilityMap = new Map(availabilityData.map((a) => [a.retreat_id, a]));
+
+  const hostUserIds = [...new Set(retreats.map((r) => r.host_user_id).filter(Boolean))];
+  const { data: hostProfiles = [] } = useQuery({
+    queryKey: ['host-profiles', hostUserIds],
+    queryFn: async () => {
+      if (hostUserIds.length === 0) return [];
+      const { data } = await supabase.from('profiles').select('id,name').in('id', hostUserIds);
+      return data || [];
+    },
+    enabled: hostUserIds.length > 0,
+  });
+  const profileMap = new Map(hostProfiles.map((p) => [p.id, p]));
 
   return (
     <div className="min-h-screen bg-background">
@@ -206,7 +218,7 @@ export default function BrowseRetreats() {
                     key={retreat.id}
                     id={retreat.id}
                     title={retreat.title}
-                    location={retreat.location || 'Location TBD'}
+                    location={retreat.custom_venue_name || 'Location TBD'}
                     image="https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&h=600&fit=crop"
                     startDate={retreat.start_date || ''}
                     endDate={retreat.end_date || ''}
@@ -215,7 +227,7 @@ export default function BrowseRetreats() {
                     maxAttendees={retreat.max_attendees || undefined}
                     spotsRemaining={avail?.spots_remaining ?? null}
                     isFull={avail?.is_full ?? false}
-                    hostName={retreat.host_name || undefined}
+                    hostName={profileMap.get(retreat.host_user_id)?.name || undefined}
                     sampleItinerary={retreat.sample_itinerary || undefined}
                     onClick={() => navigate(`/retreat/${retreat.id}`)}
                     onBook={() => navigate(`/retreat/${retreat.id}`)}
