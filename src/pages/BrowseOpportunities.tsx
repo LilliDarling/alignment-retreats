@@ -48,6 +48,7 @@ interface ApprovedRetreat {
   title: string;
   description: string | null;
   retreat_type: string | null;
+  status: string;
   start_date: string | null;
   end_date: string | null;
   max_attendees: number | null;
@@ -110,7 +111,7 @@ export default function BrowseOpportunities() {
     lookingFor: LookingFor;
   }>({ open: false, retreatId: '', retreatTitle: '', lookingFor: {} });
 
-  // Fetch approved retreats with pagination
+  // Fetch approved + published retreats with pagination
   const {
     data,
     isLoading,
@@ -119,15 +120,16 @@ export default function BrowseOpportunities() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ['approved-retreats'],
+    queryKey: ['opportunity-retreats'],
     queryFn: async ({ pageParam = 0 }) => {
       const from = pageParam * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
 
       const { data, error } = await supabase
         .from('retreats')
-        .select('id, title, description, retreat_type, start_date, end_date, max_attendees, location, host_name, looking_for')
-        .eq('status', 'approved')
+        .select('id, title, description, retreat_type, start_date, end_date, max_attendees, location, host_name, looking_for, status')
+        .in('status', ['approved', 'published'])
+        .not('looking_for', 'is', null)
         .order('created_at', { ascending: false })
         .range(from, to);
 
@@ -139,7 +141,35 @@ export default function BrowseOpportunities() {
       lastPage.length === PAGE_SIZE ? allPages.length : undefined,
   });
 
-  const retreats = data?.pages.flat() ?? [];
+  const allRetreats = data?.pages.flat() ?? [];
+
+  // Fetch accepted team members to determine which roles are filled
+  const retreatIds = allRetreats.map(r => r.id);
+  const { data: acceptedTeam = [] } = useQuery({
+    queryKey: ['opportunity-filled-roles', retreatIds],
+    enabled: retreatIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('retreat_team')
+        .select('retreat_id, role')
+        .in('retreat_id', retreatIds)
+        .eq('agreed', true);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Filter: show all approved retreats with needs, and published retreats only if they have unfilled roles
+  const retreats = allRetreats.filter(retreat => {
+    const needs = (retreat.looking_for as LookingFor)?.needs || [];
+    if (needs.length === 0) return false;
+    if (retreat.status === 'approved') return true;
+    // For published: check if any role is still unfilled
+    const filledRoles = new Set<string>(
+      acceptedTeam.filter(t => t.retreat_id === retreat.id).map(t => t.role)
+    );
+    return needs.some(need => !filledRoles.has(need));
+  });
 
   // Fetch user's existing applications
   const { data: myApplications = [], refetch: refetchApplications } = useQuery({
