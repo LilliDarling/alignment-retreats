@@ -34,6 +34,7 @@ import {
   MessageSquare,
   ExternalLink,
   User,
+  Undo2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { parseDateOnly } from '@/lib/dateOnly';
@@ -61,6 +62,7 @@ interface ApprovedRetreatRaw {
   title: string;
   description: string | null;
   retreat_type: string | null;
+  status: string;
   start_date: string | null;
   end_date: string | null;
   max_attendees: number | null;
@@ -105,14 +107,15 @@ export default function ApprovedRetreats() {
   const queryClient = useQueryClient();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [publishConfirm, setPublishConfirm] = useState<string | null>(null);
+  const [revertConfirm, setRevertConfirm] = useState<{ id: string; action: 'to_pending' | 'to_approved' } | null>(null);
 
   const { data: retreats = [], isLoading } = useQuery({
     queryKey: ['admin-approved-retreats'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('retreats')
-        .select('id, title, description, retreat_type, start_date, end_date, max_attendees, location, host_user_id, looking_for, reviewed_at, reviewed_by, created_at, price_per_person, what_you_offer, what_you_want, sample_itinerary, allow_donations')
-        .eq('status', 'approved')
+        .select('id, title, description, retreat_type, status, start_date, end_date, max_attendees, location, host_user_id, looking_for, reviewed_at, reviewed_by, created_at, price_per_person, what_you_offer, what_you_want, sample_itinerary, allow_donations')
+        .in('status', ['approved', 'published'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -207,6 +210,26 @@ export default function ApprovedRetreats() {
     },
   });
 
+  const revertMutation = useMutation({
+    mutationFn: async ({ retreatId, newStatus }: { retreatId: string; newStatus: string }) => {
+      const { error } = await supabase
+        .from('retreats')
+        .update({ status: newStatus })
+        .eq('id', retreatId);
+      if (error) throw error;
+    },
+    onSuccess: (_, { newStatus }) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-approved-retreats'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-submissions'] });
+      const label = newStatus === 'pending_review' ? 'pending review' : newStatus;
+      toast.success(`Retreat reverted to ${label}`);
+      setRevertConfirm(null);
+    },
+    onError: () => {
+      toast.error('Failed to revert retreat status');
+    },
+  });
+
   const formatDateRange = (startDate: string | null, endDate: string | null) => {
     if (!startDate || !endDate) return 'Dates TBD';
     const start = parseDateOnly(startDate);
@@ -228,8 +251,8 @@ export default function ApprovedRetreats() {
       <Card>
         <CardContent className="py-12 text-center">
           <Handshake className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-foreground mb-2">No approved retreats</h3>
-          <p className="text-muted-foreground">Approved retreats waiting for team assembly will appear here.</p>
+          <h3 className="text-lg font-semibold text-foreground mb-2">No retreats</h3>
+          <p className="text-muted-foreground">Approved and published retreats will appear here.</p>
         </CardContent>
       </Card>
     );
@@ -239,8 +262,10 @@ export default function ApprovedRetreats() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">Team Matching</h2>
-          <p className="text-sm text-muted-foreground">{retreats.length} retreat(s) in matching phase</p>
+          <h2 className="text-xl font-semibold">Retreat Management</h2>
+          <p className="text-sm text-muted-foreground">
+            {retreats.filter(r => r.status === 'approved').length} approved, {retreats.filter(r => r.status === 'published').length} published
+          </p>
         </div>
       </div>
 
@@ -279,9 +304,14 @@ export default function ApprovedRetreats() {
                     </CardDescription>
                   </div>
                 </div>
-                <Badge variant="secondary">
-                  {retreat.retreat_type || 'Wellness'}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant={retreat.status === 'published' ? 'default' : 'secondary'}>
+                    {retreat.status === 'published' ? 'Published' : 'Approved'}
+                  </Badge>
+                  <Badge variant="outline">
+                    {retreat.retreat_type || 'Wellness'}
+                  </Badge>
+                </div>
               </div>
             </CardHeader>
 
@@ -452,10 +482,39 @@ export default function ApprovedRetreats() {
 
                   {/* Actions */}
                   <div className="flex flex-wrap gap-2 pt-2">
-                    <Button onClick={() => setPublishConfirm(retreat.id)}>
-                      <Send className="h-4 w-4 mr-2" />
-                      Publish Retreat
-                    </Button>
+                    {retreat.status === 'approved' && (
+                      <>
+                        <Button onClick={() => setPublishConfirm(retreat.id)}>
+                          <Send className="h-4 w-4 mr-2" />
+                          Publish Retreat
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setRevertConfirm({ id: retreat.id, action: 'to_pending' })}
+                        >
+                          <Undo2 className="h-4 w-4 mr-2" />
+                          Revert to Pending
+                        </Button>
+                      </>
+                    )}
+                    {retreat.status === 'published' && (
+                      <>
+                        <Button
+                          variant="outline"
+                          onClick={() => setRevertConfirm({ id: retreat.id, action: 'to_approved' })}
+                        >
+                          <Undo2 className="h-4 w-4 mr-2" />
+                          Unpublish
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setRevertConfirm({ id: retreat.id, action: 'to_pending' })}
+                        >
+                          <Undo2 className="h-4 w-4 mr-2" />
+                          Revert to Pending
+                        </Button>
+                      </>
+                    )}
                     <Link to={`/messages?to=${retreat.host_user_id}`}>
                       <Button variant="outline">
                         <MessageSquare className="h-4 w-4 mr-2" />
@@ -497,6 +556,46 @@ export default function ApprovedRetreats() {
                 </>
               ) : (
                 'Publish'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Revert confirmation dialog */}
+      <AlertDialog open={!!revertConfirm} onOpenChange={(open) => { if (!open) setRevertConfirm(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {revertConfirm?.action === 'to_pending'
+                ? 'Revert to pending review?'
+                : 'Unpublish this retreat?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {revertConfirm?.action === 'to_pending'
+                ? 'This will move the retreat back to the submissions queue for re-review. It will no longer be visible to the public or in the matching phase.'
+                : 'This will remove the retreat from the public browse page. It will remain in the approved/matching phase.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => revertConfirm && revertMutation.mutate({
+                retreatId: revertConfirm.id,
+                newStatus: revertConfirm.action === 'to_pending' ? 'pending_review' : 'approved',
+              })}
+              disabled={revertMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {revertMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Reverting...
+                </>
+              ) : revertConfirm?.action === 'to_pending' ? (
+                'Revert to Pending'
+              ) : (
+                'Unpublish'
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
