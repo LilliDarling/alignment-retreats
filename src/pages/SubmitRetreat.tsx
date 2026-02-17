@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,7 +22,9 @@ import {
   Calendar,
   Send,
   CheckCircle2,
-  Lightbulb
+  Lightbulb,
+  AlertCircle,
+  Loader2,
 } from 'lucide-react';
 
 const expertiseAreas = [
@@ -46,7 +48,7 @@ const needsOptions = [
 const steps = [
   { title: 'What You Offer', icon: Sparkles },
   { title: 'What You Need', icon: Target },
-  { title: 'Goals & Dates', icon: Calendar },
+  { title: 'Details', icon: Calendar },
   { title: 'Sample Itinerary', icon: Lightbulb },
   { title: 'Review & Submit', icon: Send },
 ];
@@ -58,6 +60,9 @@ export default function SubmitRetreat() {
 
   const [currentStep, setCurrentStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [profileComplete, setProfileComplete] = useState<boolean | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [stepErrors, setStepErrors] = useState<string[]>([]);
 
   // Form state
   const [title, setTitle] = useState('');
@@ -68,11 +73,28 @@ export default function SubmitRetreat() {
   const [propertyId, setPropertyId] = useState<string | null>(null);
   const [customVenueName, setCustomVenueName] = useState('');
   const [earningsPerPerson, setEarningsPerPerson] = useState('');
-  const [preferredDates, setPreferredDates] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [datesFlexible, setDatesFlexible] = useState(true);
+  const [maxAttendees, setMaxAttendees] = useState('');
   const [sampleItinerary, setSampleItinerary] = useState('');
 
   const progress = ((currentStep + 1) / steps.length) * 100;
+
+  // Check profile completion on mount
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('profile_completed')
+        .eq('id', user.id)
+        .single();
+
+      setProfileComplete(data?.profile_completed ?? false);
+      setProfileLoading(false);
+    })();
+  }, [user]);
 
   const toggleExpertise = (area: string) => {
     setSelectedExpertise(prev =>
@@ -86,7 +108,35 @@ export default function SubmitRetreat() {
     );
   };
 
+  const validateStep = (step: number): string[] => {
+    const errors: string[] = [];
+    switch (step) {
+      case 0:
+        if (!title.trim()) errors.push('Title is required');
+        if (selectedExpertise.length === 0) errors.push('Select at least one area of expertise');
+        if (!whatYouOffer.trim()) errors.push('Describe your retreat concept');
+        break;
+      case 1:
+        if (selectedNeeds.length === 0) errors.push('Select at least one thing you need');
+        break;
+      case 2:
+        if (!earningsPerPerson) errors.push('Set your target earnings per person');
+        if (!startDate) errors.push('Set a start date');
+        if (!endDate) errors.push('Set an end date');
+        if (startDate && endDate && startDate >= endDate) errors.push('End date must be after start date');
+        if (!maxAttendees) errors.push('Set the number of attendee slots');
+        break;
+    }
+    return errors;
+  };
+
   const nextStep = () => {
+    const errors = validateStep(currentStep);
+    if (errors.length > 0) {
+      setStepErrors(errors);
+      return;
+    }
+    setStepErrors([]);
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
       window.scrollTo(0, 0);
@@ -94,6 +144,7 @@ export default function SubmitRetreat() {
   };
 
   const prevStep = () => {
+    setStepErrors([]);
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
       window.scrollTo(0, 0);
@@ -130,8 +181,10 @@ export default function SubmitRetreat() {
           preferred_dates_flexible: datesFlexible,
           retreat_type: selectedExpertise[0] || 'wellness',
           price_per_person: earningsPerPerson ? parseFloat(earningsPerPerson) : null,
+          start_date: startDate || null,
+          end_date: endDate || null,
+          max_attendees: maxAttendees ? parseInt(maxAttendees) : null,
           property_id: propertyId,
-          custom_venue_name: customVenueName || null,
           status: 'pending_review',
         })
         .select()
@@ -163,7 +216,9 @@ export default function SubmitRetreat() {
           needs: selectedNeeds,
           needsNotes,
           earningsPerPerson,
-          preferredDates,
+          startDate,
+          endDate,
+          maxAttendees,
           datesFlexible,
           sampleItinerary,
           submitterName: profile?.name || 'Unknown',
@@ -192,13 +247,51 @@ export default function SubmitRetreat() {
     }
   };
 
+  // Profile completion gate
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <AppHeader />
+        <div className="flex items-center justify-center py-24">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!profileComplete) {
+    return (
+      <div className="min-h-screen bg-background">
+        <AppHeader />
+        <main className="container mx-auto px-4 py-8 max-w-2xl">
+          <Link to="/dashboard" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Link>
+          <Card>
+            <CardContent className="py-12 text-center">
+              <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-foreground mb-2">Complete Your Profile First</h2>
+              <p className="text-muted-foreground mb-6">
+                You need a completed profile before submitting a retreat. This helps hosts and collaborators learn about you.
+              </p>
+              <Link to="/profile/complete">
+                <Button>Complete Profile</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
+
   const renderStep = () => {
     switch (currentStep) {
       case 0:
         return (
           <div className="space-y-6">
             <div>
-              <Label htmlFor="title" className="text-base font-medium">Give your retreat a working title</Label>
+              <Label htmlFor="title" className="text-base font-medium">Give your retreat a working title *</Label>
               <Input
                 id="title"
                 value={title}
@@ -209,7 +302,7 @@ export default function SubmitRetreat() {
             </div>
 
             <div>
-              <Label className="text-base font-medium">What's your expertise?</Label>
+              <Label className="text-base font-medium">What's your expertise? *</Label>
               <p className="text-sm text-muted-foreground mb-3">Select all that apply</p>
               <div className="flex flex-wrap gap-2">
                 {expertiseAreas.map((area) => (
@@ -226,7 +319,7 @@ export default function SubmitRetreat() {
             </div>
 
             <div>
-              <Label htmlFor="offer" className="text-base font-medium">Tell us about your retreat concept</Label>
+              <Label htmlFor="offer" className="text-base font-medium">Tell us about your retreat concept *</Label>
               <p className="text-sm text-muted-foreground mb-2">What transformation do you offer participants?</p>
               <Textarea
                 id="offer"
@@ -243,7 +336,7 @@ export default function SubmitRetreat() {
         return (
           <div className="space-y-6">
             <div>
-              <Label className="text-base font-medium">What do you need to make this happen?</Label>
+              <Label className="text-base font-medium">What do you need to make this happen? *</Label>
               <p className="text-sm text-muted-foreground mb-4">We'll match you with the right people and places</p>
 
               <div className="grid gap-3">
@@ -298,7 +391,7 @@ export default function SubmitRetreat() {
         return (
           <div className="space-y-8">
             <div>
-              <Label htmlFor="earnings" className="text-base font-medium">How much do you need to earn per person?</Label>
+              <Label htmlFor="earnings" className="text-base font-medium">How much do you need to earn per person? *</Label>
               <p className="text-sm text-muted-foreground mb-4">
                 We'll calculate the final ticket price based on venue, team, and other costs. Just tell us what you need to take home.
               </p>
@@ -317,24 +410,49 @@ export default function SubmitRetreat() {
             </div>
 
             <div>
-              <Label htmlFor="dates" className="text-base font-medium">Preferred dates</Label>
+              <Label htmlFor="maxAttendees" className="text-base font-medium">How many attendee slots? *</Label>
+              <p className="text-sm text-muted-foreground mb-2">Maximum number of participants</p>
               <Input
-                id="dates"
-                value={preferredDates}
-                onChange={(e) => setPreferredDates(e.target.value)}
-                placeholder="e.g., Spring 2026, or March 15-20, 2026"
-                className="mt-2"
+                id="maxAttendees"
+                type="number"
+                value={maxAttendees}
+                onChange={(e) => setMaxAttendees(e.target.value)}
+                placeholder="e.g., 20"
+                min={1}
               />
-              <div className="flex items-center gap-2 mt-3">
-                <Checkbox
-                  id="flexible"
-                  checked={datesFlexible}
-                  onCheckedChange={(checked) => setDatesFlexible(checked === true)}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="startDate" className="text-base font-medium">Start date *</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="mt-2"
                 />
-                <Label htmlFor="flexible" className="text-sm text-muted-foreground cursor-pointer">
-                  I'm flexible on dates
-                </Label>
               </div>
+              <div>
+                <Label htmlFor="endDate" className="text-base font-medium">End date *</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="mt-2"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="flexible"
+                checked={datesFlexible}
+                onCheckedChange={(checked) => setDatesFlexible(checked === true)}
+              />
+              <Label htmlFor="flexible" className="text-sm text-muted-foreground cursor-pointer">
+                I'm flexible on dates
+              </Label>
             </div>
           </div>
         );
@@ -396,12 +514,23 @@ Afternoon: Closing Ceremony & Departure`}
                   <p className="text-foreground">{whatYouOffer || 'Not specified'}</p>
                 </div>
 
-                {earningsPerPerson && (
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Target Earnings</p>
-                    <p className="text-foreground">${parseFloat(earningsPerPerson).toLocaleString()} per person</p>
+                    <p className="text-foreground">${earningsPerPerson ? parseFloat(earningsPerPerson).toLocaleString() : '?'} per person</p>
                   </div>
-                )}
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Attendee Slots</p>
+                    <p className="text-foreground">{maxAttendees || '?'} people</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Dates</p>
+                    <p className="text-foreground">
+                      {startDate && endDate ? `${startDate} to ${endDate}` : 'Not set'}
+                      {datesFlexible && ' (flexible)'}
+                    </p>
+                  </div>
+                </div>
 
                 {selectedNeeds.length > 0 && (
                   <div>
@@ -493,6 +622,20 @@ Afternoon: Closing Ceremony & Departure`}
           </CardHeader>
           <CardContent>
             {renderStep()}
+
+            {/* Validation Errors */}
+            {stepErrors.length > 0 && (
+              <div className="mt-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-destructive mt-0.5" />
+                  <div className="space-y-1">
+                    {stepErrors.map((error, i) => (
+                      <p key={i} className="text-sm text-destructive">{error}</p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 

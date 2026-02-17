@@ -23,7 +23,7 @@ import {
   Plane,
   Edit,
   Loader2,
-  Mail,
+  MessageSquare,
 } from 'lucide-react';
 
 interface ProfileData {
@@ -302,7 +302,7 @@ export default function Profile() {
 
                 {profile.website_url && (
                   <Button variant="outline" size="sm" asChild>
-                    <a href={profile.website_url} target="_blank" rel="noopener noreferrer">
+                    <a href={profile.website_url.match(/^https?:\/\//) ? profile.website_url : `https://${profile.website_url}`} target="_blank" rel="noopener noreferrer">
                       <Globe className="h-4 w-4 mr-2" />
                       Website
                     </a>
@@ -311,10 +311,10 @@ export default function Profile() {
 
                 {!isOwnProfile && (
                   <Button variant="default" size="sm" asChild>
-                    <a href={`mailto:${profile.email}`}>
-                      <Mail className="h-4 w-4 mr-2" />
-                      Contact
-                    </a>
+                    <Link to={`/messages?to=${profile.id}`}>
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Message
+                    </Link>
                   </Button>
                 )}
               </div>

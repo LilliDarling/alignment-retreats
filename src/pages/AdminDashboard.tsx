@@ -16,6 +16,7 @@ import RetreatBuilder from '@/components/admin/RetreatBuilder';
 import SubmissionReview from '@/components/admin/SubmissionReview';
 import PropertyReview from '@/components/admin/PropertyReview';
 import WishesReview from '@/components/admin/WishesReview';
+import ApprovedRetreats from '@/components/admin/ApprovedRetreats';
 import NotificationBell from '@/components/admin/NotificationBell';
 import { MemberDetailDrawer } from '@/components/admin/MemberDetailDrawer';
 import { 
@@ -381,6 +382,10 @@ export default function AdminDashboard() {
               <Home className="h-4 w-4" />
               <span className="hidden sm:inline">Properties</span>
             </TabsTrigger>
+            <TabsTrigger value="matching" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 text-xs sm:text-sm">
+              <Handshake className="h-4 w-4" />
+              <span className="hidden sm:inline">Matching</span>
+            </TabsTrigger>
             <TabsTrigger value="command" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 text-xs sm:text-sm">
               <Zap className="h-4 w-4" />
               <span className="hidden sm:inline">Command</span>
@@ -575,6 +580,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="analytics">
             <AnalyticsDashboard />
+          </TabsContent>
+
+          <TabsContent value="matching">
+            <ApprovedRetreats />
           </TabsContent>
 
           <TabsContent value="command">

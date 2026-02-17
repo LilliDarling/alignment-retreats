@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -58,6 +59,7 @@ const needIcons: Record<string, React.ComponentType<{ className?: string }>> = {
 export default function SubmissionReview() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -155,6 +157,7 @@ export default function SubmissionReview() {
           status: newStatus,
           admin_notes: adminNotes[submissionId] || null,
           reviewed_at: new Date().toISOString(),
+          reviewed_by: user?.id || null,
         })
         .eq('id', submissionId);
 

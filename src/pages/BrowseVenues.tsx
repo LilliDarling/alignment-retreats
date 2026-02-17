@@ -17,7 +17,7 @@ export default function BrowseVenues() {
     isLoading,
     error,
   } = useInfiniteQuery({
-    queryKey: ['published-venues'],
+    queryKey: ['published-venues-browse'],
     queryFn: async ({ pageParam = 0 }) => {
       const { data, error } = await supabase
         .from('properties')
@@ -27,7 +27,7 @@ export default function BrowseVenues() {
         .range(pageParam * PAGE_SIZE, (pageParam + 1) * PAGE_SIZE - 1);
 
       if (error) throw error;
-      return data;
+      return data || [];
     },
     getNextPageParam: (lastPage, pages) =>
       lastPage.length === PAGE_SIZE ? pages.length : undefined,

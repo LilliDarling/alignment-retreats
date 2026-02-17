@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -94,6 +94,18 @@ export function ApplyToRetreatDialog({
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // Reset form state when dialog opens or retreat changes
+  useEffect(() => {
+    if (open) {
+      const roles = (lookingFor.needs || []).filter(n => n in roleLabels);
+      const firstRole = roles[0] || '';
+      setSelectedRole(firstRole);
+      setFeeAmount(getDefaultFee(firstRole, lookingFor));
+      setFeeType(roleFeeTypes[firstRole] || 'flat');
+      setDescription('');
+    }
+  }, [open, retreatId]);
+
   const handleRoleChange = (role: string) => {
     setSelectedRole(role);
     setFeeAmount(getDefaultFee(role, lookingFor));
@@ -159,7 +171,7 @@ export function ApplyToRetreatDialog({
                 <SelectTrigger>
                   <SelectValue placeholder="Select a role" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[70]">
                   {availableRoles.map(role => (
                     <SelectItem key={role} value={role}>
                       {roleLabels[role]}

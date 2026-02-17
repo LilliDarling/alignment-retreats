@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import {
@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 interface Message {
@@ -45,12 +46,38 @@ interface Message {
 export default function Messages() {
   usePageTitle('Messages');
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [replyText, setReplyText] = useState('');
   const [sending, setSending] = useState(false);
+
+  // Compose state (triggered by ?to= param)
+  const [composeTo, setComposeTo] = useState<string | null>(null);
+  const [composeSubject, setComposeSubject] = useState('');
+  const [composeBody, setComposeBody] = useState('');
+
+  // Fetch recipient profile when ?to= param is present
+  const toUserId = searchParams.get('to');
+  const { data: composeRecipient } = useQuery({
+    queryKey: ['compose-recipient', toUserId],
+    enabled: !!toUserId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .rpc('get_public_profiles', { profile_ids: [toUserId!] });
+      return (data as any[])?.[0] || null;
+    },
+  });
+
+  // Set compose mode when ?to= param changes
+  useEffect(() => {
+    if (toUserId) {
+      setComposeTo(toUserId);
+      setSelectedMessage(null);
+    }
+  }, [toUserId]);
 
   // Fetch messages
   const { data: messages, isLoading } = useQuery({
@@ -142,6 +169,44 @@ export default function Messages() {
     } catch (error: any) {
       toast({
         title: 'Error sending reply',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // Send new message
+  const handleSendNewMessage = async () => {
+    if (!composeTo || !composeSubject.trim() || !composeBody.trim()) return;
+
+    setSending(true);
+    try {
+      const { error } = await supabase.from('messages').insert({
+        sender_id: user?.id,
+        recipient_id: composeTo,
+        subject: composeSubject.trim(),
+        body: composeBody.trim(),
+        message_type: 'general',
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Message sent!',
+        description: `Your message has been sent to ${composeRecipient?.name || 'the user'}.`,
+      });
+
+      setComposeTo(null);
+      setComposeSubject('');
+      setComposeBody('');
+      searchParams.delete('to');
+      setSearchParams(searchParams);
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
+    } catch (error: any) {
+      toast({
+        title: 'Error sending message',
         description: error.message,
         variant: 'destructive',
       });
@@ -262,9 +327,64 @@ export default function Messages() {
             )}
           </div>
 
-          {/* Message Detail */}
+          {/* Message Detail / Compose */}
           <div className="md:col-span-2 flex flex-col">
-            {selectedMessage ? (
+            {composeTo ? (
+              <>
+                <div className="p-4 border-b border-border">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={composeRecipient?.profile_photo} />
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {composeRecipient?.name?.charAt(0) || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <span className="font-medium text-foreground">
+                        New message to {composeRecipient?.name || 'User'}
+                      </span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setComposeTo(null);
+                        searchParams.delete('to');
+                        setSearchParams(searchParams);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex-1 p-6 space-y-4">
+                  <div>
+                    <Input
+                      placeholder="Subject"
+                      value={composeSubject}
+                      onChange={(e) => setComposeSubject(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Textarea
+                      placeholder="Write your message..."
+                      value={composeBody}
+                      onChange={(e) => setComposeBody(e.target.value)}
+                      rows={8}
+                    />
+                  </div>
+                </div>
+                <div className="p-4 border-t border-border flex justify-end">
+                  <Button
+                    onClick={handleSendNewMessage}
+                    disabled={!composeSubject.trim() || !composeBody.trim() || sending}
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    {sending ? 'Sending...' : 'Send Message'}
+                  </Button>
+                </div>
+              </>
+            ) : selectedMessage ? (
               <>
                 {/* Message Header */}
                 <div className="p-4 border-b border-border">

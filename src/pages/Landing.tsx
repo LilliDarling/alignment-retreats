@@ -6,7 +6,10 @@ import {
   Search,
   Compass,
   Users,
-  ArrowRight
+  ArrowRight,
+  Instagram,
+  Linkedin,
+  Facebook
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -347,13 +350,24 @@ export default function Landing() {
                 )}
               </div>
             </div>
-            <div className="flex flex-col items-center justify-center gap-2">
+            <div className="flex flex-col items-center justify-center gap-3">
+              <div className="flex items-center gap-4">
+                <a href="https://www.instagram.com/alignment.retreats" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                  <Instagram className="h-5 w-5" />
+                </a>
+                <a href="https://www.facebook.com/people/Alignment-Retreats-Co-op/61587878720842/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                  <Facebook className="h-5 w-5" />
+                </a>
+                <a href="https://www.linkedin.com/company/madc-foundation/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                  <Linkedin className="h-5 w-5" />
+                </a>
+              </div>
               <p className="text-muted-foreground text-sm text-center">
-                © 2024 Alignment Retreats. Bringing people together for transformative experiences.
+                © 2026 Alignment Retreats. Bringing people together for transformative experiences.
               </p>
-              <a 
-                href="https://madcfoundation.org" 
-                target="_blank" 
+              <a
+                href="https://madcfoundation.org"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-primary hover:underline"
               >

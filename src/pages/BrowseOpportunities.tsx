@@ -11,16 +11,23 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
   Calendar,
   MapPin,
   Users,
-  DollarSign,
   Briefcase,
   Handshake,
   Home,
   ChefHat,
   Check,
   Loader2,
+  Eye,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { parseDateOnly } from '@/lib/dateOnly';
@@ -91,6 +98,11 @@ const PAGE_SIZE = 12;
 export default function BrowseOpportunities() {
   usePageTitle('Opportunities');
   const { user } = useAuth();
+
+  // Detail modal state
+  const [detailRetreat, setDetailRetreat] = useState<ApprovedRetreat | null>(null);
+
+  // Apply dialog state
   const [applyDialog, setApplyDialog] = useState<{
     open: boolean;
     retreatId: string;
@@ -163,6 +175,15 @@ export default function BrowseOpportunities() {
     return `${format(start, 'MMM d')} - ${format(end, 'MMM d, yyyy')}`;
   };
 
+  const openApplyFromDetail = (retreat: ApprovedRetreat) => {
+    setApplyDialog({
+      open: true,
+      retreatId: retreat.id,
+      retreatTitle: retreat.title,
+      lookingFor: (retreat.looking_for || {}) as LookingFor,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SEO
@@ -184,7 +205,7 @@ export default function BrowseOpportunities() {
 
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">
-            {retreats.length} opportunity{retreats.length !== 1 ? 'ies' : 'y'} available
+            {retreats.length} opportunit{retreats.length !== 1 ? 'ies' : 'y'} available
           </p>
         </div>
 
@@ -274,7 +295,6 @@ export default function BrowseOpportunities() {
                             <div className="flex flex-wrap gap-2">
                               {needs.map(need => {
                                 const Icon = needIcons[need] || Briefcase;
-                                const budget = getRoleBudgetLabel(need, lookingFor);
                                 const applied = hasAppliedForRole(retreat.id, need);
                                 const app = applications.find(a => a.role === need);
 
@@ -290,12 +310,6 @@ export default function BrowseOpportunities() {
                                       <Icon className="h-3 w-3" />
                                     )}
                                     {needLabels[need] || need}
-                                    {budget && (
-                                      <span className="text-xs opacity-75">
-                                        <DollarSign className="h-3 w-3 inline" />
-                                        {budget.replace('$', '')}
-                                      </span>
-                                    )}
                                     {applied && (
                                       <span className="text-xs">
                                         {app?.agreed ? '(Accepted)' : '(Applied)'}
@@ -309,26 +323,16 @@ export default function BrowseOpportunities() {
                         )}
                       </div>
 
-                      {/* Apply Button */}
+                      {/* View Button */}
                       <div className="flex flex-col justify-center">
-                        {allRolesApplied ? (
-                          <Button variant="outline" disabled className="whitespace-nowrap">
-                            <Check className="h-4 w-4 mr-2" />
-                            Applied
-                          </Button>
-                        ) : (
-                          <Button
-                            className="whitespace-nowrap"
-                            onClick={() => setApplyDialog({
-                              open: true,
-                              retreatId: retreat.id,
-                              retreatTitle: retreat.title,
-                              lookingFor,
-                            })}
-                          >
-                            Apply Now
-                          </Button>
-                        )}
+                        <Button
+                          variant={allRolesApplied ? 'outline' : 'default'}
+                          className="whitespace-nowrap"
+                          onClick={() => setDetailRetreat(retreat)}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
@@ -360,6 +364,125 @@ export default function BrowseOpportunities() {
           </>
         )}
       </main>
+
+      {/* Detail Modal */}
+      <Dialog open={!!detailRetreat} onOpenChange={(open) => { if (!open) setDetailRetreat(null); }}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+          {detailRetreat && (() => {
+            const lookingFor = (detailRetreat.looking_for || {}) as LookingFor;
+            const needs = lookingFor.needs || [];
+            const applications = getApplicationsForRetreat(detailRetreat.id);
+            const allRolesApplied = needs.length > 0 && needs.every(n => hasAppliedForRole(detailRetreat.id, n));
+
+            return (
+              <>
+                <DialogHeader>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <DialogTitle className="font-display text-2xl">{detailRetreat.title}</DialogTitle>
+                      {detailRetreat.host_name && (
+                        <DialogDescription>by {detailRetreat.host_name}</DialogDescription>
+                      )}
+                    </div>
+                    {detailRetreat.retreat_type && (
+                      <Badge variant="secondary" className="shrink-0">{detailRetreat.retreat_type}</Badge>
+                    )}
+                  </div>
+                </DialogHeader>
+
+                <div className="space-y-6 py-2">
+                  {/* Meta info */}
+                  <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                    {detailRetreat.location && (
+                      <span className="flex items-center gap-1.5">
+                        <MapPin className="h-4 w-4" />
+                        {detailRetreat.location}
+                      </span>
+                    )}
+                    <span className="flex items-center gap-1.5">
+                      <Calendar className="h-4 w-4" />
+                      {formatDateRange(detailRetreat.start_date, detailRetreat.end_date)}
+                    </span>
+                    {detailRetreat.max_attendees && (
+                      <span className="flex items-center gap-1.5">
+                        <Users className="h-4 w-4" />
+                        {detailRetreat.max_attendees} attendees
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Full description */}
+                  {detailRetreat.description && (
+                    <div>
+                      <h3 className="text-sm font-medium text-foreground mb-2">About this retreat</h3>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        {detailRetreat.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Roles needed */}
+                  {needs.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-medium text-foreground mb-3">Positions Available</h3>
+                      <div className="space-y-2">
+                        {needs.map(need => {
+                          const Icon = needIcons[need] || Briefcase;
+                          const budget = getRoleBudgetLabel(need, lookingFor);
+                          const applied = hasAppliedForRole(detailRetreat.id, need);
+                          const app = applications.find(a => a.role === need);
+
+                          return (
+                            <div
+                              key={need}
+                              className="flex items-center justify-between p-3 rounded-lg border border-border bg-accent/20"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                  <Icon className="h-4 w-4 text-primary" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-foreground">{needLabels[need] || need}</p>
+                                  {budget && (
+                                    <p className="text-xs text-muted-foreground">{budget}</p>
+                                  )}
+                                </div>
+                              </div>
+                              {applied && (
+                                <Badge variant="default" className="gap-1">
+                                  <Check className="h-3 w-3" />
+                                  {app?.agreed ? 'Accepted' : 'Applied'}
+                                </Badge>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Apply button */}
+                  <div className="pt-2">
+                    {allRolesApplied ? (
+                      <Button disabled className="w-full" variant="outline">
+                        <Check className="h-4 w-4 mr-2" />
+                        Applied to All Roles
+                      </Button>
+                    ) : (
+                      <Button
+                        className="w-full"
+                        onClick={() => openApplyFromDetail(detailRetreat)}
+                      >
+                        Apply Now
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
 
       <ApplyToRetreatDialog
         open={applyDialog.open}
