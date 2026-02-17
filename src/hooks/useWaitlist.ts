@@ -14,9 +14,9 @@ export function useWaitlistStatus(retreatId: string | undefined) {
         .select('id, position, created_at')
         .eq('retreat_id', retreatId!)
         .eq('user_id', user!.id)
-        .maybeSingle() as unknown as { data: { id: string; position: number; created_at: string } | null; error: unknown };
+        .maybeSingle();
       if (error) throw error;
-      return data;
+      return data as { id: string; position: number; created_at: string } | null;
     },
     enabled: !!retreatId && !!user,
   });

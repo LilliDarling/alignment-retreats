@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,11 +40,13 @@ export default function BrowseRetreats() {
   const { data: venues } = useQuery({
     queryKey: ['published-venues'],
     queryFn: async () => {
+      //@ts-ignore
       const { data, error } = await supabase
         .from('properties')
         .select('id, name, location')
         .eq('status', 'published')
-        .order('name') as unknown as { data: { id: string; name: string; location: string | null }[] | null; error: unknown };
+        .order('name')
+        .overrideTypes<{ id: string; name: string; location: string | null }[]>();
 
       if (error) throw error;
       return data || [];
