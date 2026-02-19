@@ -125,7 +125,7 @@ export default function SubmitVenue() {
       case 0: // Basics
         return venueName.trim() && description.trim() && propertyType;
       case 1: // Photos & Videos
-        return photos.length > 0;
+        return true; // Photos are optional
       case 2: // Amenities
         return true; // Optional
       case 3: // Pricing

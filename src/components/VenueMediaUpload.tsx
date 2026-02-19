@@ -149,15 +149,19 @@ export function VenueMediaUpload({
         )
       );
 
-      // Add to uploaded arrays
+      // Add to uploaded arrays (use functional updates to avoid stale closure)
       if (mediaFile.type === 'image') {
-        const newPhotos = [...uploadedPhotos, publicUrl];
-        setUploadedPhotos(newPhotos);
-        onPhotosChange(newPhotos);
+        setUploadedPhotos(prev => {
+          const newPhotos = [...prev, publicUrl];
+          onPhotosChange(newPhotos);
+          return newPhotos;
+        });
       } else {
-        const newVideos = [...uploadedVideos, publicUrl];
-        setUploadedVideos(newVideos);
-        onVideosChange(newVideos);
+        setUploadedVideos(prev => {
+          const newVideos = [...prev, publicUrl];
+          onVideosChange(newVideos);
+          return newVideos;
+        });
       }
 
       toast({

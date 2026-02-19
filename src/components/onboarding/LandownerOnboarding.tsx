@@ -142,7 +142,7 @@ export function LandownerOnboarding({ onComplete, onBack, initialData }: Landown
 
   const canProceedStep1 = propertyName && propertyType && contactName && contactEmail;
   const canProceedStep2 = capacity;
-  const canProceedStep3 = photos.length > 0;
+  const canProceedStep3 = true; // Photos are optional
 
   // Step 1: Property Identity
   if (step === 1) {
