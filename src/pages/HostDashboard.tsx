@@ -23,6 +23,19 @@ import {
   Image
 } from 'lucide-react';
 
+interface HostRetreat {
+  id: string;
+  title: string;
+  status: string;
+  retreat_type: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  max_attendees: number | null;
+  price_per_person: number | null;
+  main_image: string | null;
+  created_at: string;
+}
+
 interface HostProfile {
   expertise_areas: string[] | null;
   min_rate: number | null;
@@ -48,6 +61,7 @@ export default function HostDashboard() {
   const [hostProfile, setHostProfile] = useState<HostProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [myRetreats, setMyRetreats] = useState<HostRetreat[]>([]);
   const hasMultipleRoles = userRoles.length > 1;
 
   useEffect(() => {
@@ -78,6 +92,17 @@ export default function HostDashboard() {
 
       if (hostData) {
         setHostProfile(hostData);
+      }
+
+      // Fetch user's submitted retreats
+      const { data: retreatsData } = await supabase
+        .from('retreats')
+        .select('id, title, status, retreat_type, start_date, end_date, max_attendees, price_per_person, main_image, created_at')
+        .eq('host_user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (retreatsData) {
+        setMyRetreats(retreatsData as HostRetreat[]);
       }
 
       // Auto-trigger onboarding if host hasn't completed their profile
@@ -328,6 +353,76 @@ export default function HostDashboard() {
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Link>
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* My Submitted Retreats */}
+        <Card className="mb-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="font-display text-xl">My Retreats</CardTitle>
+                <CardDescription>Track the status of your retreat submissions</CardDescription>
+              </div>
+              <Button asChild size="sm">
+                <Link to="/submit-retreat">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Submit New
+                </Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {myRetreats.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="mb-2">You haven't submitted any retreats yet.</p>
+                <Button asChild variant="outline">
+                  <Link to="/submit-retreat">Submit Your First Retreat</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {myRetreats.map((retreat) => (
+                  <Link
+                    key={retreat.id}
+                    to={`/retreats/${retreat.id}`}
+                    className="flex items-center gap-4 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+                  >
+                    {retreat.main_image ? (
+                      <img src={retreat.main_image} alt={retreat.title} className="w-16 h-12 rounded-md object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="w-16 h-12 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
+                        <Image className="h-5 w-5 text-muted-foreground/50" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate">{retreat.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {retreat.retreat_type || 'Wellness'}
+                        {retreat.start_date && ` • ${format(new Date(retreat.start_date), 'MMM d, yyyy')}`}
+                        {retreat.max_attendees && ` • ${retreat.max_attendees} attendees`}
+                      </p>
+                    </div>
+                    <Badge
+                      variant={
+                        retreat.status === 'published' ? 'default' :
+                        retreat.status === 'approved' ? 'default' :
+                        retreat.status === 'pending_review' ? 'secondary' :
+                        retreat.status === 'cancelled' ? 'destructive' :
+                        'outline'
+                      }
+                      className="flex-shrink-0"
+                    >
+                      {retreat.status === 'pending_review' ? 'Under Review' :
+                       retreat.status === 'approved' ? 'Approved' :
+                       retreat.status === 'published' ? 'Published' :
+                       retreat.status === 'cancelled' ? 'Declined' :
+                       retreat.status}
+                    </Badge>
+                  </Link>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

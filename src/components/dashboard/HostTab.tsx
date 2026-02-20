@@ -25,6 +25,25 @@ import {
   X
 } from 'lucide-react';
 
+interface HostRetreat {
+  id: string;
+  title: string;
+  status: string;
+  retreat_type: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  max_attendees: number | null;
+  price_per_person: number | null;
+  main_image: string | null;
+  created_at: string;
+  description: string | null;
+  what_you_offer: string | null;
+  sample_itinerary: string | null;
+  looking_for: any;
+  preferred_dates_flexible: boolean | null;
+  custom_venue_name: string | null;
+}
+
 interface HostProfile {
   expertise_areas: string[] | null;
   min_rate: number | null;
@@ -86,6 +105,8 @@ export default function HostTab({ profile, onProfileUpdate }: HostTabProps) {
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [pendingApplications, setPendingApplications] = useState<TeamApplication[]>([]);
+  const [myRetreats, setMyRetreats] = useState<HostRetreat[]>([]);
+  const [expandedRetreatId, setExpandedRetreatId] = useState<string | null>(null);
 
   const fetchApplications = async () => {
     if (!user) return;
@@ -147,6 +168,17 @@ export default function HostTab({ profile, onProfileUpdate }: HostTabProps) {
 
       if (hostData) {
         setHostProfile(hostData);
+      }
+
+      // Fetch user's submitted retreats
+      const { data: retreatsData } = await supabase
+        .from('retreats')
+        .select('id, title, status, retreat_type, start_date, end_date, max_attendees, price_per_person, main_image, created_at, description, what_you_offer, sample_itinerary, looking_for, preferred_dates_flexible, custom_venue_name')
+        .eq('host_user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (retreatsData) {
+        setMyRetreats(retreatsData as HostRetreat[]);
       }
 
       // Auto-trigger onboarding if host hasn't completed their profile
@@ -331,88 +363,29 @@ export default function HostTab({ profile, onProfileUpdate }: HostTabProps) {
 
   return (
     <div className="space-y-6">
-      {/* Complete Profile CTA */}
+      {/* Host Profile Summary */}
       <Card>
-        <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            {isOnboardingCompleted ? (
-              <div className="p-3 rounded-full bg-success/10">
-                <CheckCircle2 className="h-6 w-6 text-success" />
-              </div>
-            ) : (
-              <div className="p-3 rounded-full bg-primary/10">
-                <Sparkles className="h-6 w-6 text-primary" />
-              </div>
-            )}
+        <CardHeader>
+          <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-foreground">
-                {isOnboardingCompleted ? 'Your Host Profile' : 'Complete Your Host Profile'}
-              </h2>
-              <p className="text-muted-foreground">
+              <CardTitle className="font-display text-xl">Your Host Profile</CardTitle>
+              <CardDescription>
                 {isOnboardingCompleted
-                  ? 'Update your expertise and preferences anytime'
+                  ? 'Your current profile settings'
                   : 'Set up your profile to get discovered by collaborators and venues'}
-              </p>
+              </CardDescription>
             </div>
-          </div>
-          <Button
-            onClick={() => setShowOnboarding(true)}
-            variant={isOnboardingCompleted ? 'outline' : 'default'}
-          >
-            {isOnboardingCompleted ? 'Update Profile' : 'Complete Profile'}
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Submit Retreat CTA */}
-      <Card className="bg-gradient-to-r from-accent/10 to-transparent border border-border shadow-sm">
-        <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div>
-            <h2 className="font-display text-2xl font-semibold text-foreground mb-1">Submit a Retreat</h2>
-            <p className="text-muted-foreground">Have a retreat idea? Submit it for review and start building your team.</p>
-          </div>
-          <Button size="lg" className="whitespace-nowrap" asChild>
-            <Link to="/retreats/submit">
-              <Sparkles className="h-5 w-5 mr-2" />
-              Submit Retreat
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Co-Op CTA */}
-      <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
-        <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-full bg-primary/10">
-              <Crown className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h2 className="font-display text-xl font-semibold text-foreground">
-                Own a Piece of the Platform
-              </h2>
-              <p className="text-muted-foreground">
-                Join our member-owned cooperative and keep more of what you earn
-              </p>
-            </div>
-          </div>
-          <Button asChild>
-            <Link to="/cooperative">
-              Become a Co-Owner Today!
+            <Button
+              onClick={() => setShowOnboarding(true)}
+              variant="outline"
+              size="sm"
+            >
+              {isOnboardingCompleted ? 'Edit Profile' : 'Complete Profile'}
               <ArrowRight className="h-4 w-4 ml-2" />
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Profile Summary */}
-      {isOnboardingCompleted && hostProfile && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-display text-xl">Your Host Profile</CardTitle>
-            <CardDescription>Your current profile settings</CardDescription>
-          </CardHeader>
+            </Button>
+          </div>
+        </CardHeader>
+        {isOnboardingCompleted && hostProfile && (
           <CardContent className="space-y-6">
             {hostProfile.expertise_areas && hostProfile.expertise_areas.length > 0 && (
               <div>
@@ -489,6 +462,196 @@ export default function HostTab({ profile, onProfileUpdate }: HostTabProps) {
                 <p className="text-sm text-foreground whitespace-pre-line">{hostProfile.portfolio_links}</p>
               </div>
             )}
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Co-Op CTA */}
+      <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
+        <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-full bg-primary/10">
+              <Crown className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h2 className="font-display text-xl font-semibold text-foreground">
+                Own a Piece of the Platform
+              </h2>
+              <p className="text-muted-foreground">
+                Join our member-owned cooperative and keep more of what you earn
+              </p>
+            </div>
+          </div>
+          <Button asChild>
+            <Link to="/cooperative">
+              Become a Co-Owner Today!
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Submit Retreat CTA */}
+      <Card className="bg-gradient-to-r from-accent/10 to-transparent border border-border shadow-sm">
+        <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div>
+            <h2 className="font-display text-2xl font-semibold text-foreground mb-1">Submit a Retreat</h2>
+            <p className="text-muted-foreground">Have a retreat idea? Submit it for review and start building your team.</p>
+          </div>
+          <Button size="lg" className="whitespace-nowrap" asChild>
+            <Link to="/retreats/submit">
+              <Sparkles className="h-5 w-5 mr-2" />
+              Submit Retreat
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* My Submitted Retreats */}
+      {myRetreats.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-display text-xl">My Retreats</CardTitle>
+            <CardDescription>Track the status of your retreat submissions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {myRetreats.map((retreat) => {
+                const isExpanded = expandedRetreatId === retreat.id;
+                const isPublished = retreat.status === 'published';
+                const lookingFor = retreat.looking_for as { needs?: string[]; notes?: Record<string, string> } | null;
+                const needs = lookingFor?.needs || [];
+
+                const header = (
+                  <div className="flex items-center gap-4">
+                    {retreat.main_image ? (
+                      <img src={retreat.main_image} alt={retreat.title} className="w-16 h-12 rounded-md object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="w-16 h-12 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
+                        <Image className="h-5 w-5 text-muted-foreground/50" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate">{retreat.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {retreat.retreat_type || 'Wellness'}
+                        {retreat.start_date && ` · ${format(new Date(retreat.start_date), 'MMM d, yyyy')}`}
+                        {retreat.max_attendees && ` · ${retreat.max_attendees} attendees`}
+                      </p>
+                    </div>
+                    <Badge
+                      variant={
+                        retreat.status === 'published' ? 'default' :
+                        retreat.status === 'approved' ? 'default' :
+                        retreat.status === 'pending_review' ? 'secondary' :
+                        retreat.status === 'cancelled' ? 'destructive' :
+                        'outline'
+                      }
+                      className="flex-shrink-0"
+                    >
+                      {retreat.status === 'pending_review' ? 'Under Review' :
+                       retreat.status === 'approved' ? 'Approved' :
+                       retreat.status === 'published' ? 'Published' :
+                       retreat.status === 'cancelled' ? 'Declined' :
+                       retreat.status}
+                    </Badge>
+                  </div>
+                );
+
+                if (isPublished) {
+                  return (
+                    <Link
+                      key={retreat.id}
+                      to={`/retreats/${retreat.id}`}
+                      className="block p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+                    >
+                      {header}
+                    </Link>
+                  );
+                }
+
+                return (
+                  <div
+                    key={retreat.id}
+                    className={`rounded-lg border transition-colors ${isExpanded ? 'ring-2 ring-primary' : ''}`}
+                  >
+                    <div
+                      className="p-3 cursor-pointer hover:bg-accent/50 transition-colors"
+                      onClick={() => setExpandedRetreatId(isExpanded ? null : retreat.id)}
+                    >
+                      {header}
+                    </div>
+
+                    {isExpanded && (
+                      <div className="px-3 pb-3 space-y-4 border-t pt-4">
+                        {retreat.main_image && (
+                          <img src={retreat.main_image} alt="Cover" className="w-full max-w-md h-48 rounded-lg object-cover" />
+                        )}
+
+                        {retreat.what_you_offer && (
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground mb-1">Vision & Concept</p>
+                            <p className="text-foreground text-sm">{retreat.what_you_offer}</p>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <p className="text-muted-foreground font-medium">Price per Person</p>
+                            <p className="text-foreground">${retreat.price_per_person?.toLocaleString() || '?'}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground font-medium">Attendees</p>
+                            <p className="text-foreground">{retreat.max_attendees || '?'}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground font-medium">Dates</p>
+                            <p className="text-foreground">
+                              {retreat.start_date && retreat.end_date
+                                ? `${format(new Date(retreat.start_date), 'MMM d')} - ${format(new Date(retreat.end_date), 'MMM d, yyyy')}`
+                                : 'Not set'}
+                              {retreat.preferred_dates_flexible && ' (flexible)'}
+                            </p>
+                          </div>
+                          {retreat.custom_venue_name && (
+                            <div>
+                              <p className="text-muted-foreground font-medium">Venue</p>
+                              <p className="text-foreground">{retreat.custom_venue_name}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {needs.length > 0 && (
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground mb-2">Looking For</p>
+                            <div className="flex flex-wrap gap-2">
+                              {needs.map((needId: string) => (
+                                <Badge key={needId} variant="outline" className="capitalize text-xs">
+                                  {needId.replace(/_/g, ' ')}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {retreat.sample_itinerary && (
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground mb-1">Sample Itinerary</p>
+                            <pre className="text-sm text-foreground bg-accent/50 p-3 rounded-lg whitespace-pre-wrap font-sans">
+                              {retreat.sample_itinerary}
+                            </pre>
+                          </div>
+                        )}
+
+                        <p className="text-xs text-muted-foreground">
+                          Submitted {format(new Date(retreat.created_at), 'MMM d, yyyy')}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </CardContent>
         </Card>
       )}

@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { AppHeader } from '@/components/AppHeader';
 import { VenueSelector } from '@/components/VenueSelector';
+import { RetreatImageUpload } from '@/components/RetreatImageUpload';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -78,6 +79,7 @@ export default function SubmitRetreat() {
   const [datesFlexible, setDatesFlexible] = useState(true);
   const [maxAttendees, setMaxAttendees] = useState('');
   const [sampleItinerary, setSampleItinerary] = useState('');
+  const [mainImage, setMainImage] = useState<string | null>(null);
 
   const progress = ((currentStep + 1) / steps.length) * 100;
 
@@ -185,6 +187,7 @@ export default function SubmitRetreat() {
           end_date: endDate || null,
           max_attendees: maxAttendees ? parseInt(maxAttendees) : null,
           property_id: propertyId,
+          main_image: mainImage,
           status: 'pending_review',
         })
         .select()
@@ -328,6 +331,14 @@ export default function SubmitRetreat() {
                 placeholder="Describe your vision, what makes your retreat unique, and the experience you want to create..."
                 className="mt-2 min-h-[150px]"
               />
+            </div>
+
+            <div>
+              <Label className="text-base font-medium">Cover Photo</Label>
+              <p className="text-sm text-muted-foreground mb-2">
+                Add a cover image to make your retreat stand out (optional)
+              </p>
+              <RetreatImageUpload value={mainImage} onChange={setMainImage} />
             </div>
           </div>
         );
@@ -509,6 +520,9 @@ Afternoon: Closing Ceremony & Departure`}
                 <CardDescription>{selectedExpertise.join(', ') || 'Wellness retreat'}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {mainImage && (
+                  <img src={mainImage} alt="Cover" className="w-full h-40 rounded-lg object-cover" />
+                )}
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Your Vision</p>
                   <p className="text-foreground">{whatYouOffer || 'Not specified'}</p>

@@ -36,7 +36,13 @@ import AuthCallback from "./pages/AuthCallback";
 
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <HelmetProvider>
@@ -53,7 +59,6 @@ const App = () => (
           <Route path="/" element={<Landing />} />
               <Route path="/cooperative" element={<Cooperative />} />
               <Route path="/login" element={<Login />} />
-              {/* All signup paths redirect to unified get-started flow */}
               <Route path="/signup" element={<Navigate to="/get-started" replace />} />
               <Route path="/signup/attendee" element={<Navigate to="/get-started" replace />} />
               <Route path="/thank-you" element={<ThankYou />} />

@@ -87,17 +87,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      // Token refreshes (e.g. on tab focus) — update session silently, skip re-renders
+      if (event === 'TOKEN_REFRESHED') {
+        setSession(session);
+        return;
+      }
+
       setSession(session);
-      setUser(session?.user ?? null);
+
+      // Preserve the same user object reference if the user hasn't changed
+      // This prevents useEffect([user]) from re-firing across the app
+      const newUserId = session?.user?.id ?? null;
+      setUser(prev => {
+        const prevUserId = prev?.id ?? null;
+        if (prevUserId === newUserId && prevUserId !== null) return prev;
+        return session?.user ?? null;
+      });
 
       if (session?.user) {
-        // Keep app in loading state until roles are fetched.
-        setLoading(true);
-
-        // Defer role fetch to avoid deadlock
-        setTimeout(() => {
-          fetchUserRoles(session.user.id).finally(() => setLoading(false));
-        }, 0);
+        // Only trigger loading + role fetch for actual user changes (sign-in),
+        // not repeat events for the same user (e.g. INITIAL_SESSION on tab focus)
+        setUserRoles(prev => {
+          if (prev.length > 0) {
+            // Already have roles for this user — skip refetch
+            setLoading(false);
+            return prev;
+          }
+          setLoading(true);
+          setTimeout(() => {
+            fetchUserRoles(session.user.id).finally(() => setLoading(false));
+          }, 0);
+          return prev;
+        });
       } else {
         setUserRoles([]);
         setLoading(false);

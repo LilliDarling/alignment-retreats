@@ -52,7 +52,7 @@ export default function RetreatDetail() {
       return {
         ...data,
         location: (data as any).custom_venue_name || data.property?.location || data.property?.name || 'Location TBD',
-        image: data.property?.photos?.[0] || 'https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&h=600&fit=crop',
+        image: (data as any).main_image || data.property?.photos?.[0] || 'https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&h=600&fit=crop',
         amenities: ['Daily sessions', 'Healthy meals', 'Guided activities'],
         schedule: [],
       };

@@ -38,6 +38,7 @@ interface Submission {
   retreat_type: string | null;
   price_per_person: number | null;
   max_attendees: number | null;
+  main_image: string | null;
   created_at: string;
   host_user_id: string;
   host_name?: string;
@@ -288,6 +289,17 @@ export default function SubmissionReview() {
               {/* Expanded Content */}
               {isExpanded && (
                 <div className="space-y-4 pt-4 border-t">
+                  {submission.main_image && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-1">Cover Photo</p>
+                      <img
+                        src={submission.main_image}
+                        alt={submission.title}
+                        className="w-full max-w-md h-48 rounded-lg object-cover"
+                      />
+                    </div>
+                  )}
+
                   {submission.what_you_offer && (
                     <div>
                       <p className="text-sm font-medium text-muted-foreground mb-1">Vision & Concept</p>

@@ -839,6 +839,7 @@ export type Database = {
           host_user_id: string
           id: string
           looking_for: Json | null
+          main_image: string | null
           max_attendees: number | null
           preferred_dates_flexible: boolean | null
           price_per_person: number | null
@@ -866,6 +867,7 @@ export type Database = {
           host_user_id: string
           id?: string
           looking_for?: Json | null
+          main_image?: string | null
           max_attendees?: number | null
           preferred_dates_flexible?: boolean | null
           price_per_person?: number | null
@@ -893,6 +895,7 @@ export type Database = {
           host_user_id?: string
           id?: string
           looking_for?: Json | null
+          main_image?: string | null
           max_attendees?: number | null
           preferred_dates_flexible?: boolean | null
           price_per_person?: number | null
@@ -1201,6 +1204,7 @@ export type Database = {
           end_date: string | null
           host_user_id: string | null
           id: string | null
+          main_image: string | null
           max_attendees: number | null
           price_per_person: number | null
           property_id: string | null
@@ -1215,6 +1219,7 @@ export type Database = {
           end_date?: string | null
           host_user_id?: never
           id?: string | null
+          main_image?: string | null
           max_attendees?: number | null
           price_per_person?: number | null
           property_id?: string | null
@@ -1229,6 +1234,7 @@ export type Database = {
           end_date?: string | null
           host_user_id?: never
           id?: string | null
+          main_image?: string | null
           max_attendees?: number | null
           price_per_person?: number | null
           property_id?: string | null
