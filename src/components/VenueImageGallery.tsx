@@ -53,11 +53,12 @@ export function VenueImageGallery({ photos, videos, venueName }: VenueImageGalle
 
   if (mediaItems.length === 0) {
     return (
-      <div className="aspect-video bg-accent rounded-lg flex items-center justify-center">
-        <div className="text-center text-muted-foreground">
-          <ImageIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
-          <p>No media available</p>
-        </div>
+      <div className="aspect-video rounded-lg overflow-hidden">
+        <img
+          src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop"
+          alt={`${venueName} - Placeholder`}
+          className="w-full h-full object-cover"
+        />
       </div>
     );
   }

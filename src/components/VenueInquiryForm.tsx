@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -30,13 +31,15 @@ type InquiryFormData = z.infer<typeof inquirySchema>;
 interface VenueInquiryFormProps {
   propertyId: string;
   venueName: string;
+  ownerUserId: string;
   onSuccess?: () => void;
 }
 
-export function VenueInquiryForm({ propertyId, venueName, onSuccess }: VenueInquiryFormProps) {
+export function VenueInquiryForm({ propertyId, venueName, ownerUserId, onSuccess }: VenueInquiryFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const form = useForm<InquiryFormData>({
     resolver: zodResolver(inquirySchema),
@@ -57,27 +60,47 @@ export function VenueInquiryForm({ propertyId, venueName, onSuccess }: VenueInqu
       return;
     }
 
+    if (user.id === ownerUserId) {
+      toast({
+        title: 'Cannot inquire',
+        description: 'You cannot send an inquiry to your own venue',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from('venue_inquiries').insert({
-        property_id: propertyId,
-        inquirer_user_id: user.id,
-        message: data.message,
-        preferred_dates: data.preferredDates || null,
-        guest_count: data.guestCount || null,
-        status: 'pending',
+      // Build the message body with venue context and inquiry details
+      let body = `📍 Venue Inquiry: ${venueName}\n\n${data.message}`;
+      if (data.preferredDates) {
+        body += `\n\nPreferred Dates: ${data.preferredDates}`;
+      }
+      if (data.guestCount) {
+        body += `\nExpected Guests: ${data.guestCount}`;
+      }
+
+      const { error } = await supabase.from('messages').insert({
+        sender_id: user.id,
+        recipient_id: ownerUserId,
+        subject: `Inquiry about ${venueName}`,
+        body,
+        message_type: 'venue_inquiry',
       });
 
       if (error) throw error;
 
       toast({
         title: 'Inquiry sent!',
-        description: 'The venue owner will get back to you soon.',
+        description: 'Your message has been sent to the venue owner.',
       });
 
       form.reset();
       onSuccess?.();
+
+      // Navigate to the conversation
+      navigate(`/messages?to=${ownerUserId}`);
     } catch (error) {
       console.error('Error sending inquiry:', error);
       toast({
@@ -99,6 +122,11 @@ export function VenueInquiryForm({ propertyId, venueName, onSuccess }: VenueInqu
         </Button>
       </div>
     );
+  }
+
+  // Don't show inquiry form to the venue owner
+  if (user.id === ownerUserId) {
+    return null;
   }
 
   return (

@@ -43,19 +43,26 @@ export default function VenueDetail() {
     enabled: !!id,
   });
 
-  // Fetch retreats at this venue
+  // Fetch retreats at this venue, then resolve host names
   const { data: retreats } = useQuery({
     queryKey: ['venue-retreats', id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('retreats')
-        .select('*, host:profiles!host_user_id(name)')
+        .select('*')
         .eq('property_id', id)
         .eq('status', 'published')
         .order('start_date', { ascending: true });
 
       if (error) throw error;
-      return data;
+      if (!data || data.length === 0) return [];
+
+      // Fetch host names via RPC
+      const hostIds = [...new Set(data.map(r => r.host_user_id))];
+      const { data: profiles } = await supabase.rpc('get_public_profiles', { profile_ids: hostIds });
+      const profileMap = new Map((profiles as any[] || []).map((p: any) => [p.id, p.name]));
+
+      return data.map(r => ({ ...r, host: { name: profileMap.get(r.host_user_id) || null } }));
     },
     enabled: !!id,
   });
@@ -164,7 +171,7 @@ export default function VenueDetail() {
         {/* Gallery */}
         <VenueImageGallery
           photos={venue.photos || []}
-          videos={venue.videos || []}
+          videos={(venue as any).videos || []}
           venueName={venue.name}
         />
       </div>
@@ -402,7 +409,7 @@ export default function VenueDetail() {
               </Card>
 
               {/* Inquiry Form */}
-              <VenueInquiryForm propertyId={venue.id} venueName={venue.name} />
+              <VenueInquiryForm propertyId={venue.id} venueName={venue.name} ownerUserId={venue.owner_user_id} />
             </div>
           </div>
         </div>
