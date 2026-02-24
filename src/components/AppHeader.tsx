@@ -2,8 +2,10 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Users, Shield, Briefcase, LayoutDashboard, Calendar, MapPin, MessageSquare, Menu, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
 interface AppHeaderProps {
   showSignOut?: boolean;
@@ -14,6 +16,7 @@ export function AppHeader({ showSignOut = true }: AppHeaderProps) {
   const isAdmin = hasRole('admin');
   const showOpportunities = hasAnyRole(['host', 'cohost', 'staff', 'landowner']);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { unreadCount } = useUnreadMessages();
 
   const navLinks = (
     <>
@@ -50,6 +53,11 @@ export function AppHeader({ showSignOut = true }: AppHeaderProps) {
           >
             <MessageSquare className="w-4 h-4" />
             Messages
+            {unreadCount > 0 && (
+              <Badge variant="destructive" className="h-5 min-w-[1.25rem] px-1 text-xs rounded-full">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </Badge>
+            )}
           </Link>
         </>
       )}

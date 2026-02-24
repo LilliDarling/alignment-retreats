@@ -504,6 +504,8 @@ export type Database = {
         Row: {
           body: string
           created_at: string | null
+          deleted_for_recipient: boolean | null
+          deleted_for_sender: boolean | null
           id: string
           message_type: string | null
           read: boolean | null
@@ -515,6 +517,8 @@ export type Database = {
         Insert: {
           body: string
           created_at?: string | null
+          deleted_for_recipient?: boolean | null
+          deleted_for_sender?: boolean | null
           id?: string
           message_type?: string | null
           read?: boolean | null
@@ -526,6 +530,8 @@ export type Database = {
         Update: {
           body?: string
           created_at?: string | null
+          deleted_for_recipient?: boolean | null
+          deleted_for_sender?: boolean | null
           id?: string
           message_type?: string | null
           read?: boolean | null
