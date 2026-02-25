@@ -60,13 +60,20 @@ export default function Dashboard() {
         .single();
 
       if (data) {
+        // Fetch is_coop_member separately (not yet in generated types)
+        const { data: coopData } = await supabase
+          .from('profiles')
+          .select('is_coop_member' as any)
+          .eq('id', user.id)
+          .single();
+
         setProfile({
           name: data.name,
           bio: data.bio,
           profile_photo: data.profile_photo,
           onboarding_completed: data.onboarding_completed as ProfileData['onboarding_completed'],
           profile_completed: data.show_in_directory,
-          is_coop_member: (data as any).is_coop_member ?? false,
+          is_coop_member: (coopData as any)?.is_coop_member ?? false,
         });
       }
 
@@ -167,6 +174,7 @@ export default function Dashboard() {
                   profile={{
                     name: profile?.name || null,
                     onboarding_completed: profile?.onboarding_completed || null,
+                    is_coop_member: profile?.is_coop_member ?? false,
                   }}
                   onProfileUpdate={handleProfileUpdate}
                 />

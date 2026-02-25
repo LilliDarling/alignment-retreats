@@ -79,10 +79,17 @@ export default function HostDashboard() {
         .single();
 
       if (profileData) {
+        // Fetch is_coop_member separately (not yet in generated types)
+        const { data: coopData } = await supabase
+          .from('profiles')
+          .select('is_coop_member' as any)
+          .eq('id', user.id)
+          .single();
+
         setProfile({
           name: profileData.name,
           onboarding_completed: profileData.onboarding_completed as Profile['onboarding_completed'],
-          is_coop_member: (profileData as any).is_coop_member ?? false,
+          is_coop_member: (coopData as any)?.is_coop_member ?? false,
         });
       }
 
