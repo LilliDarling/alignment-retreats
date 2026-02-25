@@ -436,16 +436,10 @@ export default function RetreatDetail() {
                   <MapPin className="h-5 w-5 text-primary" />
                   <span>{retreat.location}</span>
                 </div>
-                {retreat.max_attendees && (
+                {isFull && (
                   <div className="flex items-center gap-3 text-foreground">
-                    <Users className={cn("h-5 w-5", isFull ? "text-destructive" : "text-primary")} />
-                    <span className={isFull ? 'text-destructive font-medium' : ''}>
-                      {isFull
-                        ? 'Sold Out'
-                        : spotsRemaining != null
-                          ? `${spotsRemaining} spot${spotsRemaining !== 1 ? 's' : ''} remaining`
-                          : `Up to ${retreat.max_attendees} attendees`}
-                    </span>
+                    <Users className="h-5 w-5 text-destructive" />
+                    <span className="text-destructive font-medium">Sold Out</span>
                   </div>
                 )}
               </div>
