@@ -53,6 +53,7 @@ interface ProfileData {
   languages: string[];
   travel_willing: boolean;
   profile_completed: boolean;
+  show_in_directory: boolean;
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -110,7 +111,15 @@ export default function Profile() {
         return;
       }
 
-      setProfile(data as ProfileData);
+      // Fetch roles from user_roles table
+      const { data: rolesData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+
+      const roles = (rolesData || []).map(r => r.role);
+
+      setProfile({ ...(data as unknown as ProfileData), user_roles: roles });
     } catch (error) {
       console.error('Error fetching profile:', error);
       setNotFound(true);
@@ -151,7 +160,7 @@ export default function Profile() {
     );
   }
 
-  if (!profile.profile_completed && !isOwnProfile) {
+  if (!profile.show_in_directory && !isOwnProfile) {
     return (
       <div className="min-h-screen bg-background">
         <AppHeader showSignOut={!!user} />
@@ -211,7 +220,7 @@ export default function Profile() {
 
                   {/* Roles */}
                   <div className="flex flex-wrap gap-2 mb-3">
-                    {profile.user_roles.map(role => (
+                    {(profile.user_roles || []).map(role => (
                       <Badge key={role} variant="secondary">
                         {ROLE_LABELS[role] || role}
                       </Badge>
@@ -391,7 +400,7 @@ export default function Profile() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Expertise */}
-            {profile.expertise_areas.length > 0 && (
+            {profile.expertise_areas?.length > 0 && (
               <Card className="p-6">
                 <h3 className="font-semibold mb-3">Expertise</h3>
                 <div className="flex flex-wrap gap-2">
@@ -405,7 +414,7 @@ export default function Profile() {
             )}
 
             {/* Certifications */}
-            {profile.certifications.length > 0 && (
+            {profile.certifications?.length > 0 && (
               <Card className="p-6">
                 <h3 className="font-semibold mb-3 flex items-center gap-2">
                   <Award className="h-4 w-4" />
@@ -422,7 +431,7 @@ export default function Profile() {
             )}
 
             {/* Languages */}
-            {profile.languages.length > 0 && (
+            {profile.languages?.length > 0 && (
               <Card className="p-6">
                 <h3 className="font-semibold mb-3 flex items-center gap-2">
                   <Languages className="h-4 w-4" />

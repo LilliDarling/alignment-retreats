@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { Search, Filter, X, Users, Loader2 } from 'lucide-react';
+import { Search, Filter, X, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppHeader } from '@/components/AppHeader';
@@ -24,17 +24,10 @@ const PAGE_SIZE = 12;
 
 interface DirectoryProfile {
   id: string;
-  name: string;
-  email: string;
+  name: string | null;
   profile_photo: string | null;
-  bio: string;
-  user_roles: string[];
-  expertise_areas: string[];
-  location: string;
-  years_experience: number | null;
-  availability_status: string;
-  verified: boolean;
-  profile_completed: boolean;
+  bio: string | null;
+  roles: string[];
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -49,13 +42,8 @@ const ROLE_LABELS: Record<string, string> = {
   massage_therapist: 'Massage Therapist',
   sound_healer: 'Sound Healer',
   attendee: 'Retreat Attendee',
-};
-
-const AVAILABILITY_LABELS: Record<string, { label: string; color: string }> = {
-  available: { label: 'Available', color: 'bg-green-500/10 text-green-700 border-green-500/20' },
-  limited: { label: 'Limited', color: 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20' },
-  booked: { label: 'Booked', color: 'bg-red-500/10 text-red-700 border-red-500/20' },
-  not_available: { label: 'Unavailable', color: 'bg-gray-500/10 text-gray-700 border-gray-500/20' },
+  landowner: 'Venue Owner',
+  staff: 'Staff',
 };
 
 export default function Directory() {
@@ -64,55 +52,82 @@ export default function Directory() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  // Fetch profiles with pagination
-  const {
-    data,
-    isLoading,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: ['directory-profiles', searchQuery, roleFilter],
-    queryFn: async ({ pageParam = 0 }) => {
-      const from = pageParam * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
-
-      let query = supabase
+  // Fetch profiles that opted into the directory, then enrich with roles
+  const { data: allProfiles, isLoading } = useQuery({
+    queryKey: ['directory-profiles'],
+    queryFn: async (): Promise<DirectoryProfile[]> => {
+      // Get profiles that opted into directory
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, name, email, profile_photo, bio, user_roles, expertise_areas, location, years_experience, availability_status, verified, profile_completed')
-        .eq('profile_completed', true);
+        .select('id, name, profile_photo, bio')
+        .eq('show_in_directory', true)
+        .order('name', { ascending: true });
 
-      // Apply role filter if not "all"
-      if (roleFilter !== 'all') {
-        query = query.contains('user_roles', [roleFilter]);
+      if (profilesError) throw profilesError;
+      if (!profilesData || profilesData.length === 0) return [];
+
+      // Get roles for all these users
+      const userIds = profilesData.map(p => p.id);
+      const { data: rolesData } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('user_id', userIds);
+
+      // Build a role map
+      const roleMap = new Map<string, string[]>();
+      for (const r of rolesData || []) {
+        if (!roleMap.has(r.user_id)) roleMap.set(r.user_id, []);
+        roleMap.get(r.user_id)!.push(r.role);
       }
 
-      // Apply search filter
-      if (searchQuery) {
-        query = query.or(`name.ilike.%${searchQuery}%,bio.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%`);
-      }
-
-      const { data, error } = await query
-        .order('name', { ascending: true })
-        .range(from, to);
-
-      if (error) throw error;
-      return (data || []) as DirectoryProfile[];
+      return profilesData
+        .filter(p => p.name && p.name.trim().length > 0)
+        .map(p => ({
+          ...p,
+          roles: roleMap.get(p.id) || [],
+        }))
+        .filter(p => p.roles.length > 0);
     },
-    initialPageParam: 0,
-    getNextPageParam: (lastPage, allPages) =>
-      lastPage.length === PAGE_SIZE ? allPages.length : undefined,
+    enabled: !!user?.id,
   });
 
-  const profiles = data?.pages.flat() ?? [];
+  // Client-side filtering
+  const filteredProfiles = useMemo(() => {
+    if (!allProfiles) return [];
 
+    return allProfiles.filter((profile) => {
+      // Role filter
+      if (roleFilter !== 'all') {
+        if (!profile.roles.includes(roleFilter)) return false;
+      }
+
+      // Search filter
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const nameMatch = profile.name?.toLowerCase().includes(q);
+        const bioMatch = profile.bio?.toLowerCase().includes(q);
+        if (!nameMatch && !bioMatch) return false;
+      }
+
+      return true;
+    });
+  }, [allProfiles, roleFilter, searchQuery]);
+
+  // Paginate client-side
+  const profiles = filteredProfiles.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredProfiles.length;
+
+  // Reset visible count when filters change
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
+    setVisibleCount(PAGE_SIZE);
   };
 
   const handleRoleFilterChange = (value: string) => {
     setRoleFilter(value);
+    setVisibleCount(PAGE_SIZE);
   };
 
   return (
@@ -138,7 +153,7 @@ export default function Directory() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name, bio, or location..."
+              placeholder="Search by name or bio..."
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-10"
@@ -161,14 +176,8 @@ export default function Directory() {
               <SelectItem value="all">All Roles</SelectItem>
               <SelectItem value="host">Retreat Hosts</SelectItem>
               <SelectItem value="cohost">Co-Hosts</SelectItem>
-              <SelectItem value="chef">Chefs</SelectItem>
-              <SelectItem value="photographer">Photographers</SelectItem>
-              <SelectItem value="videographer">Videographers</SelectItem>
-              <SelectItem value="yoga_instructor">Yoga Instructors</SelectItem>
-              <SelectItem value="meditation_guide">Meditation Guides</SelectItem>
-              <SelectItem value="facilitator">Facilitators</SelectItem>
-              <SelectItem value="massage_therapist">Massage Therapists</SelectItem>
-              <SelectItem value="sound_healer">Sound Healers</SelectItem>
+              <SelectItem value="staff">Staff</SelectItem>
+              <SelectItem value="landowner">Venue Owners</SelectItem>
               <SelectItem value="attendee">Attendees</SelectItem>
             </SelectContent>
           </Select>
@@ -176,7 +185,7 @@ export default function Directory() {
 
         {/* Results Count */}
         <div className="mb-6 text-sm text-muted-foreground">
-          {profiles.length} member{profiles.length !== 1 ? 's' : ''} found
+          {filteredProfiles.length} member{filteredProfiles.length !== 1 ? 's' : ''} found
         </div>
 
         {/* Profile Grid */}
@@ -201,108 +210,64 @@ export default function Directory() {
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {profiles.map((profile) => {
-                const availInfo = AVAILABILITY_LABELS[profile.availability_status] || AVAILABILITY_LABELS.not_available;
+              {profiles.map((profile) => (
+                <Card
+                  key={profile.id}
+                  className="p-6 hover:shadow-lg transition-all cursor-pointer group"
+                  onClick={() => navigate(`/profile/${profile.id}`)}
+                >
+                  <div className="flex flex-col items-center text-center">
+                    {/* Avatar */}
+                    <Avatar className="h-20 w-20 mb-4 border-2 border-border">
+                      <AvatarImage src={profile.profile_photo || undefined} alt={profile.name || 'User'} />
+                      <AvatarFallback className="text-xl">
+                        {profile.name?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
 
-                return (
-                  <Card
-                    key={profile.id}
-                    className="p-6 hover:shadow-lg transition-all cursor-pointer group"
-                    onClick={() => navigate(`/profile/${profile.id}`)}
-                  >
-                    <div className="flex flex-col items-center text-center">
-                      {/* Avatar */}
-                      <Avatar className="h-20 w-20 mb-4 border-2 border-border">
-                        <AvatarImage src={profile.profile_photo || undefined} alt={profile.name} />
-                        <AvatarFallback className="text-xl">
-                          {profile.name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+                    {/* Name */}
+                    <div className="mb-2">
+                      <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
+                        {profile.name || 'Unknown'}
+                      </h3>
+                    </div>
 
-                      {/* Name & Verification */}
-                      <div className="mb-2">
-                        <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
-                          {profile.name}
-                        </h3>
-                        {profile.verified && (
-                          <Badge variant="default" className="mt-1 text-xs">
-                            Verified
-                          </Badge>
-                        )}
-                      </div>
-
-                      {/* Location & Experience */}
-                      <div className="text-sm text-muted-foreground mb-3 space-y-1">
-                        {profile.location && <div>{profile.location}</div>}
-                        {profile.years_experience && (
-                          <div>{profile.years_experience} years experience</div>
-                        )}
-                      </div>
-
-                      {/* Roles */}
+                    {/* Roles */}
+                    {profile.roles.length > 0 && (
                       <div className="flex flex-wrap justify-center gap-1.5 mb-3">
-                        {profile.user_roles.slice(0, 3).map((role) => (
+                        {profile.roles.slice(0, 3).map((role) => (
                           <Badge key={role} variant="secondary" className="text-xs">
                             {ROLE_LABELS[role] || role}
                           </Badge>
                         ))}
-                        {profile.user_roles.length > 3 && (
+                        {profile.roles.length > 3 && (
                           <Badge variant="secondary" className="text-xs">
-                            +{profile.user_roles.length - 3}
+                            +{profile.roles.length - 3}
                           </Badge>
                         )}
                       </div>
+                    )}
 
-                      {/* Expertise */}
-                      {profile.expertise_areas.length > 0 && (
-                        <div className="flex flex-wrap justify-center gap-1 mb-3">
-                          {profile.expertise_areas.slice(0, 2).map((area) => (
-                            <Badge key={area} variant="outline" className="text-xs">
-                              {area}
-                            </Badge>
-                          ))}
-                          {profile.expertise_areas.length > 2 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{profile.expertise_areas.length - 2}
-                            </Badge>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Bio */}
-                      {profile.bio && (
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                          {profile.bio}
-                        </p>
-                      )}
-
-                      {/* Availability */}
-                      <Badge variant="outline" className={`text-xs ${availInfo.color}`}>
-                        {availInfo.label}
-                      </Badge>
-                    </div>
-                  </Card>
-                );
-              })}
+                    {/* Bio */}
+                    {profile.bio && (
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {profile.bio}
+                      </p>
+                    )}
+                  </div>
+                </Card>
+              ))}
             </div>
 
             {/* Load More */}
-            {hasNextPage && (
+            {hasMore && (
               <div className="mt-8 text-center">
                 <Button
                   variant="outline"
                   size="lg"
-                  onClick={() => fetchNextPage()}
-                  disabled={isFetchingNextPage}
+                  onClick={() => setVisibleCount(prev => prev + PAGE_SIZE)}
                 >
-                  {isFetchingNextPage ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    'Load More'
-                  )}
+                  Load More
                 </Button>
               </div>
             )}

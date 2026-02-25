@@ -9,7 +9,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import { cn } from '@/lib/utils';
 
 interface MediaItem {
   url: string;
@@ -53,11 +52,11 @@ export function VenueImageGallery({ photos, videos, venueName }: VenueImageGalle
 
   if (mediaItems.length === 0) {
     return (
-      <div className="aspect-video rounded-lg overflow-hidden">
+      <div className="rounded-lg overflow-hidden max-h-[360px] flex items-center justify-center bg-accent">
         <img
           src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop"
           alt={`${venueName} - Placeholder`}
-          className="w-full h-full object-cover"
+          className="max-w-full max-h-[360px] object-contain"
         />
       </div>
     );
@@ -73,23 +72,19 @@ export function VenueImageGallery({ photos, videos, venueName }: VenueImageGalle
             {mediaItems.map((item, index) => (
               <CarouselItem key={index}>
                 <div
-                  className="relative aspect-video rounded-lg overflow-hidden cursor-pointer group"
-                  onClick={() => openLightbox(index)}
+                  className="relative rounded-lg overflow-hidden max-h-[500px] flex items-center justify-center bg-accent/10"
                 >
                   {item.type === 'image' ? (
-                    <>
-                      <img
-                        src={item.url}
-                        alt={`${venueName} - Photo ${index + 1}`}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                    </>
+                    <img
+                      src={item.url}
+                      alt={`${venueName} - Photo ${index + 1}`}
+                      className="max-w-full max-h-[400px] object-contain"
+                    />
                   ) : (
-                    <div className="relative w-full h-full">
+                    <div className="relative max-w-full max-h-[500px]">
                       <video
                         src={item.url}
-                        className="w-full h-full object-cover"
+                        className="max-w-full max-h-[400px] object-contain"
                         poster={item.url}
                       />
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/50 transition-colors">
