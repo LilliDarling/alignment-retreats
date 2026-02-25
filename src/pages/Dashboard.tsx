@@ -21,6 +21,7 @@ interface ProfileData {
   profile_photo: string | null;
   onboarding_completed: { [key: string]: boolean | undefined } | null;
   profile_completed: boolean | null;
+  is_coop_member: boolean;
 }
 
 const roleLabels: Record<string, string> = {
@@ -54,7 +55,7 @@ export default function Dashboard() {
 
       const { data } = await supabase
         .from('profiles')
-        .select('name, bio, profile_photo, onboarding_completed, profile_completed')
+        .select('name, bio, profile_photo, onboarding_completed, show_in_directory')
         .eq('id', user.id)
         .single();
 
@@ -64,7 +65,8 @@ export default function Dashboard() {
           bio: data.bio,
           profile_photo: data.profile_photo,
           onboarding_completed: data.onboarding_completed as ProfileData['onboarding_completed'],
-          profile_completed: data.profile_completed,
+          profile_completed: data.show_in_directory,
+          is_coop_member: (data as any).is_coop_member ?? false,
         });
       }
 
@@ -104,6 +106,7 @@ export default function Dashboard() {
             name: profile?.name || null,
             bio: profile?.bio || null,
             profile_photo: profile?.profile_photo || null,
+            is_coop_member: profile?.is_coop_member ?? false,
           }}
           roles={userRoles}
         />

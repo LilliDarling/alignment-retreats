@@ -90,11 +90,13 @@ interface ProfileData {
   bio: string | null;
   profile_photo: string | null;
   created_at: string | null;
+  is_coop_member: boolean | null;
 }
 
 export function MemberDetailDrawer({ memberId, open, onClose }: MemberDetailDrawerProps) {
   const [loading, setLoading] = useState(true);
   const [verifyingRole, setVerifyingRole] = useState<string | null>(null);
+  const [togglingCoop, setTogglingCoop] = useState(false);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [roles, setRoles] = useState<string[]>([]);
   const [hostData, setHostData] = useState<HostData | null>(null);
@@ -143,6 +145,33 @@ export function MemberDetailDrawer({ memberId, open, onClose }: MemberDetailDraw
     }
   };
 
+  const handleToggleCoopMember = async () => {
+    if (!memberId || !profile) return;
+    setTogglingCoop(true);
+    try {
+      const newValue = !profile.is_coop_member;
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_coop_member: newValue } as any)
+        .eq('id', memberId);
+      if (error) throw error;
+      setProfile(prev => prev ? { ...prev, is_coop_member: newValue } : null);
+      toast({
+        title: newValue ? 'Co-Op Member Added' : 'Co-Op Membership Removed',
+        description: `${profile.name || 'Member'} co-op status updated.`,
+      });
+    } catch (error) {
+      console.error('Error updating co-op status:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update co-op membership.',
+        variant: 'destructive',
+      });
+    } finally {
+      setTogglingCoop(false);
+    }
+  };
+
   useEffect(() => {
     if (memberId && open) {
       fetchMemberData();
@@ -160,8 +189,18 @@ export function MemberDetailDrawer({ memberId, open, onClose }: MemberDetailDraw
         .select('id, name, bio, profile_photo, created_at')
         .eq('id', memberId)
         .single();
-      
-      setProfile(profileData);
+
+      // Fetch co-op status separately (column not yet in generated types)
+      const { data: coopData } = await supabase
+        .from('profiles')
+        .select('is_coop_member' as any)
+        .eq('id', memberId)
+        .single();
+
+      setProfile({
+        ...profileData,
+        is_coop_member: (coopData as any)?.is_coop_member ?? false,
+      } as ProfileData);
 
       // Fetch roles
       const { data: rolesData } = await supabase
@@ -268,6 +307,24 @@ export function MemberDetailDrawer({ memberId, open, onClose }: MemberDetailDraw
           <SheetDescription>
             Member since {profile?.created_at ? format(new Date(profile.created_at), 'MMM yyyy') : 'Unknown'}
           </SheetDescription>
+          {!loading && (
+            <div className="flex items-center gap-2 mt-3">
+              {profile?.is_coop_member && (
+                <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20">
+                  Co-Op Member
+                </Badge>
+              )}
+              <Button
+                size="sm"
+                variant={profile?.is_coop_member ? 'destructive' : 'outline'}
+                onClick={handleToggleCoopMember}
+                disabled={togglingCoop}
+              >
+                {togglingCoop && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                {profile?.is_coop_member ? 'Remove Co-Op' : 'Add to Co-Op'}
+              </Button>
+            </div>
+          )}
         </SheetHeader>
 
         {loading ? (

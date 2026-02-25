@@ -95,6 +95,7 @@ interface HostTabProps {
   profile: {
     name: string | null;
     onboarding_completed: { host?: boolean; [key: string]: boolean | undefined } | null;
+    is_coop_member?: boolean;
   };
   onProfileUpdate: (onboarding: Record<string, boolean | undefined>) => void;
 }
@@ -466,30 +467,32 @@ export default function HostTab({ profile, onProfileUpdate }: HostTabProps) {
         )}
       </Card>
 
-      {/* Co-Op CTA */}
-      <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
-        <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-full bg-primary/10">
-              <Crown className="h-6 w-6 text-primary" />
+      {/* Co-Op CTA — hidden for existing co-op members */}
+      {!profile.is_coop_member && (
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
+          <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-primary/10">
+                <Crown className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h2 className="font-display text-xl font-semibold text-foreground">
+                  Own a Piece of the Platform
+                </h2>
+                <p className="text-muted-foreground">
+                  Join our member-owned cooperative and keep more of what you earn
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="font-display text-xl font-semibold text-foreground">
-                Own a Piece of the Platform
-              </h2>
-              <p className="text-muted-foreground">
-                Join our member-owned cooperative and keep more of what you earn
-              </p>
-            </div>
-          </div>
-          <Button asChild>
-            <Link to="/cooperative">
-              Become a Co-Owner Today!
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
+            <Button asChild>
+              <Link to="/cooperative">
+                Become a Co-Owner Today!
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Submit Retreat CTA */}
       <Card className="bg-gradient-to-r from-accent/10 to-transparent border border-border shadow-sm">

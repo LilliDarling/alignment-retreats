@@ -13,6 +13,7 @@ interface SharedProfileSectionProps {
     name: string | null;
     bio: string | null;
     profile_photo: string | null;
+    is_coop_member?: boolean;
   };
   roles: AppRole[];
 }
@@ -72,10 +73,17 @@ export default function SharedProfileSection({ user, profile, roles }: SharedPro
                   {roleLabels[role] || role}
                 </Badge>
               ))}
-              <Link to="/cooperative" className="inline-flex items-center gap-1 text-xs text-primary hover:underline ml-1">
-                <Crown className="h-3 w-3" />
-                Join the Co-Op
-              </Link>
+              {profile.is_coop_member ? (
+                <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-xs ml-1">
+                  <Crown className="h-3 w-3 mr-1" />
+                  Co-Op Member
+                </Badge>
+              ) : (
+                <Link to="/cooperative" className="inline-flex items-center gap-1 text-xs text-primary hover:underline ml-1">
+                  <Crown className="h-3 w-3" />
+                  Join the Co-Op
+                </Link>
+              )}
             </div>
           </div>
         </div>
