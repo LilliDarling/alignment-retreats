@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,32 +10,32 @@ import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import Cooperative from "./pages/Cooperative";
-import Landing from "./pages/Landing";
-import Login from "./pages/Login";
-import ThankYou from "./pages/ThankYou";
-import OnboardingWizard from "./pages/OnboardingWizard";
-import Dashboard from "./pages/Dashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import CreateRetreat from "./pages/CreateRetreat";
-import SubmitRetreat from "./pages/SubmitRetreat";
-import BrowseRetreats from "./pages/BrowseRetreats";
-import BrowseOpportunities from "./pages/BrowseOpportunities";
-import RetreatDetail from "./pages/RetreatDetail";
-import SubmitVenue from "./pages/SubmitVenue";
-import BrowseVenues from "./pages/BrowseVenues";
-import VenueDetail from "./pages/VenueDetail";
-import Profile from "./pages/Profile";
-import EditProfile from "./pages/EditProfile";
-import ProfileCompletePage from "./pages/ProfileCompletePage";
-import Directory from "./pages/Directory";
-import Messages from "./pages/Messages";
-import BuildRetreat from "./pages/BuildRetreat";
-import GetStarted from "./pages/GetStarted";
-import Donate from "./pages/Donate";
-import AuthCallback from "./pages/AuthCallback";
 
-import NotFound from "./pages/NotFound";
+const Landing = lazy(() => import("./pages/Landing"));
+const Cooperative = lazy(() => import("./pages/Cooperative"));
+const Login = lazy(() => import("./pages/Login"));
+const ThankYou = lazy(() => import("./pages/ThankYou"));
+const OnboardingWizard = lazy(() => import("./pages/OnboardingWizard"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const CreateRetreat = lazy(() => import("./pages/CreateRetreat"));
+const SubmitRetreat = lazy(() => import("./pages/SubmitRetreat"));
+const BrowseRetreats = lazy(() => import("./pages/BrowseRetreats"));
+const BrowseOpportunities = lazy(() => import("./pages/BrowseOpportunities"));
+const RetreatDetail = lazy(() => import("./pages/RetreatDetail"));
+const SubmitVenue = lazy(() => import("./pages/SubmitVenue"));
+const BrowseVenues = lazy(() => import("./pages/BrowseVenues"));
+const VenueDetail = lazy(() => import("./pages/VenueDetail"));
+const Profile = lazy(() => import("./pages/Profile"));
+const EditProfile = lazy(() => import("./pages/EditProfile"));
+const ProfileCompletePage = lazy(() => import("./pages/ProfileCompletePage"));
+const Directory = lazy(() => import("./pages/Directory"));
+const Messages = lazy(() => import("./pages/Messages"));
+const BuildRetreat = lazy(() => import("./pages/BuildRetreat"));
+const GetStarted = lazy(() => import("./pages/GetStarted"));
+const Donate = lazy(() => import("./pages/Donate"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,6 +56,7 @@ const App = () => (
           <ScrollToTop />
           <AuthProvider>
             <AnalyticsProvider>
+              <Suspense fallback={<div className="min-h-screen bg-background" />}>
               <Routes>
           <Route path="/" element={<Landing />} />
               <Route path="/cooperative" element={<Cooperative />} />
@@ -174,6 +176,7 @@ const App = () => (
               />
               <Route path="*" element={<NotFound />} />
             </Routes>
+              </Suspense>
             </AnalyticsProvider>
           </AuthProvider>
         </BrowserRouter>

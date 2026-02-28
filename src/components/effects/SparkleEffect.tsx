@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import './SparkleEffect.css';
 
 interface SparkleEffectProps {
   enabled: boolean;
@@ -8,7 +8,7 @@ interface SparkleEffectProps {
 export function SparkleEffect({ enabled, color = '#ffffff' }: SparkleEffectProps) {
   if (!enabled) return null;
 
-  const sparkles = Array.from({ length: 20 }, (_, i) => ({
+  const sparkles = Array.from({ length: 8 }, (_, i) => ({
     id: i,
     x: Math.random() * 100,
     y: Math.random() * 100,
@@ -20,9 +20,9 @@ export function SparkleEffect({ enabled, color = '#ffffff' }: SparkleEffectProps
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
       {sparkles.map(sparkle => (
-        <motion.div
+        <div
           key={sparkle.id}
-          className="absolute rounded-full"
+          className="absolute rounded-full sparkle-animate"
           style={{
             left: `${sparkle.x}%`,
             top: `${sparkle.y}%`,
@@ -30,16 +30,8 @@ export function SparkleEffect({ enabled, color = '#ffffff' }: SparkleEffectProps
             height: sparkle.size,
             backgroundColor: color,
             boxShadow: `0 0 ${sparkle.size * 2}px ${color}`,
-          }}
-          animate={{
-            opacity: [0, 1, 0],
-            scale: [0.5, 1.2, 0.5],
-          }}
-          transition={{
-            duration: sparkle.duration,
-            delay: sparkle.delay,
-            repeat: Infinity,
-            ease: 'easeInOut',
+            animationDuration: `${sparkle.duration}s`,
+            animationDelay: `${sparkle.delay}s`,
           }}
         />
       ))}

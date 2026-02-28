@@ -8,6 +8,7 @@ interface VideoHeroSectionProps {
 
 const VideoHeroSection = ({ videoSrc = HERO_VIDEO_URL }: VideoHeroSectionProps) => {
   const [showMask, setShowMask] = useState(true);
+  const [loadVideo, setLoadVideo] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -16,18 +17,24 @@ const VideoHeroSection = ({ videoSrc = HERO_VIDEO_URL }: VideoHeroSectionProps) 
   const opacity = useTransform(scrollY, [0, 400], [1, 0.3]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowMask(false), 400);
+    // Defer video loading until after initial paint
+    const timer = setTimeout(() => setLoadVideo(true), 100);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    // Ensure video plays on load
+    if (!loadVideo) return;
+    const timer = setTimeout(() => setShowMask(false), 400);
+    return () => clearTimeout(timer);
+  }, [loadVideo]);
+
+  useEffect(() => {
     if (videoRef.current) {
       videoRef.current.play().catch(() => {
         // Autoplay may be blocked, that's ok
       });
     }
-  }, []);
+  }, [loadVideo]);
 
   return (
     <div ref={containerRef} className="absolute inset-0 overflow-hidden">
@@ -35,27 +42,30 @@ const VideoHeroSection = ({ videoSrc = HERO_VIDEO_URL }: VideoHeroSectionProps) 
         style={{ y }}
         className="absolute inset-0"
       >
-        <video
-          ref={videoRef}
-          className="absolute top-1/2 left-1/2 pointer-events-none object-cover"
-          style={{
-            width: '177.78vh',
-            minWidth: '100%',
-            height: '56.25vw',
-            minHeight: '120%',
-            transform: 'translate(-50%, -50%)',
-          }}
-          src={videoSrc}
-          autoPlay
-          muted
-          loop
-          playsInline
-        />
+        {loadVideo && (
+          <video
+            ref={videoRef}
+            className="absolute top-1/2 left-1/2 pointer-events-none object-cover"
+            style={{
+              width: '177.78vh',
+              minWidth: '100%',
+              height: '56.25vw',
+              minHeight: '120%',
+              transform: 'translate(-50%, -50%)',
+            }}
+            src={videoSrc}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+          />
+        )}
       </motion.div>
 
-      {/* Short startup mask - fades out quickly */}
+      {/* Startup mask - covers until video is ready */}
       <div
-        className="absolute inset-0 bg-black transition-opacity duration-300"
+        className="absolute inset-0 bg-black transition-opacity duration-500"
         style={{ opacity: showMask ? 1 : 0, pointerEvents: 'none' }}
       />
 

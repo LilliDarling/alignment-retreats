@@ -56,6 +56,7 @@ export function VenueImageGallery({ photos, videos, venueName }: VenueImageGalle
         <img
           src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop"
           alt={`${venueName} - Placeholder`}
+          loading="lazy"
           className="max-w-full max-h-[360px] object-contain"
         />
       </div>
@@ -78,6 +79,7 @@ export function VenueImageGallery({ photos, videos, venueName }: VenueImageGalle
                     <img
                       src={item.url}
                       alt={`${venueName} - Photo ${index + 1}`}
+                      loading="lazy"
                       className="max-w-full max-h-[400px] object-contain"
                     />
                   ) : (
@@ -119,6 +121,7 @@ export function VenueImageGallery({ photos, videos, venueName }: VenueImageGalle
                   <img
                     src={item.url}
                     alt={`Thumbnail ${index + 1}`}
+                    loading="lazy"
                     className="w-full h-full object-cover"
                   />
                 ) : (

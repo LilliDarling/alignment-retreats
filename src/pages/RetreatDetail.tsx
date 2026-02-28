@@ -228,9 +228,10 @@ export default function RetreatDetail() {
 
       {/* Hero Image */}
       <div className="relative h-[40vh] md:h-[50vh] overflow-hidden">
-        <img 
-          src={retreat.image} 
+        <img
+          src={retreat.image}
           alt={retreat.title}
+          loading="lazy"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-black/40" />
