@@ -29,6 +29,7 @@ interface DbRetreat {
   custom_venue_name: string | null;
   host_user_id: string;
   main_image: string | null;
+  property: { name: string; location: string | null } | null;
 }
 
 export default function BrowseRetreats() {
@@ -70,7 +71,7 @@ export default function BrowseRetreats() {
       let query = supabase
         .from('retreats')
         .select(
-          'id,title,description,retreat_type,start_date,end_date,max_attendees,price_per_person,sample_itinerary,status,custom_venue_name,host_user_id,main_image'
+          'id,title,description,retreat_type,start_date,end_date,max_attendees,price_per_person,sample_itinerary,status,custom_venue_name,host_user_id,main_image,property:properties(name,location)'
         )
         .eq('status', 'published');
 
@@ -221,7 +222,7 @@ export default function BrowseRetreats() {
                     key={retreat.id}
                     id={retreat.id}
                     title={retreat.title}
-                    location={retreat.custom_venue_name || 'Location TBD'}
+                    location={retreat.custom_venue_name || retreat.property?.location || retreat.property?.name || 'Location TBD'}
                     image={retreat.main_image || 'https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&h=600&fit=crop'}
                     startDate={retreat.start_date || ''}
                     endDate={retreat.end_date || ''}
