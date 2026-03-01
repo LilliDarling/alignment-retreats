@@ -382,29 +382,12 @@ export default function VenueDetail() {
           {/* Right Column - Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-8 space-y-6">
-              {/* Pricing Card */}
+              {/* Contact Card */}
               <Card>
-                <CardHeader>
-                  <CardTitle>Pricing</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-muted-foreground" />
-                    <span className="text-2xl font-bold">{formatPriceRange()}</span>
-                  </div>
-
-                  {venue.capacity && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Users className="h-5 w-5" />
-                      <span>Up to {venue.capacity} guests</span>
-                    </div>
-                  )}
-
-                  <Separator />
-
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <p>Contact the owner for availability and booking details</p>
-                  </div>
+                <CardContent className="pt-6">
+                  <p className="text-sm text-muted-foreground">
+                    Contact the owner for availability and booking details
+                  </p>
                 </CardContent>
               </Card>
 

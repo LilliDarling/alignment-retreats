@@ -102,8 +102,8 @@ export default function BrowseRetreats() {
     queryKey: ['host-profiles', hostUserIds],
     queryFn: async () => {
       if (hostUserIds.length === 0) return [];
-      const { data } = await supabase.from('profiles').select('id,name').in('id', hostUserIds);
-      return data || [];
+      const { data } = await supabase.rpc('get_public_profiles', { profile_ids: hostUserIds });
+      return (data as { id: string; name: string }[]) || [];
     },
     enabled: hostUserIds.length > 0,
   });

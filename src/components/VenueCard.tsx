@@ -140,22 +140,6 @@ export function VenueCard({
           )}
         </div>
 
-        {/* Details Grid */}
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          {/* Capacity */}
-          {capacity && (
-            <div className="flex items-center">
-              <Users className="h-4 w-4 mr-1" />
-              <span>Up to {capacity}</span>
-            </div>
-          )}
-
-          {/* Price */}
-          <div className="flex items-center">
-            <DollarSign className="h-4 w-4 mr-1" />
-            <span className="font-medium text-foreground">{formatPriceRange()}</span>
-          </div>
-        </div>
 
         {/* Description */}
         {description && (
