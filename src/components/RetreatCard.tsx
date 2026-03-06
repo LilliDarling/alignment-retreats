@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, Calendar, Users, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
+import { Star, Calendar, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
 import { differenceInCalendarDays, format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { parseDateOnly } from '@/lib/dateOnly';
@@ -165,18 +165,6 @@ export function RetreatCard({
             <Calendar className="h-3.5 w-3.5 shrink-0" />
             <span>{formatDateRange()}</span>
           </div>
-          {maxAttendees && (
-            <div className="flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5 shrink-0" />
-              <span className={isFull ? 'text-destructive font-medium' : ''}>
-                {isFull
-                  ? 'Sold Out'
-                  : spotsRemaining != null
-                    ? `${spotsRemaining} spot${spotsRemaining !== 1 ? 's' : ''} left`
-                    : `Up to ${maxAttendees} attendees`}
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Sample Itinerary Preview */}
