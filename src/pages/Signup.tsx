@@ -134,6 +134,11 @@ export default function Signup() {
         body: { name, email, roles: userTypes }
       });
 
+      // Auto-subscribe to newsletter via Mailchimp
+      supabase.functions.invoke('mailchimp-subscribe', {
+        body: { email, subscribe: true, name }
+      });
+
       // Clear booking redirect from sessionStorage if it was used
       if (bookingRedirect) {
         sessionStorage.removeItem('bookingRedirect');
