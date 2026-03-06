@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Users, Shield, Briefcase, LayoutDashboard, Calendar, MapPin, MessageSquare, Menu, Heart } from "lucide-react";
+import { Users, Shield, Briefcase, LayoutDashboard, Calendar, MapPin, MessageSquare, Menu, Heart, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -58,6 +58,14 @@ export function AppHeader({ showSignOut = true }: AppHeaderProps) {
                 {unreadCount > 99 ? '99+' : unreadCount}
               </Badge>
             )}
+          </Link>
+          <Link
+            to="/settings"
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            onClick={() => setMobileOpen(false)}
+          >
+            <Settings className="w-4 h-4" />
+            Settings
           </Link>
         </>
       )}

@@ -34,6 +34,7 @@ const Messages = lazy(() => import("./pages/Messages"));
 const BuildRetreat = lazy(() => import("./pages/BuildRetreat"));
 const GetStarted = lazy(() => import("./pages/GetStarted"));
 const Donate = lazy(() => import("./pages/Donate"));
+const Settings = lazy(() => import("./pages/Settings"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -133,6 +134,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Messages />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <Settings />
                   </ProtectedRoute>
                 }
               />
