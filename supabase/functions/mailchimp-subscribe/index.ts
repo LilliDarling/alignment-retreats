@@ -14,24 +14,6 @@ interface SubscribeRequest {
   name?: string;
 }
 
-/** MD5 hex hash — tries crypto.subtle first, falls back to SHA-256 truncated */
-async function md5Hex(input: string): Promise<string> {
-  const data = new TextEncoder().encode(input);
-  try {
-    const buf = await crypto.subtle.digest("MD5", data);
-    return Array.from(new Uint8Array(buf))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-  } catch {
-    // Fallback: SHA-256 truncated to 32 hex chars (same length as MD5)
-    const buf = await crypto.subtle.digest("SHA-256", data);
-    return Array.from(new Uint8Array(buf))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("")
-      .slice(0, 32);
-  }
-}
-
 async function mailchimpRequest(
   email: string,
   subscribe: boolean,
@@ -42,38 +24,66 @@ async function mailchimpRequest(
     return { ok: true };
   }
 
-  // Mailchimp uses MD5 hash of lowercase email as subscriber ID
-  const subscriberHash = await md5Hex(email.toLowerCase());
-
-  const url = `https://${MAILCHIMP_SERVER_PREFIX}.api.mailchimp.com/3.0/lists/${MAILCHIMP_LIST_ID}/members/${subscriberHash}`;
+  const authHeader = `Basic ${btoa(`anystring:${MAILCHIMP_API_KEY}`)}`;
+  const baseUrl = `https://${MAILCHIMP_SERVER_PREFIX}.api.mailchimp.com/3.0/lists/${MAILCHIMP_LIST_ID}/members`;
 
   const nameParts = (name || "").trim().split(" ");
   const firstName = nameParts[0] || "";
   const lastName = nameParts.slice(1).join(" ") || "";
 
+  // Search for the member using Mailchimp's search endpoint
+  const searchUrl = `https://${MAILCHIMP_SERVER_PREFIX}.api.mailchimp.com/3.0/search-members?query=${encodeURIComponent(email)}&list_id=${MAILCHIMP_LIST_ID}`;
+  const searchRes = await fetch(searchUrl, {
+    headers: { Authorization: authHeader },
+  });
+
+  if (searchRes.ok) {
+    const searchData = await searchRes.json();
+    // Find exact email match from search results
+    const match = searchData.exact_matches?.members?.find(
+      (m: { email_address: string }) => m.email_address.toLowerCase() === email.toLowerCase()
+    );
+
+    if (match) {
+      // Member exists — update their status via PATCH using their ID
+      const patchRes = await fetch(`${baseUrl}/${match.id}?skip_merge_validation=true`, {
+        method: "PATCH",
+        headers: { Authorization: authHeader, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: subscribe ? "subscribed" : "unsubscribed",
+        }),
+      });
+
+      if (!patchRes.ok) {
+        const errorText = await patchRes.text();
+        console.error("Mailchimp PATCH error:", patchRes.status, errorText);
+        return { ok: false, error: `Mailchimp API error: ${patchRes.status}` };
+      }
+
+      return { ok: true };
+    }
+  }
+
+  // Member doesn't exist yet — create them via POST
   const body: Record<string, unknown> = {
     email_address: email,
-    status_if_new: subscribe ? "subscribed" : "unsubscribed",
     status: subscribe ? "subscribed" : "unsubscribed",
   };
 
-  if (subscribe && (firstName || lastName)) {
+  if (firstName || lastName) {
     body.merge_fields = { FNAME: firstName, LNAME: lastName };
   }
 
-  const response = await fetch(url, {
-    method: "PUT",
-    headers: {
-      Authorization: `Basic ${btoa(`anystring:${MAILCHIMP_API_KEY}`)}`,
-      "Content-Type": "application/json",
-    },
+  const createRes = await fetch(baseUrl, {
+    method: "POST",
+    headers: { Authorization: authHeader, "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("Mailchimp error:", response.status, errorText);
-    return { ok: false, error: `Mailchimp API error: ${response.status}` };
+  if (!createRes.ok) {
+    const errorText = await createRes.text();
+    console.error("Mailchimp POST error:", createRes.status, errorText);
+    return { ok: false, error: `Mailchimp API error: ${createRes.status}` };
   }
 
   return { ok: true };
@@ -88,8 +98,8 @@ serve(async (req: Request) => {
 
   try {
     // Authenticate the request
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader) {
+    const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return new Response(
         JSON.stringify({ error: "Missing authorization" }),
         { status: 401, headers: { ...cors, ...securityHeaders } }

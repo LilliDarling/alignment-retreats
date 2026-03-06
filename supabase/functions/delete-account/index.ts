@@ -18,8 +18,8 @@ serve(async (req: Request) => {
 
   try {
     // Authenticate
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader) {
+    const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return new Response(
         JSON.stringify({ error: "Missing authorization" }),
         { status: 401, headers: { ...cors, ...securityHeaders } }

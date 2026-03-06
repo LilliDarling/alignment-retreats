@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Home, ArrowLeft, Handshake, Briefcase, Search, Check, Palette } from 'lucide-react';
+import { Users, Home, ArrowLeft, Handshake, Briefcase, Search, Check, Palette, Eye, EyeOff } from 'lucide-react';
 import { z } from 'zod';
 
 const signupSchema = z.object({
@@ -59,6 +59,7 @@ export default function Signup() {
   const [isCreativeSelected, setIsCreativeSelected] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string; userTypes?: string }>({});
+  const [showPassword, setShowPassword] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
 
   const { signUp } = useAuth();
@@ -205,13 +206,24 @@ export default function Signup() {
 
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 8 characters"
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="At least 8 characters"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
               </div>
 
