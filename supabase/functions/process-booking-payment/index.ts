@@ -145,7 +145,7 @@ serve(async (req) => {
     // Fetch retreat details
     const { data: retreat, error: retreatError } = await supabaseAdmin
       .from("retreats")
-      .select("id, title, retreat_type, price_per_person, status, max_attendees, start_date, allow_donations, retreat_team(*)")
+      .select("id, title, retreat_type, price_per_person, ticket_price, status, max_attendees, start_date, allow_donations, retreat_team(*)")
       .eq("id", retreat_id)
       .eq("status", "published") // Only allow booking published retreats
       .single();
@@ -221,11 +221,12 @@ serve(async (req) => {
       });
     }
 
-    const pricePerPerson = retreat.price_per_person || 0;
-    const totalAmount = Math.round(pricePerPerson * 100); // Convert to cents
+    // Use ticket_price (calculated all-in price) when available, fall back to price_per_person
+    const ticketPrice = retreat.ticket_price || retreat.price_per_person || 0;
+    const totalAmount = Math.round(ticketPrice * 100); // Convert to cents
 
     if (totalAmount <= 0 || totalAmount > 100000000) { // Max $1M
-      console.error("Invalid price:", { pricePerPerson, retreat_id, requestId });
+      console.error("Invalid price:", { ticketPrice, retreat_id, requestId });
       return new Response(JSON.stringify({ error: "Invalid price configuration" }), {
         status: 400,
         headers: { ...getCorsHeaders(req), ...securityHeaders },

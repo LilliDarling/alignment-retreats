@@ -1,0 +1,339 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Alignment Retreats — Brand Design System
+   Deep Cedar:  #3E2723 — headings/foreground
+   Forest Moss: #2E4600 — primary (buttons, accents)
+   Sage Leaf:   #818D60 — secondary elements
+   Parchment:   #F5F2ED — backgrounds
+   Gold Leaf:   #C5A059 — CTA highlights
+   Display font: Tenor Sans (headings)
+   Body font:    Barlow (body text)
+*/
+
+/* ============================================
+   CSS VARIABLES — brand tokens
+   ============================================ */
+
+:root {
+  /* Parchment background */
+  --background: 37 29% 95%;
+  /* Deep Cedar */
+  --foreground: 14 42% 26%;
+
+  /* Cards */
+  --card: 37 33% 98%;
+  --card-foreground: 14 42% 26%;
+
+  --popover: 37 33% 98%;
+  --popover-foreground: 14 42% 26%;
+
+  /* Primary — Forest Moss */
+  --primary: 94 27% 18%;
+  --primary-foreground: 37 29% 95%;
+
+  /* Secondary — Sage Leaf tint */
+  --secondary: 76 30% 82%;
+  --secondary-foreground: 14 42% 26%;
+
+  /* Muted — sage-parchment blend */
+  --muted: 70 16% 88%;
+  --muted-foreground: 14 25% 42%;
+
+  /* Accent — Gold Leaf */
+  --accent: 39 48% 56%;
+  --accent-foreground: 14 42% 26%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+
+  /* Borders — hint of sage */
+  --border: 70 12% 82%;
+  --input: 70 12% 82%;
+  --ring: 94 27% 18%;
+
+  --radius: 0.75rem;
+
+  /* Sidebar */
+  --sidebar-background: 37 33% 98%;
+  --sidebar-foreground: 14 42% 26%;
+  --sidebar-primary: 94 27% 18%;
+  --sidebar-primary-foreground: 37 29% 95%;
+  --sidebar-accent: 76 25% 85%;
+  --sidebar-accent-foreground: 14 42% 26%;
+  --sidebar-border: 70 12% 82%;
+  --sidebar-ring: 94 27% 18%;
+
+  /* Semantic */
+  --success: 84 60% 30%;
+  --success-foreground: 0 0% 100%;
+  --warning: 39 48% 56%;
+  --warning-foreground: 14 42% 26%;
+
+  /* Charts */
+  --chart-1: 94 27% 30%;
+  --chart-2: 76 30% 50%;
+  --chart-3: 39 48% 56%;
+  --chart-4: 14 42% 40%;
+  --chart-5: 84 60% 30%;
+}
+
+.dark {
+  --background: 14 18% 9%;
+  --foreground: 37 22% 88%;
+
+  --card: 14 14% 13%;
+  --card-foreground: 37 22% 88%;
+
+  --popover: 14 14% 13%;
+  --popover-foreground: 37 22% 88%;
+
+  /* Forest Moss — vivid in dark mode */
+  --primary: 84 55% 38%;
+  --primary-foreground: 14 18% 9%;
+
+  /* Sage — rich tint in dark */
+  --secondary: 76 18% 24%;
+  --secondary-foreground: 37 22% 88%;
+
+  --muted: 14 10% 18%;
+  --muted-foreground: 37 14% 58%;
+
+  /* Gold Leaf */
+  --accent: 39 48% 50%;
+  --accent-foreground: 14 18% 9%;
+
+  --destructive: 0 62% 45%;
+  --destructive-foreground: 37 22% 88%;
+
+  --border: 14 10% 20%;
+  --input: 14 10% 20%;
+  --ring: 84 55% 38%;
+
+  --sidebar-background: 14 14% 11%;
+  --sidebar-foreground: 37 22% 88%;
+  --sidebar-primary: 84 55% 38%;
+  --sidebar-primary-foreground: 14 18% 9%;
+  --sidebar-accent: 76 12% 18%;
+  --sidebar-accent-foreground: 37 22% 88%;
+  --sidebar-border: 14 10% 18%;
+  --sidebar-ring: 84 55% 38%;
+
+  --success: 84 45% 40%;
+  --success-foreground: 14 18% 9%;
+  --warning: 39 48% 56%;
+  --warning-foreground: 14 18% 9%;
+
+  --chart-1: 84 55% 45%;
+  --chart-2: 76 30% 55%;
+  --chart-3: 39 48% 60%;
+  --chart-4: 37 22% 65%;
+  --chart-5: 84 45% 50%;
+}
+
+/* ============================================
+   TAILWIND v4 THEME — maps variables to utilities
+   ============================================ */
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Fonts — next/font sets --font-tenor and --font-barlow on <html> */
+  --font-display: var(--font-tenor), "Tenor Sans", sans-serif;
+  --font-body: var(--font-barlow), "Barlow", sans-serif;
+
+  /* Layout tokens */
+  --radius-card: 16px;
+  --radius-button: 30px;
+  --container-max: 77.5rem;
+
+  /* Animations */
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-fade-in: fade-in 0.5s ease-out forwards;
+  --animate-fade-in-up: fade-in-up 0.6s ease-out forwards;
+}
+
+@keyframes accordion-down {
+  from { height: 0; }
+  to { height: var(--radix-accordion-content-height); }
+}
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to { height: 0; }
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+  }
+
+  h1 { font-size: clamp(2.5rem, 5vw, 3.75rem); }
+  h2 { font-size: clamp(2rem, 4vw, 3rem); }
+  h3 { font-size: clamp(1.25rem, 2.5vw, 1.75rem); }
+  h4 { font-size: clamp(1.1rem, 2vw, 1.25rem); }
+
+  p, span, a, li, label, button {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground));
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--foreground));
+  }
+}
+
+/* ============================================
+   COMPONENT CLASSES
+   ============================================ */
+
+@layer components {
+  .section-padding {
+    padding-top: 7rem;
+    padding-bottom: 7rem;
+  }
+
+  @media (max-width: 768px) {
+    .section-padding {
+      padding-top: 4rem;
+      padding-bottom: 4rem;
+    }
+  }
+
+  .section-subtitle {
+    display: inline-block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: hsl(var(--primary));
+    margin-bottom: 0.75rem;
+  }
+
+  .input-base {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    background-color: hsl(var(--background));
+    border: 1px solid hsl(var(--border));
+    font-size: 0.875rem;
+    color: hsl(var(--foreground));
+    transition: border-color 0.2s;
+  }
+  .input-base:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-color: hsl(var(--ring));
+  }
+
+  .video-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+/* ============================================
+   REDUCED MOTION
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,48 +1,40 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, RefreshCw, CheckCircle, ArrowLeft } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { Link } from 'react-router-dom';
+"use client";
 
-interface EmailVerificationPendingProps {
-  email: string;
-  onBack?: () => void;
-}
+import { useState } from "react";
+import Link from "next/link";
+import { Mail, RefreshCw, CheckCircle, ArrowLeft } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { EmailVerificationPendingProps } from "@/types/auth";
 
-export default function EmailVerificationPending({ email, onBack }: EmailVerificationPendingProps) {
+export default function EmailVerificationPending({
+  email,
+  onBack,
+}: EmailVerificationPendingProps) {
   const [resending, setResending] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
   const [cooldown, setCooldown] = useState(0);
-  const { toast } = useToast();
+  const [error, setError] = useState("");
 
-  const handleResendVerification = async () => {
+  const supabase = createClient();
+
+  async function handleResendVerification() {
     if (cooldown > 0) return;
-    
+
     setResending(true);
     setResendSuccess(false);
+    setError("");
 
     try {
-      const { data, error } = await supabase.functions.invoke('resend-verification-email', {
-        body: { email },
-      });
+      const { data, error: fnError } = await supabase.functions.invoke(
+        "resend-verification-email",
+        { body: { email } }
+      );
 
-      if (error) {
-        throw error;
-      }
-
-      if (data?.error) {
-        throw new Error(data.error);
-      }
+      if (fnError) throw fnError;
+      if (data?.error) throw new Error(data.error);
 
       setResendSuccess(true);
-      toast({
-        title: 'Email sent!',
-        description: 'A new verification email has been sent to your inbox.',
-      });
 
-      // Start 60 second cooldown
       setCooldown(60);
       const interval = setInterval(() => {
         setCooldown((prev) => {
@@ -53,33 +45,31 @@ export default function EmailVerificationPending({ email, onBack }: EmailVerific
           return prev - 1;
         });
       }, 1000);
-    } catch (error: any) {
-      toast({
-        title: 'Failed to resend',
-        description: error.message || 'Please try again later.',
-        variant: 'destructive',
-      });
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Please try again later.";
+      setError(message);
     } finally {
       setResending(false);
     }
-  };
+  }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Back button */}
-      <div className="p-4">
+    <div className="w-full max-w-[420px]">
+      {/* Back */}
+      <div className="mb-8">
         {onBack ? (
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
           >
             <ArrowLeft className="h-4 w-4" />
             Back
           </button>
         ) : (
           <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            href="/"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to home
@@ -87,74 +77,80 @@ export default function EmailVerificationPending({ email, onBack }: EmailVerific
         )}
       </div>
 
-      <div className="flex-1 flex items-center justify-center px-4 py-8">
-        <Card className="w-full max-w-md border-border">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <div className="p-4 rounded-full bg-accent">
-                <Mail className="h-10 w-10 text-primary" />
-              </div>
-            </div>
-            <CardTitle className="font-display text-2xl">Check Your Email</CardTitle>
-            <CardDescription className="text-base">
-              We've sent a verification link to
-            </CardDescription>
-            <p className="font-medium text-foreground mt-1">{email}</p>
-          </CardHeader>
+      <div className="text-center">
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+          <Mail className="w-8 h-8 text-primary" />
+        </div>
 
-          <CardContent className="space-y-6">
-            <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-              <h4 className="font-medium text-foreground text-sm">What to do next:</h4>
-              <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
-                <li>Open your email inbox</li>
-                <li>Find the email from Alignment Retreats</li>
-                <li>Click the verification link</li>
-                <li>You'll be redirected to sign in</li>
-              </ol>
-            </div>
+        <h1 className="text-2xl font-display text-foreground mb-3">
+          Check Your Email
+        </h1>
+        <p className="text-muted-foreground mb-1">
+          We&apos;ve sent a verification link to
+        </p>
+        <p className="font-medium text-foreground mb-8">{email}</p>
 
-            <div className="text-center space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Didn't receive the email? Check your spam folder or
-              </p>
-              
-              <Button
-                variant="outline"
-                onClick={handleResendVerification}
-                disabled={resending || cooldown > 0}
-                className="w-full"
-              >
-                {resending ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Sending...
-                  </>
-                ) : resendSuccess && cooldown > 0 ? (
-                  <>
-                    <CheckCircle className="h-4 w-4 mr-2 text-primary" />
-                    Sent! Resend in {cooldown}s
-                  </>
-                ) : cooldown > 0 ? (
-                  `Resend in ${cooldown}s`
-                ) : (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Resend Verification Email
-                  </>
-                )}
-              </Button>
-            </div>
+        {/* Instructions */}
+        <div className="bg-muted/50 rounded-[var(--radius-card)] p-4 text-left mb-6">
+          <h4 className="font-medium text-foreground text-sm mb-2">
+            What to do next:
+          </h4>
+          <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
+            <li>Open your email inbox</li>
+            <li>Find the email from Alignment Retreats</li>
+            <li>Click the verification link</li>
+            <li>You&apos;ll be redirected to sign in</li>
+          </ol>
+        </div>
 
-            <div className="pt-4 border-t border-border text-center">
-              <p className="text-sm text-muted-foreground">
-                Already verified?{' '}
-                <Link to="/login" className="text-primary hover:underline font-medium">
-                  Sign in
-                </Link>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        {error && (
+          <div className="mb-4 p-3 rounded-xl bg-destructive/10 text-destructive text-sm">
+            {error}
+          </div>
+        )}
+
+        {/* Resend */}
+        <p className="text-sm text-muted-foreground mb-3">
+          Didn&apos;t receive the email? Check your spam folder or
+        </p>
+
+        <button
+          onClick={handleResendVerification}
+          disabled={resending || cooldown > 0}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-[var(--radius-button)] border border-border bg-card text-foreground font-medium hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {resending ? (
+            <>
+              <RefreshCw className="h-4 w-4 animate-spin" />
+              Sending...
+            </>
+          ) : resendSuccess && cooldown > 0 ? (
+            <>
+              <CheckCircle className="h-4 w-4 text-primary" />
+              Sent! Resend in {cooldown}s
+            </>
+          ) : cooldown > 0 ? (
+            `Resend in ${cooldown}s`
+          ) : (
+            <>
+              <RefreshCw className="h-4 w-4" />
+              Resend Verification Email
+            </>
+          )}
+        </button>
+
+        {/* Sign in link */}
+        <div className="mt-6 pt-6 border-t border-border">
+          <p className="text-sm text-muted-foreground">
+            Already verified?{" "}
+            <Link
+              href="/login"
+              className="text-primary hover:underline font-medium"
+            >
+              Sign in
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
