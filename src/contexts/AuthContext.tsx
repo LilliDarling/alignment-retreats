@@ -1,50 +1,32 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase, clearAuthStorage } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+"use client";
 
-export type AppRole = 'host' | 'cohost' | 'landowner' | 'staff' | 'attendee' | 'admin';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState
+} from 'react';
+import {User, Session} from '@supabase/supabase-js';
+import {createClient} from '@/lib/supabase/client';
+import type {
+  AppRole,
+  OnboardingMetadata,
+  AuthContextType
+} from '@/types/auth';
 
-export interface OnboardingMetadata {
-  profile?: { location: string; description: string; availability: string; coopInterest?: boolean };
-  host?: { expertiseAreas: string[]; minRate: number; maxRate: number };
-  cohost?: { skills: string[]; availability: string; hourlyRate: number; minRate: number; maxRate: number };
-  staff?: { serviceType: string; experienceYears: number; dayRate: number; availability: string; portfolioUrl: string };
-  landowner?: {
-    propertyName: string;
-    propertyType: string;
-    capacity: number;
-    location: string;
-    basePrice: number | null;
-    minRate: number | null;
-    maxRate: number | null;
-    description: string;
-    amenities: string[];
-    contactName: string;
-    contactEmail: string;
-    instagramHandle: string;
-    tiktokHandle: string;
-    contentStatus: string;
-    existingContentLink: string;
-    contentDescription: string;
-    interestedInResidency: boolean;
-    residencyAvailableDates: string;
-    propertyFeatures: string[];
-  };
-}
+const supabase = createClient();
 
-interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  userRoles: AppRole[];
-  loading: boolean;
-  signUp: (email: string, password: string, name: string, userTypes: AppRole[], onboardingData?: OnboardingMetadata) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signInWithMagicLink: (email: string, redirectTo?: string) => Promise<{ error: Error | null }>;
-  signOut: () => Promise<void>;
-  hasRole: (role: AppRole) => boolean;
-  hasAnyRole: (roles: AppRole[]) => boolean;
-  updatePassword: (password: string) => Promise<{ error: Error | null }>;
+function clearAuthStorage() {
+  const keysToRemove: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && (key.startsWith('sb-') || key.includes('supabase'))) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+  sessionStorage.removeItem('bookingRedirect');
+  sessionStorage.removeItem('authRedirectTo');
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -54,8 +36,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [userRoles, setUserRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
-
   const fetchUserRoles = async (userId: string) => {
     const { data, error } = await supabase
       .from('user_roles')
@@ -166,7 +146,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, name: string, userTypes: AppRole[], onboardingData?: OnboardingMetadata) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    name: string,
+    userTypes: AppRole[],
+    onboardingData?: OnboardingMetadata
+  ) => {
     const redirectUrl = `${window.location.origin}/auth/callback`;
 
     const { error } = await supabase.auth.signUp({
@@ -238,7 +224,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const hasAnyRole = (roles: AppRole[]) => roles.some(role => userRoles.includes(role));
 
   return (
-    <AuthContext.Provider value={{ user, session, userRoles, loading, signUp, signIn, signInWithMagicLink, signOut, hasRole, hasAnyRole, updatePassword }}>
+    <AuthContext.Provider value={{
+      user,
+      session,
+      userRoles,
+      loading,
+      signUp,
+      signIn,
+      signInWithMagicLink,
+      signOut,
+      hasRole,
+      hasAnyRole,
+      updatePassword
+      }}>
       {children}
     </AuthContext.Provider>
   );
