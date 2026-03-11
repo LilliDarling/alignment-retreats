@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Plus, Calendar, MapPin, Pencil, Clock, Eye } from "lucide-react";
+import { parseLocalDate } from "@/lib/utils/format";
 import { Card, CardContent } from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -159,7 +160,7 @@ export default function HostTab({ retreats }: HostTabProps) {
                       {retreat.start_date && (
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
-                          {new Date(retreat.start_date).toLocaleDateString()}
+                          {parseLocalDate(retreat.start_date).toLocaleDateString()}
                         </span>
                       )}
                     </div>

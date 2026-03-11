@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Instagram, Facebook, Linkedin, ShieldCheck, BadgeCheck, RefreshCcw } from "lucide-react";
+import { Instagram, Facebook, Linkedin, ShieldCheck, BadgeCheck } from "lucide-react";
 import { siteConfig, navLinks } from "@/lib/data/site";
 
 export default function Footer() {
@@ -175,7 +175,6 @@ export default function Footer() {
           {[
             { icon: ShieldCheck, label: "Secure Payments" },
             { icon: BadgeCheck, label: "Verified Hosts" },
-            { icon: RefreshCcw, label: "Money-Back Guarantee" },
           ].map((badge) => (
             <div
               key={badge.label}

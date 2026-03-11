@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Globe, Calendar, Users, DollarSign, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { unpublishRetreat } from "@/lib/actions/admin";
+import { parseLocalDate } from "@/lib/utils/format";
 import type { PublishedRetreat } from "@/lib/queries/admin";
 
 interface PublishedTabProps {
@@ -70,7 +71,7 @@ export default function PublishedTab({ retreats }: PublishedTabProps) {
                   {retreat.start_date && (
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      {new Date(retreat.start_date).toLocaleDateString()} – {new Date(retreat.end_date).toLocaleDateString()}
+                      {parseLocalDate(retreat.start_date).toLocaleDateString()} – {parseLocalDate(retreat.end_date).toLocaleDateString()}
                     </span>
                   )}
                   {retreat.custom_venue_name && (

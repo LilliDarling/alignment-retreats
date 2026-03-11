@@ -10,8 +10,9 @@ function toRetreat(row: Record<string, unknown>): Retreat {
   const r = row as Record<string, unknown>;
   const property = r.property as Record<string, unknown> | null;
 
-  // Derive location from custom_venue_name or property
+  // Derive location from location_details, custom_venue_name, or property
   const location =
+    (r.location_details as string) ||
     (r.custom_venue_name as string) ||
     (property?.location as string) ||
     (property?.name as string) ||
@@ -24,11 +25,13 @@ function toRetreat(row: Record<string, unknown>): Retreat {
     propertyPhotos?.[0] ||
     "";
 
-  // Calculate duration from dates
+  // Calculate duration from dates (parse as local to avoid timezone shift)
   let duration = "";
   if (r.start_date && r.end_date) {
-    const start = new Date(r.start_date as string);
-    const end = new Date(r.end_date as string);
+    const [sy, sm, sd] = (r.start_date as string).split("T")[0].split("-").map(Number);
+    const [ey, em, ed] = (r.end_date as string).split("T")[0].split("-").map(Number);
+    const start = new Date(sy, sm - 1, sd);
+    const end = new Date(ey, em - 1, ed);
     const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
     duration = `${days} day${days !== 1 ? "s" : ""}`;
   }
@@ -74,10 +77,10 @@ function toRetreat(row: Record<string, unknown>): Retreat {
 
 const RETREAT_SELECT = `
   id, slug, title, description, retreat_type, start_date, end_date,
-  max_attendees, price_per_person, sample_itinerary, status,
-  custom_venue_name, host_user_id, main_image, what_you_offer,
-  allow_donations,
-  property:properties(name, location, photos)
+  max_attendees, price_per_person, ticket_price, sample_itinerary, status,
+  custom_venue_name, location_details, host_user_id, main_image, what_you_offer,
+  allow_donations, gallery_images, gallery_videos,
+  property:properties(id, name, location, description, capacity, photos, videos, property_features, property_type)
 ` as const;
 
 export async function getFeaturedRetreats(limit = 2): Promise<Retreat[]> {

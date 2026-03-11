@@ -29,6 +29,7 @@ import {
   removeTeamCost,
 } from "@/lib/actions/admin";
 import type { ApprovedRetreat, TeamMemberInfo, AdminMember } from "@/lib/queries/admin";
+import { parseLocalDate } from "@/lib/utils/format";
 
 const ROLE_LABELS: Record<string, string> = {
   host: "Host",
@@ -388,8 +389,8 @@ function ApprovedRetreatCard({
   const maxAttendees = retreat.max_attendees || 20;
   const hostRate = retreat.price_per_person || 0;
 
-  const startDate = retreat.start_date ? new Date(retreat.start_date) : null;
-  const endDate = retreat.end_date ? new Date(retreat.end_date) : null;
+  const startDate = retreat.start_date ? parseLocalDate(retreat.start_date) : null;
+  const endDate = retreat.end_date ? parseLocalDate(retreat.end_date) : null;
   const nights =
     startDate && endDate
       ? Math.max(

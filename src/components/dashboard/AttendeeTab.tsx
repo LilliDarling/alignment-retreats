@@ -1,6 +1,7 @@
 "use client";
 
 import { Heart, Calendar, Search, ArrowRight } from "lucide-react";
+import { parseLocalDate } from "@/lib/utils/format";
 import { Card, CardContent } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import type { DashboardBooking } from "@/lib/queries/dashboard";
@@ -114,11 +115,9 @@ export default function AttendeeTab({ bookings }: AttendeeTabProps) {
                       {booking.retreat_start && (
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
-                          {new Date(
-                            booking.retreat_start
-                          ).toLocaleDateString()}
+                          {parseLocalDate(booking.retreat_start).toLocaleDateString()}
                           {booking.retreat_end &&
-                            ` – ${new Date(booking.retreat_end).toLocaleDateString()}`}
+                            ` – ${parseLocalDate(booking.retreat_end).toLocaleDateString()}`}
                         </span>
                       )}
                     </div>

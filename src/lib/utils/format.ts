@@ -7,9 +7,15 @@ export function formatPrice(price: number, currency: string = "USD"): string {
   }).format(price);
 }
 
+// Parse date string (YYYY-MM-DD) without timezone shift
+export function parseLocalDate(dateStr: string): Date {
+  const [y, m, d] = dateStr.split("T")[0].split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
 export function formatDateRange(start: string, end: string): string {
-  const s = new Date(start);
-  const e = new Date(end);
+  const s = parseLocalDate(start);
+  const e = parseLocalDate(end);
   const opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
 
   if (s.getFullYear() !== e.getFullYear()) {
