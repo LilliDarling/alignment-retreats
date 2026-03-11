@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { navLinks } from "@/lib/data/site";
 import Button from "@/components/ui/Button";
 import UserMenu from "@/components/layout/UserMenu";
+import SupportButton from "@/components/ui/SupportButton";
 import { useLenis } from "@/components/providers/SmoothScrollProvider";
 import { cn } from "@/lib/utils";
 import { NavbarProps } from "@/types/ui";
@@ -391,6 +392,13 @@ export default function Navbar({
                     >
                       Dashboard
                     </Link>
+                    <Link
+                      href="/bookings"
+                      className="block px-3 py-3 text-lg font-display text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-colors"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      My Bookings
+                    </Link>
                   </div>
                 ) : (
                   <div className="space-y-1 mb-6">
@@ -407,7 +415,12 @@ export default function Navbar({
                   </div>
                 )}
 
-                <div className="pt-4 border-t border-border">
+                <div className="pt-4 border-t border-border space-y-3">
+                  <SupportButton
+                    variant="ghost"
+                    className="w-full justify-center"
+                    label="Get Support"
+                  />
                   <Button
                     href={user ? "/account" : "/signup"}
                     className="w-full"

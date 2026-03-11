@@ -35,6 +35,7 @@ import type { RetreatFormData, VenueOption, ScheduleDay, LookingFor } from "@/li
 import ItineraryBuilder from "@/components/retreats/ItineraryBuilder";
 import { uploadRetreatImage, uploadRetreatVideo } from "@/lib/utils/upload";
 import Link from "next/link";
+import FirstTimeSubmitModal from "@/components/ui/FirstTimeSubmitModal";
 
 interface RetreatFormProps {
   mode: "create" | "edit";
@@ -104,6 +105,7 @@ export default function RetreatForm({
   const [success, setSuccess] = useState<string | null>(null);
   const [showEditWarning, setShowEditWarning] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [showFirstTimeModal, setShowFirstTimeModal] = useState(false);
 
   // Load published venues for the dropdown
   useEffect(() => {
@@ -253,6 +255,7 @@ export default function RetreatForm({
       setError(result.error);
     } else {
       setSuccess("Retreat submitted for review! You'll be notified once it's approved.");
+      if (result.isFirstTime) setShowFirstTimeModal(true);
     }
     setSubmitting(false);
   };
@@ -274,6 +277,12 @@ export default function RetreatForm({
   const labelClass = "text-sm font-medium text-foreground mb-1 block";
 
   return (
+    <>
+    <FirstTimeSubmitModal
+      open={showFirstTimeModal}
+      onClose={() => setShowFirstTimeModal(false)}
+      type="retreat"
+    />
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-28">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
@@ -1019,7 +1028,7 @@ export default function RetreatForm({
             </div>
           )}
 
-          {mode === "edit" && (status === "draft" || status === "pending_review") && (
+          {mode === "edit" && (status === "draft" || status === "pending_review" || status === "cancelled") && (
             <button
               onClick={handleDelete}
               disabled={deleting}
@@ -1036,5 +1045,6 @@ export default function RetreatForm({
         </div>
       </div>
     </main>
+    </>
   );
 }

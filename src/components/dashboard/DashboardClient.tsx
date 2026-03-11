@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { TabsList, TabPanel } from "@/components/ui/Tabs";
 import SharedProfileSection from "./SharedProfileSection";
+import SupportButton from "@/components/ui/SupportButton";
 import HostTab from "./HostTab";
 import CohostTab from "./CohostTab";
 import VenueTab from "./VenueTab";
@@ -66,6 +67,10 @@ export default function DashboardClient({
         roles={data.roles}
         userEmail={userEmail}
       />
+
+      <div className="flex justify-end mb-4 -mt-2">
+        <SupportButton variant="ghost" label="Get Support" />
+      </div>
 
       {displayRoles.length > 0 && (
         <div className="space-y-6">

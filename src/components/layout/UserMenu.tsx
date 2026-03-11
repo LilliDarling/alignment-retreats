@@ -11,13 +11,14 @@ import {
   Mountain,
   LayoutDashboard,
   MessageSquare,
-  ShieldCheck,
+  Settings,
   Shield,
   Crown,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { UserMenuProps } from "@/types/ui";
+import { useUnreadMessages } from "@/lib/hooks/useUnreadMessages";
 
 
 export default function UserMenu({ user, scrolled }: UserMenuProps) {
@@ -25,6 +26,7 @@ export default function UserMenu({ user, scrolled }: UserMenuProps) {
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const supabase = createClient();
+  const { unreadCount } = useUnreadMessages();
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -53,7 +55,6 @@ export default function UserMenu({ user, scrolled }: UserMenuProps) {
     : user.email[0].toUpperCase();
 
   const isHost = user.roles.includes("host") || user.roles.includes("admin");
-  const isCohost = user.roles.includes("cohost") || user.roles.includes("admin");
   const isAdmin = user.roles.includes("admin");
 
   return (
@@ -61,7 +62,7 @@ export default function UserMenu({ user, scrolled }: UserMenuProps) {
       <button
         onClick={() => setOpen(!open)}
         className={cn(
-          "w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-colors overflow-hidden",
+          "w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-colors overflow-hidden relative",
           scrolled
             ? "bg-primary text-primary-foreground hover:bg-primary/90"
             : "bg-white/20 text-white hover:bg-white/30"
@@ -79,6 +80,11 @@ export default function UserMenu({ user, scrolled }: UserMenuProps) {
           />
         ) : (
           initials
+        )}
+        {unreadCount > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white">
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>
         )}
       </button>
 
@@ -139,11 +145,23 @@ export default function UserMenu({ user, scrolled }: UserMenuProps) {
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
             >
-              <MessageSquare className="w-4 h-4 text-muted-foreground" />
-              Messages
+              <div className="relative shrink-0">
+                <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-red-500 text-white text-[8px] font-bold flex items-center justify-center">
+                    {unreadCount > 9 ? "9" : unreadCount}
+                  </span>
+                )}
+              </div>
+              <span className="flex-1">Messages</span>
+              {unreadCount > 0 && (
+                <span className="ml-auto text-xs font-semibold text-white bg-red-500 rounded-full px-1.5 py-0.5 leading-none">
+                  {unreadCount}
+                </span>
+              )}
             </Link>
             <Link
-              href="/account#bookings"
+              href="/bookings"
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
             >
@@ -151,13 +169,14 @@ export default function UserMenu({ user, scrolled }: UserMenuProps) {
               My Bookings
             </Link>
             <Link
-              href="/account/verification"
+              href="/account/settings"
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
             >
-              <ShieldCheck className="w-4 h-4 text-muted-foreground" />
-              Verification
+              <Settings className="w-4 h-4 text-muted-foreground" />
+              Settings
             </Link>
+
             {!isHost && (
               <Link
                 href="/signup?step=host"

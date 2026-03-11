@@ -142,9 +142,9 @@ export async function updateRetreat(
 
 export async function submitRetreatForReview(
   retreatId: string
-): Promise<{ error: string | null }> {
+): Promise<{ error: string | null; isFirstTime: boolean }> {
   const userId = await getAuthUserId();
-  if (!userId) return { error: "Not authenticated" };
+  if (!userId) return { error: "Not authenticated", isFirstTime: false };
 
   const supabase = await createClient();
 
@@ -154,17 +154,17 @@ export async function submitRetreatForReview(
     .eq("id", retreatId)
     .single();
 
-  if (fetchError || !existing) return { error: "Retreat not found." };
-  if (existing.host_user_id !== userId) return { error: "Not authorized." };
+  if (fetchError || !existing) return { error: "Retreat not found.", isFirstTime: false };
+  if (existing.host_user_id !== userId) return { error: "Not authorized.", isFirstTime: false };
 
   const status = existing.status as string;
   if (status !== "draft" && status !== "pending_review") {
-    return { error: `Cannot submit a retreat with status "${status}".` };
+    return { error: `Cannot submit a retreat with status "${status}".`, isFirstTime: false };
   }
 
   // Basic completeness check
   if (!existing.title || !existing.description || !existing.start_date || !existing.end_date || (!existing.custom_venue_name && !existing.property_id) || !existing.retreat_type) {
-    return { error: "Please fill in all required fields before submitting." };
+    return { error: "Please fill in all required fields before submitting.", isFirstTime: false };
   }
 
   const { error } = await supabase
@@ -172,10 +172,16 @@ export async function submitRetreatForReview(
     .update({ status: "pending_review" })
     .eq("id", retreatId);
 
-  if (error) return { error: error.message };
+  if (error) return { error: error.message, isFirstTime: false };
+
+  const { count } = await supabase
+    .from("retreats")
+    .select("id", { count: "exact", head: true })
+    .eq("host_user_id", userId)
+    .in("status", ["approved", "published", "full", "completed"]);
 
   revalidatePath("/dashboard");
-  return { error: null };
+  return { error: null, isFirstTime: !count || count === 0 };
 }
 
 export async function deleteRetreat(
@@ -196,8 +202,8 @@ export async function deleteRetreat(
   if (existing.host_user_id !== userId) return { error: "Not authorized." };
 
   const status = existing.status as string;
-  if (status !== "draft" && status !== "pending_review") {
-    return { error: "Only draft or pending review retreats can be deleted. Published retreats must be unpublished first." };
+  if (status !== "draft" && status !== "pending_review" && status !== "cancelled") {
+    return { error: "Only draft, pending review, or cancelled retreats can be deleted. Published retreats must be unpublished first." };
   }
 
   const { error } = await supabase

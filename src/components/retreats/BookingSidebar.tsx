@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Shield, BadgeCheck, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Button from "@/components/ui/Button";
+import SupportButton from "@/components/ui/SupportButton";
 import { formatPrice, formatDateRange } from "@/lib/utils/format";
 import type { Retreat } from "@/lib/types";
 
@@ -119,6 +120,11 @@ export default function BookingSidebar({ retreat, isAuthenticated }: BookingSide
         <p className="text-center text-xs text-muted-foreground mt-3">
           Secure checkout powered by Stripe
         </p>
+      </div>
+
+      {/* Support */}
+      <div className="px-6 pb-2">
+        <SupportButton variant="link" className="text-muted-foreground text-xs justify-center w-full" label="Have a question? Get support" />
       </div>
 
       {/* Trust Badges */}

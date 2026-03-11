@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Instagram, Facebook, Linkedin, ShieldCheck, BadgeCheck } from "lucide-react";
 import { siteConfig, navLinks } from "@/lib/data/site";
+import SupportButton from "@/components/ui/SupportButton";
 
 export default function Footer() {
   return (
@@ -164,6 +165,9 @@ export default function Footer() {
                   Contact Form
                 </Link>
               </li>
+              <li className="pt-1">
+                <SupportButton variant="link" className="text-white/80 hover:text-white" label="Get Support" />
+              </li>
             </ul>
           </div>
         </div>
@@ -194,8 +198,13 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} Alignment Retreats. Bringing
             people together for transformative experiences.
           </p>
-          <p>
-            A project of{" "}
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+            <Link href="/terms" className="hover:text-white transition-colors">
+              Terms of Service
+            </Link>
+            <Link href="/privacy" className="hover:text-white transition-colors">
+              Privacy Policy
+            </Link>
             <a
               href={siteConfig.parentOrg.url}
               target="_blank"
@@ -204,7 +213,7 @@ export default function Footer() {
             >
               {siteConfig.parentOrg.name}
             </a>
-          </p>
+          </div>
         </div>
       </div>
     </footer>

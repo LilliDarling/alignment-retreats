@@ -28,4 +28,10 @@ export interface VenueDetail {
   photos: string[];
   videos: string[];
   property_features: string[];
+  capacity: number | null;
+  contact_name: string | null;
+  contact_email: string | null;
+  instagram_handle: string | null;
+  tiktok_handle: string | null;
+  status?: string;
 }
