@@ -19,7 +19,7 @@ export default async function SettingsPage() {
       .from("profiles")
       .select("show_in_directory, newsletter_opt_in")
       .eq("id", user.id)
-      .single() as Promise<{ data: { show_in_directory: boolean; newsletter_opt_in: boolean } | null; error: unknown }>,
+      .single() as unknown as Promise<{ data: { show_in_directory: boolean; newsletter_opt_in: boolean } | null; error: unknown }>,
     supabase.from("user_roles").select("role").eq("user_id", user.id),
   ]);
 
@@ -28,6 +28,7 @@ export default async function SettingsPage() {
   return (
     <SettingsClient
       user={{
+        id: user.id,
         email: user.email!,
         createdAt: user.created_at,
         roles,

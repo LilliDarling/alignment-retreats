@@ -67,11 +67,26 @@ export async function deleteMessage(
   if (!userId) return { error: "Not authenticated" };
 
   const supabase = await createClient();
+
+  // Verify the user is the sender or recipient before deleting
+  const { data: message } = await supabase
+    .from("messages")
+    .select("sender_id, recipient_id")
+    .eq("id", messageId)
+    .single();
+
+  if (!message) return { error: "Message not found" };
+  if (
+    (message as { sender_id: string; recipient_id: string }).sender_id !== userId &&
+    (message as { sender_id: string; recipient_id: string }).recipient_id !== userId
+  ) {
+    return { error: "Not authorized" };
+  }
+
   const { error } = await supabase
     .from("messages")
     .delete()
-    .eq("id", messageId)
-    .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`);
+    .eq("id", messageId);
 
   if (error) return { error: error.message };
   revalidatePath("/account/messages");

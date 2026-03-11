@@ -45,32 +45,52 @@ export async function submitSupportRequest(data: {
   if (!data.email?.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))
     return { error: "A valid email address is required." };
 
-  const { error } = await supabase.from("contact_submissions").insert({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any).from("contact_submissions").insert({
     name: data.name.trim(),
     email: data.email.trim().toLowerCase(),
     subject,
     message: data.details.trim(),
-  } as never);
+  });
 
   if (error) return { error: error.message };
   return { error: null };
 }
 
-export async function markContactSubmissionRead(id: string): Promise<{ error: string | null }> {
+async function requireAdmin(): Promise<{ userId: string } | { error: string }> {
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+  const { data: roles } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", user.id);
+  const isAdmin = (roles || []).some((r) => r.role === "admin");
+  if (!isAdmin) return { error: "Not authorized" };
+  return { userId: user.id };
+}
+
+export async function markContactSubmissionRead(id: string): Promise<{ error: string | null }> {
+  const auth = await requireAdmin();
+  if ("error" in auth) return auth;
+  const supabase = await createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from("contact_submissions")
-    .update({ read: true } as never)
+    .update({ read: true })
     .eq("id", id);
   if (error) return { error: error.message };
   return { error: null };
 }
 
 export async function markContactSubmissionResolved(id: string, resolved: boolean): Promise<{ error: string | null }> {
+  const auth = await requireAdmin();
+  if ("error" in auth) return auth;
   const supabase = await createClient();
-  const { error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from("contact_submissions")
-    .update({ resolved, read: true } as never)
+    .update({ resolved, read: true })
     .eq("id", id);
   if (error) return { error: error.message };
   return { error: null };
@@ -89,12 +109,13 @@ export async function submitContactForm(data: {
   if (!data.message.trim()) return { error: "Message is required." };
 
   const supabase = await createClient();
-  const { error } = await supabase.from("contact_submissions").insert({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any).from("contact_submissions").insert({
     name: data.name.trim(),
     email: data.email.trim().toLowerCase(),
     subject: data.subject.trim(),
     message: data.message.trim(),
-  } as never);
+  });
 
   if (error) return { error: error.message };
   return { error: null };

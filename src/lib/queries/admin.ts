@@ -435,7 +435,8 @@ async function getPublishedProperties(): Promise<PublishedProperty[]> {
 async function getContactSubmissions(): Promise<ContactSubmission[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from("contact_submissions")
     .select("id, name, email, subject, message, created_at, read, resolved")
     .order("created_at", { ascending: false });
@@ -482,7 +483,8 @@ async function getRevenueMetrics(): Promise<RevenueMetrics> {
         .from("properties")
         .select("id", { count: "exact", head: true })
         .eq("status", "published"),
-      supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase as any)
         .from("contact_submissions")
         .select("id", { count: "exact", head: true }),
     ]);

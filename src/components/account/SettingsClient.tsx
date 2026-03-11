@@ -30,6 +30,7 @@ import Button from "@/components/ui/Button";
 
 interface SettingsClientProps {
   user: {
+    id: string;
     email: string;
     createdAt: string;
     roles: string[];
@@ -200,7 +201,7 @@ export default function SettingsClient({
     setDeleting(true);
     setDeleteFeedback(null);
     const { error } = await supabase.functions.invoke("delete-account", {
-      body: { userId: user.email },
+      body: { userId: user.id },
     });
     if (error) {
       setDeleting(false);

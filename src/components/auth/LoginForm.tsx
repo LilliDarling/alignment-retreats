@@ -17,7 +17,12 @@ export default function LoginForm() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/dashboard";
+  const rawRedirect = searchParams.get("redirect") || "/dashboard";
+  // Prevent open redirect: only allow internal paths
+  const redirect =
+    rawRedirect.startsWith("/") && !rawRedirect.includes("//")
+      ? rawRedirect
+      : "/dashboard";
   const authError = searchParams.get("error");
 
   const supabase = createClient();
