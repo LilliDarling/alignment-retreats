@@ -11,6 +11,7 @@ import {
   Download,
   CheckCircle,
   Globe,
+  Inbox,
 } from "lucide-react";
 import type { AdminDashboardData } from "@/lib/queries/admin";
 import SubmissionsTab from "@/components/admin/SubmissionsTab";
@@ -20,6 +21,7 @@ import MetricsBar from "@/components/admin/MetricsBar";
 import ExportsTab from "@/components/admin/ExportsTab";
 import ApprovedTab from "@/components/admin/ApprovedTab";
 import PublishedTab from "@/components/admin/PublishedTab";
+import ContactSubmissionsTab from "@/components/admin/ContactSubmissionsTab";
 
 interface AdminDashboardProps {
   data: AdminDashboardData;
@@ -30,6 +32,7 @@ const TABS = [
   { key: "approved", label: "Approved", icon: CheckCircle },
   { key: "published", label: "Published", icon: Globe },
   { key: "properties", label: "Properties", icon: Home },
+  { key: "contact", label: "Contact", icon: Inbox },
   { key: "members", label: "Members", icon: Users },
   { key: "exports", label: "Exports", icon: Download },
 ] as const;
@@ -83,8 +86,10 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
                   : tab.key === "published"
                     ? data.metrics.publishedRetreats
                     : tab.key === "properties"
-                      ? data.metrics.pendingProperties
-                      : 0;
+                      ? data.metrics.pendingProperties + data.metrics.publishedProperties
+                      : tab.key === "contact"
+                        ? data.metrics.contactSubmissions
+                        : 0;
             return (
               <button
                 key={tab.key}
@@ -99,7 +104,7 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
                 <span className="hidden sm:inline">{tab.label}</span>
                 {count > 0 && (
                   <span className={`absolute -top-0.5 -right-0.5 sm:static sm:ml-1 min-w-[18px] h-[18px] rounded-full text-white text-[10px] font-bold flex items-center justify-center px-1 ${
-                    tab.key === "approved" ? "bg-primary" : tab.key === "published" ? "bg-green-500" : "bg-red-500"
+                    tab.key === "approved" ? "bg-primary" : tab.key === "published" ? "bg-green-500" : tab.key === "contact" ? "bg-amber-500" : "bg-red-500"
                   }`}>
                     {count}
                   </span>
@@ -120,7 +125,10 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
           <PublishedTab retreats={data.publishedRetreats} />
         )}
         {activeTab === "properties" && (
-          <PropertiesTab properties={data.pendingProperties} />
+          <PropertiesTab properties={data.pendingProperties} publishedProperties={data.publishedProperties} />
+        )}
+        {activeTab === "contact" && (
+          <ContactSubmissionsTab submissions={data.contactSubmissions} />
         )}
         {activeTab === "members" && <MembersTab members={data.members} />}
         {activeTab === "exports" && <ExportsTab />}

@@ -147,6 +147,62 @@ export async function uploadRetreatVideo(
   return { url: publicUrl };
 }
 
+export async function uploadVenueImage(
+  propertyId: string,
+  file: File
+): Promise<{ url: string } | { error: string }> {
+  const validationError = validateFile(file);
+  if (validationError) return { error: validationError };
+  if (getMediaType(file) !== "image") return { error: "Venue photo must be an image." };
+
+  const supabase = createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const path = `${user.id}/${propertyId}-${generateFileName(file)}`;
+
+  const { error } = await supabase.storage
+    .from("venue-photos")
+    .upload(path, file, { upsert: true });
+
+  if (error) return { error: error.message };
+
+  const { data: { publicUrl } } = supabase.storage
+    .from("venue-photos")
+    .getPublicUrl(path);
+
+  return { url: publicUrl };
+}
+
+export async function uploadVenueVideo(
+  propertyId: string,
+  file: File
+): Promise<{ url: string } | { error: string }> {
+  const validationError = validateFile(file);
+  if (validationError) return { error: validationError };
+  if (getMediaType(file) !== "video") return { error: "File must be a video." };
+
+  const supabase = createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const path = `${user.id}/${propertyId}-${generateFileName(file)}`;
+
+  const { error } = await supabase.storage
+    .from("venue-photos")
+    .upload(path, file);
+
+  if (error) return { error: error.message };
+
+  const { data: { publicUrl } } = supabase.storage
+    .from("venue-photos")
+    .getPublicUrl(path);
+
+  return { url: publicUrl };
+}
+
 export async function deleteStorageFile(
   bucket: string,
   url: string

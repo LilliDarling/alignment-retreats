@@ -152,22 +152,62 @@ export async function getVenueById(id: string): Promise<VenueDetail | null> {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("properties")
-      .select("id, name, location, property_type, amenities, description, photos, videos, property_features")
+      .select("id, name, location, property_type, amenities, description, photos, videos, property_features, capacity, contact_name, contact_email, instagram_handle, tiktok_handle")
       .eq("id", id)
       .eq("status", "published")
       .single();
 
     if (error || !data) return null;
+    const d = data as Record<string, unknown>;
     return {
-      id: data.id as string,
-      name: data.name as string,
-      location: (data.location as string) || null,
-      property_type: (data.property_type as string) || "venue",
-      amenities: (data.amenities as string[]) || [],
-      description: (data.description as string) || null,
-      photos: (data.photos as string[]) || [],
-      videos: (data.videos as string[]) || [],
-      property_features: (data.property_features as string[]) || [],
+      id: d.id as string,
+      name: d.name as string,
+      location: (d.location as string) || null,
+      property_type: (d.property_type as string) || "venue",
+      amenities: (d.amenities as string[]) || [],
+      description: (d.description as string) || null,
+      photos: (d.photos as string[]) || [],
+      videos: (d.videos as string[]) || [],
+      property_features: (d.property_features as string[]) || [],
+      capacity: (d.capacity as number) || null,
+      contact_name: (d.contact_name as string) || null,
+      contact_email: (d.contact_email as string) || null,
+      instagram_handle: (d.instagram_handle as string) || null,
+      tiktok_handle: (d.tiktok_handle as string) || null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function getOwnProperty(id: string, userId: string): Promise<VenueDetail | null> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("properties")
+      .select("id, name, location, property_type, amenities, description, photos, videos, property_features, capacity, contact_name, contact_email, instagram_handle, tiktok_handle, status")
+      .eq("id", id)
+      .eq("owner_user_id", userId)
+      .single();
+
+    if (error || !data) return null;
+    const d = data as Record<string, unknown>;
+    return {
+      id: d.id as string,
+      name: d.name as string,
+      location: (d.location as string) || null,
+      property_type: (d.property_type as string) || "venue",
+      amenities: (d.amenities as string[]) || [],
+      description: (d.description as string) || null,
+      photos: (d.photos as string[]) || [],
+      videos: (d.videos as string[]) || [],
+      property_features: (d.property_features as string[]) || [],
+      capacity: (d.capacity as number) || null,
+      contact_name: (d.contact_name as string) || null,
+      contact_email: (d.contact_email as string) || null,
+      instagram_handle: (d.instagram_handle as string) || null,
+      tiktok_handle: (d.tiktok_handle as string) || null,
+      status: (d.status as string) || "draft",
     };
   } catch {
     return null;
@@ -260,7 +300,7 @@ export async function getMapRetreats(): Promise<MapRetreat[]> {
 
     if (error || !data) return [];
 
-    const retreatMarkers = data
+    return data
       .map((row) => {
         const r = row;
         const retreat = toRetreat(r);
@@ -299,8 +339,6 @@ export async function getMapRetreats(): Promise<MapRetreat[]> {
         };
       })
       .filter((r): r is MapRetreat => r !== null);
-
-    return retreatMarkers;
   } catch {
     return [];
   }

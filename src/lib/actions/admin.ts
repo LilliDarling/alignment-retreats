@@ -156,6 +156,25 @@ export async function approveProperty(
 }
 
 export async function rejectProperty(
+  propertyId: string,
+  adminNotes?: string
+): Promise<{ error: string | null }> {
+  const adminId = await requireAdmin();
+  if (!adminId) return { error: "Not authorized" };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("properties")
+    .update({ status: "rejected", admin_notes: adminNotes || null } as never)
+    .eq("id", propertyId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/admin");
+  return { error: null };
+}
+
+export async function unpublishProperty(
   propertyId: string
 ): Promise<{ error: string | null }> {
   const adminId = await requireAdmin();
@@ -164,12 +183,13 @@ export async function rejectProperty(
   const supabase = await createClient();
   const { error } = await supabase
     .from("properties")
-    .update({ status: "rejected" })
+    .update({ status: "pending_review" } as never)
     .eq("id", propertyId);
 
   if (error) return { error: error.message };
 
   revalidatePath("/admin");
+  revalidatePath("/venues");
   return { error: null };
 }
 

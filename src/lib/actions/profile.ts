@@ -117,3 +117,11 @@ export async function updatePortfolio(data: PortfolioUpdate) {
 export async function markProfileComplete() {
   return updateProfileFields({ profile_completed: true });
 }
+
+export async function updateDirectoryVisibility(show: boolean): Promise<{ error: string | null }> {
+  return updateProfileFields({ show_in_directory: show });
+}
+
+export async function updateNewsletterOptIn(optIn: boolean): Promise<{ error: string | null }> {
+  return updateProfileFields({ newsletter_opt_in: optIn } as Record<string, unknown>);
+}

@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Calendar, MapPin, Pencil, Clock, Eye } from "lucide-react";
+import { useState } from "react";
+import { Plus, Calendar, MapPin, Pencil, Clock, Eye, Trash2, Loader2 } from "lucide-react";
 import { parseLocalDate } from "@/lib/utils/format";
 import { Card, CardContent } from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
+import { deleteRetreat } from "@/lib/actions/retreat";
 import type { HostRetreat } from "@/lib/queries/dashboard";
 
 const statusVariant: Record<string, "primary" | "muted" | "outline" | "warning"> = {
@@ -32,6 +34,15 @@ interface HostTabProps {
 }
 
 export default function HostTab({ retreats }: HostTabProps) {
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (id: string, title: string) => {
+    if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
+    setDeletingId(id);
+    await deleteRetreat(id);
+    setDeletingId(null);
+  };
+
   const published = retreats.filter((r) => r.status === "published").length;
   const drafts = retreats.filter((r) => r.status === "draft").length;
   const pending = retreats.filter((r) => r.status === "pending_review").length;
@@ -180,6 +191,20 @@ export default function HostTab({ retreats }: HostTabProps) {
                     >
                       <Eye className="w-3.5 h-3.5" />
                     </Link>
+                    {(retreat.status === "draft" || retreat.status === "pending_review" || retreat.status === "cancelled") && (
+                      <button
+                        onClick={() => handleDelete(retreat.id, retreat.title)}
+                        disabled={deletingId === retreat.id}
+                        className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-red-600 hover:border-red-300 transition-colors disabled:opacity-50"
+                        title="Delete retreat"
+                      >
+                        {deletingId === retreat.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    )}
                   </div>
                 </CardContent>
               </Card>

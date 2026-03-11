@@ -91,7 +91,6 @@ export interface PendingProperty {
   location: string | null;
   capacity: number | null;
   description: string | null;
-  base_price: number | null;
   amenities: string[];
   photos: string[];
   videos: string[];
@@ -102,7 +101,32 @@ export interface PendingProperty {
   owner_email: string | null;
   contact_name: string | null;
   contact_email: string | null;
+  instagram_handle: string | null;
+  tiktok_handle: string | null;
   property_features: string[];
+}
+
+export interface PublishedProperty {
+  id: string;
+  name: string;
+  property_type: string;
+  location: string | null;
+  capacity: number | null;
+  photos: string[];
+  status: string;
+  owner_name: string | null;
+  owner_email: string | null;
+}
+
+export interface ContactSubmission {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  created_at: string;
+  read: boolean;
+  resolved: boolean;
 }
 
 export interface RevenueMetrics {
@@ -112,8 +136,10 @@ export interface RevenueMetrics {
   uniqueHosts: number;
   pendingSubmissions: number;
   pendingProperties: number;
+  publishedProperties: number;
   approvedRetreats: number;
   publishedRetreats: number;
+  contactSubmissions: number;
 }
 
 export interface AdminDashboardData {
@@ -122,23 +148,27 @@ export interface AdminDashboardData {
   approvedRetreats: ApprovedRetreat[];
   publishedRetreats: PublishedRetreat[];
   pendingProperties: PendingProperty[];
+  publishedProperties: PublishedProperty[];
+  contactSubmissions: ContactSubmission[];
   metrics: RevenueMetrics;
 }
 
 // ─── Queries ─────────────────────────────────────────────────────────
 
 export async function getAdminDashboardData(): Promise<AdminDashboardData> {
-  const [members, pendingRetreats, approvedRetreats, publishedRetreats, pendingProperties, metrics] =
+  const [members, pendingRetreats, approvedRetreats, publishedRetreats, pendingProperties, publishedProperties, contactSubmissions, metrics] =
     await Promise.all([
       getMembers(),
       getPendingRetreats(),
       getApprovedRetreats(),
       getPublishedRetreats(),
       getPendingProperties(),
+      getPublishedProperties(),
+      getContactSubmissions(),
       getRevenueMetrics(),
     ]);
 
-  return { members, pendingRetreats, approvedRetreats, publishedRetreats, pendingProperties, metrics };
+  return { members, pendingRetreats, approvedRetreats, publishedRetreats, pendingProperties, publishedProperties, contactSubmissions, metrics };
 }
 
 async function getMembers(): Promise<AdminMember[]> {
@@ -359,15 +389,75 @@ async function getPendingProperties(): Promise<PendingProperty[]> {
       owner_email: owner ? (owner.email as string) || null : null,
       contact_name: (row.contact_name as string) || null,
       contact_email: (row.contact_email as string) || null,
+      instagram_handle: (row.instagram_handle as string) || null,
+      tiktok_handle: (row.tiktok_handle as string) || null,
       property_features: (row.property_features as string[]) || [],
     };
   });
 }
 
+async function getPublishedProperties(): Promise<PublishedProperty[]> {
+  const supabase = await createClient();
+
+  const { data: properties, error } = await supabase
+    .from("properties")
+    .select("*")
+    .eq("status", "published")
+    .order("created_at", { ascending: false });
+
+  if (error || !properties) return [];
+
+  const { data: profiles } = await supabase.rpc("get_all_profiles_admin");
+  const profileMap = new Map<string, Record<string, unknown>>();
+  if (profiles) {
+    for (const p of profiles as Record<string, unknown>[]) {
+      profileMap.set(p.id as string, p);
+    }
+  }
+
+  return properties.map((p) => {
+    const row = p as Record<string, unknown>;
+    const owner = profileMap.get(row.owner_user_id as string);
+    return {
+      id: row.id as string,
+      name: (row.name as string) || "",
+      property_type: (row.property_type as string) || "",
+      location: (row.location as string) || null,
+      capacity: (row.capacity as number) || null,
+      photos: (row.photos as string[]) || [],
+      status: (row.status as string) || "published",
+      owner_name: owner ? (owner.name as string) || null : null,
+      owner_email: owner ? (owner.email as string) || null : null,
+    };
+  });
+}
+
+async function getContactSubmissions(): Promise<ContactSubmission[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("contact_submissions")
+    .select("id, name, email, subject, message, created_at, read, resolved")
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+
+  return (data as Record<string, unknown>[]).map((r) => ({
+    id: r.id as string,
+    name: (r.name as string) || "",
+    email: (r.email as string) || "",
+    subject: (r.subject as string) || "",
+    message: (r.message as string) || "",
+    created_at: (r.created_at as string) || "",
+    read: (r.read as boolean) || false,
+    resolved: (r.resolved as boolean) || false,
+  }));
+}
+
 async function getRevenueMetrics(): Promise<RevenueMetrics> {
   const supabase = await createClient();
 
-  const [retreatsResult, pendingRetreatsResult, approvedRetreatsResult, publishedRetreatsResult, pendingPropsResult] =
+  const [retreatsResult, pendingRetreatsResult, approvedRetreatsResult, publishedRetreatsResult, pendingPropsResult, publishedPropsResult, contactResult] =
     await Promise.all([
       supabase
         .from("retreats")
@@ -388,6 +478,13 @@ async function getRevenueMetrics(): Promise<RevenueMetrics> {
         .from("properties")
         .select("id", { count: "exact", head: true })
         .eq("status", "pending_review"),
+      supabase
+        .from("properties")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "published"),
+      supabase
+        .from("contact_submissions")
+        .select("id", { count: "exact", head: true }),
     ]);
 
   const retreats = (retreatsResult.data || []) as Record<string, unknown>[];
@@ -408,8 +505,10 @@ async function getRevenueMetrics(): Promise<RevenueMetrics> {
     uniqueHosts,
     pendingSubmissions: pendingRetreatsResult.count || 0,
     pendingProperties: pendingPropsResult.count || 0,
+    publishedProperties: publishedPropsResult.count || 0,
     approvedRetreats: approvedRetreatsResult.count || 0,
     publishedRetreats: publishedRetreatsResult.count || 0,
+    contactSubmissions: contactResult.count || 0,
   };
 }
 
