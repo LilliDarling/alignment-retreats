@@ -6,6 +6,7 @@ import { Camera, MapPin, X } from "lucide-react";
 import { uploadProfilePhoto } from "@/lib/utils/upload";
 import { updateBasicInfo } from "@/lib/actions/profile";
 import type { EditableProfile, BasicInfoUpdate } from "@/types/profile";
+import UnsavedChangesModal from "@/components/ui/UnsavedChangesModal";
 
 interface BasicInfoFormProps {
   profile: EditableProfile;
@@ -22,6 +23,18 @@ export default function BasicInfoForm({ profile, onSaved, onCancel }: BasicInfoF
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+
+  const isDirty =
+    name !== (profile.name || "") ||
+    bio !== (profile.bio || "") ||
+    location !== (profile.location || "") ||
+    photoUrl !== (profile.profile_photo || "") ||
+    coverUrl !== (profile.cover_photo || "");
+
+  const handleCancel = () => {
+    if (isDirty) { setShowCancelModal(true); } else { onCancel?.(); }
+  };
   const photoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
@@ -199,12 +212,20 @@ export default function BasicInfoForm({ profile, onSaved, onCancel }: BasicInfoF
         <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">{error}</p>
       )}
 
+      <UnsavedChangesModal
+        open={showCancelModal}
+        onLeave={() => { setShowCancelModal(false); onCancel?.(); }}
+        onStay={() => setShowCancelModal(false)}
+        onSaveAndLeave={async () => { await handleSave(); setShowCancelModal(false); }}
+        saving={saving}
+      />
+
       {/* Actions */}
       <div className="flex gap-3 justify-end">
         {onCancel && (
           <button
             type="button"
-            onClick={onCancel}
+            onClick={handleCancel}
             className="px-5 py-2.5 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
             Cancel

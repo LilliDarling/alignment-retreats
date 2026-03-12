@@ -91,6 +91,9 @@ async function updateProfileFields(
 }
 
 export async function updateBasicInfo(data: BasicInfoUpdate) {
+  if (data.name && data.name.length > 100) return { error: "Name must be 100 characters or fewer." };
+  if (data.bio && data.bio.length > 1000) return { error: "Bio must be 1,000 characters or fewer." };
+  if (data.location && data.location.length > 200) return { error: "Location must be 200 characters or fewer." };
   return updateProfileFields({ ...data });
 }
 
@@ -98,11 +101,22 @@ export async function updateProfessional(data: ProfessionalUpdate) {
   return updateProfileFields({ ...data });
 }
 
+const HANDLE_REGEX = /^[a-zA-Z0-9._]{1,50}$/;
+
 export async function updateSocialLinks(data: SocialLinksUpdate) {
+  if (data.instagram_handle && !HANDLE_REGEX.test(data.instagram_handle)) {
+    return { error: "Instagram handle may only contain letters, numbers, periods, and underscores (max 50 characters)." };
+  }
+  if (data.tiktok_handle && !HANDLE_REGEX.test(data.tiktok_handle)) {
+    return { error: "TikTok handle may only contain letters, numbers, periods, and underscores (max 50 characters)." };
+  }
   return updateProfileFields({ ...data });
 }
 
 export async function updateAbout(data: AboutUpdate) {
+  if (data.what_i_offer && data.what_i_offer.length > 3000) return { error: "What you offer must be 3,000 characters or fewer." };
+  if (data.what_im_looking_for && data.what_im_looking_for.length > 3000) return { error: "What you're looking for must be 3,000 characters or fewer." };
+  if (data.availability_status && data.availability_status.length > 200) return { error: "Availability status must be 200 characters or fewer." };
   return updateProfileFields({ ...data });
 }
 

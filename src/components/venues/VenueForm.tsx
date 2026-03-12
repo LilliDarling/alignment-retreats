@@ -38,6 +38,8 @@ import {
 import { uploadVenueImage, uploadVenueVideo } from "@/lib/utils/upload";
 import Link from "next/link";
 import FirstTimeSubmitModal from "@/components/ui/FirstTimeSubmitModal";
+import UnsavedChangesModal from "@/components/ui/UnsavedChangesModal";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
 
 interface VenueFormProps {
   mode: "create" | "edit";
@@ -87,6 +89,28 @@ export default function VenueForm({
   const [showEditWarning, setShowEditWarning] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [showFirstTimeModal, setShowFirstTimeModal] = useState(false);
+  const { showModal: showUnsavedModal, guardedNavigate, confirmLeave, cancelLeave } = useUnsavedChanges(isDirty);
+
+  const handleSaveAndLeave = async () => {
+    setSaving(true);
+    setError(null);
+    if (mode === "create") {
+      const result = await createProperty(form);
+      setSaving(false);
+      if ("error" in result) { setError(result.error); } else { confirmLeave(); }
+    } else if (propertyId) {
+      const result = await updateProperty(propertyId, form);
+      setSaving(false);
+      if (result.error) { setError(result.error); } else { confirmLeave(); }
+    }
+  };
+
+  const handlePreview = () => {
+    if (!propertyId) return;
+    sessionStorage.setItem(`venue_unsaved_${propertyId}`, JSON.stringify(form));
+    window.open(`/venues/${propertyId}?unsaved=1`, "_blank");
+    cancelLeave();
+  };
 
   useEffect(() => {
     if (searchParams.get("saved") === "1") {
@@ -267,16 +291,25 @@ export default function VenueForm({
       onClose={() => setShowFirstTimeModal(false)}
       type="venue"
     />
+    <UnsavedChangesModal
+      open={showUnsavedModal}
+      onLeave={confirmLeave}
+      onStay={cancelLeave}
+      onSaveAndLeave={handleSaveAndLeave}
+      onPreview={mode === "edit" && propertyId ? handlePreview : undefined}
+      saving={saving}
+    />
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-28">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard"
+          <button
+            type="button"
+            onClick={() => guardedNavigate(() => router.push("/dashboard"))}
             className="w-9 h-9 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-          </Link>
+          </button>
           <div>
             <h1 className="text-2xl font-display text-foreground">
               {mode === "create" ? "List Your Property" : "Edit Property"}

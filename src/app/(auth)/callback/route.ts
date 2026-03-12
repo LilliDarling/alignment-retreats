@@ -6,11 +6,15 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const rawRedirect = searchParams.get("redirect") || "/dashboard";
 
-  // Prevent open redirect
-  const redirect =
-    rawRedirect.startsWith("/") && !rawRedirect.includes("//")
-      ? rawRedirect
-      : "/dashboard";
+  // Prevent open redirect — verify the resolved URL stays on the same origin
+  const isValidRedirect = (path: string): boolean => {
+    try {
+      return new URL(path, origin).origin === origin;
+    } catch {
+      return false;
+    }
+  };
+  const redirect = isValidRedirect(rawRedirect) ? rawRedirect : "/dashboard";
 
   if (code) {
     const supabase = await createClient();

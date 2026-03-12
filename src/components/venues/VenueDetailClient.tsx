@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { MapPin, Trees, Sparkles, Mountain, Users, Mail, Instagram, ArrowLeft, Eye } from "lucide-react";
 import AnimateOnScroll from "@/components/ui/AnimateOnScroll";
@@ -29,11 +30,36 @@ interface VenueDetailClientProps {
 
 export default function VenueDetailClient({ venue, isPreview = false }: VenueDetailClientProps) {
   const isAuthenticated = useIsAuthenticated();
+  const [displayVenue, setDisplayVenue] = useState(venue);
+  const [isUnsavedPreview, setIsUnsavedPreview] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("unsaved") === "1") {
+      const stored = sessionStorage.getItem(`venue_unsaved_${venue.id}`);
+      if (stored) {
+        try {
+          const overrides = JSON.parse(stored);
+          setDisplayVenue((prev) => ({ ...prev, ...overrides }));
+          setIsUnsavedPreview(true);
+        } catch {
+          // ignore malformed data
+        }
+      }
+    }
+  }, [venue.id]);
 
   return (
     <>
       {/* Preview Banner */}
-      {isPreview && (
+      {isUnsavedPreview ? (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-blue-600 text-white text-center text-sm font-medium py-2 px-4">
+          Previewing unsaved changes — these are not saved yet.{" "}
+          <button onClick={() => window.close()} className="underline hover:no-underline">
+            Close preview
+          </button>
+        </div>
+      ) : isPreview && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-white text-center text-sm font-medium py-2 px-4">
           This is a preview — your venue is not yet published.{" "}
           <Link href={`/venues/${venue.id}/edit`} className="underline hover:no-underline">
@@ -57,28 +83,28 @@ export default function VenueDetailClient({ venue, isPreview = false }: VenueDet
             )}
             <div className="flex flex-wrap gap-3 mb-4">
               <Badge variant="outline">
-                {typeLabels[venue.property_type] || "Venue"}
+                {typeLabels[displayVenue.property_type] || "Venue"}
               </Badge>
-              {isPreview && venue.status && (
-                <Badge variant={venue.status === "pending_review" ? "warning" : "muted"}>
-                  {venue.status === "pending_review" ? "Pending Review" : "Draft"}
+              {isPreview && displayVenue.status && (
+                <Badge variant={displayVenue.status === "pending_review" ? "warning" : "muted"}>
+                  {displayVenue.status === "pending_review" ? "Pending Review" : "Draft"}
                 </Badge>
               )}
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display mb-4">
-              {venue.name}
+              {displayVenue.name}
             </h1>
             <div className="flex flex-wrap items-center gap-4 text-muted-foreground mb-8">
-              {venue.location && (
+              {displayVenue.location && (
                 <div className="flex items-center gap-2 text-lg">
                   <MapPin className="w-5 h-5" />
-                  {venue.location}
+                  {displayVenue.location}
                 </div>
               )}
-              {venue.capacity && (
+              {displayVenue.capacity && (
                 <div className="flex items-center gap-2 text-lg">
                   <Users className="w-5 h-5" />
-                  Up to {venue.capacity} guests
+                  Up to {displayVenue.capacity} guests
                 </div>
               )}
             </div>
@@ -92,17 +118,17 @@ export default function VenueDetailClient({ venue, isPreview = false }: VenueDet
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             {/* Main content */}
             <div className="lg:col-span-2 space-y-12">
-              {venue.photos.length > 0 && (
+              {displayVenue.photos.length > 0 && (
                 <AnimateOnScroll>
-                  <VenueGallery images={venue.photos} alt={venue.name} />
+                  <VenueGallery images={displayVenue.photos} alt={displayVenue.name} />
                 </AnimateOnScroll>
               )}
 
-              {venue.videos.length > 0 && (
+              {displayVenue.videos.length > 0 && (
                 <AnimateOnScroll>
                   <h2 className="text-2xl font-display mb-4">Videos</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {venue.videos.map((url, index) => (
+                    {displayVenue.videos.map((url, index) => (
                       <div key={index} className="relative aspect-video rounded-xl overflow-hidden bg-black">
                         <video
                           src={url}
@@ -116,20 +142,20 @@ export default function VenueDetailClient({ venue, isPreview = false }: VenueDet
                 </AnimateOnScroll>
               )}
 
-              {venue.description && (
+              {displayVenue.description && (
                 <AnimateOnScroll>
                   <h2 className="text-2xl font-display mb-4">About This Space</h2>
                   <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
-                    {venue.description}
+                    {displayVenue.description}
                   </p>
                 </AnimateOnScroll>
               )}
 
-              {venue.amenities.length > 0 && (
+              {displayVenue.amenities.length > 0 && (
                 <AnimateOnScroll>
                   <h2 className="text-2xl font-display mb-4">Amenities</h2>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {venue.amenities.map((amenity) => (
+                    {displayVenue.amenities.map((amenity) => (
                       <div
                         key={amenity}
                         className="flex items-center gap-2 p-3 bg-white rounded-lg border border-border"
@@ -142,11 +168,11 @@ export default function VenueDetailClient({ venue, isPreview = false }: VenueDet
                 </AnimateOnScroll>
               )}
 
-              {venue.property_features.length > 0 && (
+              {displayVenue.property_features.length > 0 && (
                 <AnimateOnScroll>
                   <h2 className="text-2xl font-display mb-4">What Makes This Venue Special</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {venue.property_features.map((feature) => (
+                    {displayVenue.property_features.map((feature) => (
                       <div
                         key={feature}
                         className="flex items-start gap-3 p-4 bg-muted rounded-[12px]"
@@ -160,45 +186,45 @@ export default function VenueDetailClient({ venue, isPreview = false }: VenueDet
               )}
 
               {/* Contact (shown on published pages only) */}
-              {!isPreview && (venue.contact_name || venue.contact_email || venue.instagram_handle || venue.tiktok_handle) && (
+              {!isPreview && (displayVenue.contact_name || displayVenue.contact_email || displayVenue.instagram_handle || displayVenue.tiktok_handle) && (
                 <AnimateOnScroll>
                   <h2 className="text-2xl font-display mb-4">Get in Touch</h2>
                   <div className="space-y-3">
-                    {venue.contact_name && (
+                    {displayVenue.contact_name && (
                       <p className="text-muted-foreground">
                         <span className="font-medium text-foreground">Contact: </span>
-                        {venue.contact_name}
+                        {displayVenue.contact_name}
                       </p>
                     )}
-                    {venue.contact_email && (
+                    {displayVenue.contact_email && (
                       <a
-                        href={`mailto:${venue.contact_email}`}
+                        href={`mailto:${displayVenue.contact_email}`}
                         className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
                       >
                         <Mail className="w-4 h-4" />
-                        {venue.contact_email}
+                        {displayVenue.contact_email}
                       </a>
                     )}
-                    {venue.instagram_handle && (
+                    {displayVenue.instagram_handle && (
                       <a
-                        href={`https://instagram.com/${venue.instagram_handle}`}
+                        href={`https://instagram.com/${displayVenue.instagram_handle.replace(/[^a-zA-Z0-9._]/g, '')}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
                       >
                         <Instagram className="w-4 h-4" />
-                        @{venue.instagram_handle}
+                        @{displayVenue.instagram_handle}
                       </a>
                     )}
-                    {venue.tiktok_handle && (
+                    {displayVenue.tiktok_handle && (
                       <a
-                        href={`https://tiktok.com/@${venue.tiktok_handle}`}
+                        href={`https://tiktok.com/@${displayVenue.tiktok_handle.replace(/[^a-zA-Z0-9._]/g, '')}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
                       >
                         <span className="w-4 h-4 text-xs font-bold flex items-center justify-center">TK</span>
-                        @{venue.tiktok_handle}
+                        @{displayVenue.tiktok_handle}
                       </a>
                     )}
                   </div>
@@ -262,15 +288,15 @@ export default function VenueDetailClient({ venue, isPreview = false }: VenueDet
                     </div>
                   </div>
 
-                  {venue.capacity && (
+                  {displayVenue.capacity && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Users className="w-4 h-4" />
-                      <span>Up to <strong className="text-foreground">{venue.capacity} guests</strong></span>
+                      <span>Up to <strong className="text-foreground">{displayVenue.capacity} guests</strong></span>
                     </div>
                   )}
 
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Interested in hosting a retreat at {venue.name}? Get in touch to discuss
+                    Interested in hosting a retreat at {displayVenue.name}? Get in touch to discuss
                     availability, logistics, and how this space can work for your group.
                   </p>
 

@@ -128,6 +128,19 @@ export async function deleteConversationForEveryone(
 
   const supabase = await createClient();
 
+  // Verify the authenticated user is actually a participant in this conversation
+  const { data: exists, error: checkError } = await supabase
+    .from("messages")
+    .select("id")
+    .or(
+      `and(sender_id.eq.${userId},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${userId})`
+    )
+    .limit(1)
+    .maybeSingle();
+
+  if (checkError) return { error: checkError.message };
+  if (!exists) return { error: "No conversation found." };
+
   const [r1, r2] = await Promise.all([
     supabase
       .from("messages")
