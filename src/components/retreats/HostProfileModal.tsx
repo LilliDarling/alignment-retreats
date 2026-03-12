@@ -236,7 +236,7 @@ export default function HostProfileModal({
                 <div className="flex flex-wrap gap-2 mb-6">
                   {profile.instagram_handle && (
                     <a
-                      href={`https://instagram.com/${profile.instagram_handle}`}
+                      href={`https://instagram.com/${profile.instagram_handle.replace(/[^a-zA-Z0-9._]/g, '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-border rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
@@ -247,7 +247,7 @@ export default function HostProfileModal({
                   )}
                   {profile.website_url && (
                     <a
-                      href={profile.website_url.match(/^https?:\/\//) ? profile.website_url : `https://${profile.website_url}`}
+                      href={(() => { try { const u = new URL(profile.website_url.startsWith('http') ? profile.website_url : `https://${profile.website_url}`); return ['http:', 'https:'].includes(u.protocol) ? u.href : ''; } catch { return ''; } })()}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-border rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"

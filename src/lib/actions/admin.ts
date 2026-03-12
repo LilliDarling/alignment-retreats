@@ -235,6 +235,15 @@ export async function toggleCoopMembership(
 
 // ─── Team Management ────────────────────────────────────────────
 
+const VALID_TEAM_ROLES = new Set([
+  "host", "cohost", "venue", "chef", "staff", "other",
+  "photographer", "yoga_instructor", "sound_healer", "massage",
+]);
+const VALID_FEE_TYPES = new Set([
+  "flat", "per_person", "per_night", "per_person_per_night", "percentage",
+]);
+const MAX_FEE_AMOUNT = 1_000_000;
+
 export async function addTeamCost(
   retreatId: string,
   data: {
@@ -248,6 +257,11 @@ export async function addTeamCost(
 ): Promise<{ error: string | null; id?: string }> {
   const adminId = await requireAdmin();
   if (!adminId) return { error: "Not authorized" };
+
+  if (!VALID_TEAM_ROLES.has(data.role)) return { error: "Invalid team role." };
+  if (!VALID_FEE_TYPES.has(data.feeType)) return { error: "Invalid fee type." };
+  if (!Number.isFinite(data.feeAmount) || data.feeAmount < 0 || data.feeAmount > MAX_FEE_AMOUNT)
+    return { error: "Fee amount must be between 0 and 1,000,000." };
 
   const supabase = await createClient();
 
@@ -283,6 +297,11 @@ export async function updateTeamCost(
 ): Promise<{ error: string | null }> {
   const adminId = await requireAdmin();
   if (!adminId) return { error: "Not authorized" };
+
+  if (data.feeType !== undefined && !VALID_FEE_TYPES.has(data.feeType))
+    return { error: "Invalid fee type." };
+  if (data.feeAmount !== undefined && (!Number.isFinite(data.feeAmount) || data.feeAmount < 0 || data.feeAmount > MAX_FEE_AMOUNT))
+    return { error: "Fee amount must be between 0 and 1,000,000." };
 
   const supabase = await createClient();
 
@@ -359,6 +378,13 @@ export async function exportMembersCSV(
   ]);
 
   const csv = [headers.join(","), ...rows.map((r) => r.map((c) => `"${(c || "").replace(/"/g, '""')}"`).join(","))].join("\n");
+
+  await supabase.from("admin_audit_log").insert({
+    admin_user_id: adminId,
+    action: "csv_export",
+    resource_type: roleFilter ? `members:${roleFilter}` : "members:all",
+    resource_count: members.length,
+  });
 
   return { csv };
 }

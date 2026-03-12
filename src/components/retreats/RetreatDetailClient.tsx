@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -41,18 +41,61 @@ export default function RetreatDetailClient({
   isAuthenticated,
   isPreview,
 }: RetreatDetailClientProps) {
+  const [displayRetreat, setDisplayRetreat] = useState(retreat);
+  const [isUnsavedPreview, setIsUnsavedPreview] = useState(false);
   const [showHostModal, setShowHostModal] = useState(false);
   const [selectedTeamProfile, setSelectedTeamProfile] = useState<HostProfileData | null>(null);
   const [activeTab, setActiveTab] = useState<"overview" | "gallery" | "schedule" | "included">("overview");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const hasGallery = (retreat.galleryImages && retreat.galleryImages.length > 0) || (retreat.galleryVideos && retreat.galleryVideos.length > 0);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("unsaved") === "1") {
+      const stored = sessionStorage.getItem(`retreat_unsaved_${retreat.id}`);
+      if (stored) {
+        try {
+          const f = JSON.parse(stored);
+          setDisplayRetreat((prev) => ({
+            ...prev,
+            title: f.title ?? prev.title,
+            description: f.description ?? prev.description,
+            category: f.retreat_type ?? prev.category,
+            location: f.location_details ?? prev.location,
+            startDate: f.start_date ?? prev.startDate,
+            endDate: f.end_date ?? prev.endDate,
+            price: f.price_per_person ?? prev.price,
+            spotsTotal: f.max_attendees ?? prev.spotsTotal,
+            image: f.main_image ?? prev.image,
+            galleryImages: f.gallery_images ?? prev.galleryImages,
+            galleryVideos: f.gallery_videos ?? prev.galleryVideos,
+            sampleItinerary: f.sample_itinerary ?? prev.sampleItinerary,
+            allowDonations: f.allow_donations ?? prev.allowDonations,
+          }));
+          setIsUnsavedPreview(true);
+        } catch {
+          // ignore malformed data
+        }
+      }
+    }
+  }, [retreat.id]);
+
+  const hasGallery = (displayRetreat.galleryImages && displayRetreat.galleryImages.length > 0) || (displayRetreat.galleryVideos && displayRetreat.galleryVideos.length > 0);
   const heroColor =
-    categoryHeroColors[retreat.category] || "#1A3D25";
+    categoryHeroColors[displayRetreat.category] || "#1A3D25";
 
   return (
     <>
       {/* Preview Banner */}
-      {isPreview && (
+      {isUnsavedPreview ? (
+        <div className="bg-blue-600 px-4 py-3 text-center">
+          <p className="text-sm font-medium text-white">
+            Previewing unsaved changes — these are not saved yet.{" "}
+            <button onClick={() => window.close()} className="underline hover:no-underline">
+              Close preview
+            </button>
+          </p>
+        </div>
+      ) : isPreview && (
         <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 text-center">
           <p className="text-sm font-medium text-amber-800">
             This is a preview — this retreat is not yet published and only visible to you.
@@ -62,10 +105,10 @@ export default function RetreatDetailClient({
 
       {/* Hero */}
       <section className="relative h-[420px] sm:h-[480px] lg:h-[540px] overflow-hidden">
-        {retreat.image ? (
+        {displayRetreat.image ? (
           <Image
-            src={retreat.image}
-            alt={retreat.title}
+            src={displayRetreat.image}
+            alt={displayRetreat.title}
             fill
             className="object-cover"
             sizes="100vw"
@@ -85,38 +128,38 @@ export default function RetreatDetailClient({
           <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 pb-10 sm:pb-12">
             <div className="flex flex-wrap gap-2 mb-4">
               <span className="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-white/20 text-white backdrop-blur-sm">
-                {retreat.category}
+                {displayRetreat.category}
               </span>
-              {retreat.spotsLeft && retreat.spotsLeft <= 10 && (
+              {displayRetreat.spotsLeft && displayRetreat.spotsLeft <= 10 && (
                 <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/20 text-white backdrop-blur-sm">
-                  {retreat.spotsLeft} spots left
+                  {displayRetreat.spotsLeft} spots left
                 </span>
               )}
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl text-white mb-3 max-w-3xl font-display">
-              {retreat.title}
+              {displayRetreat.title}
             </h1>
 
             <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-white/70 text-sm">
               <span className="flex items-center gap-1.5">
                 <MapPin className="w-4 h-4" />
-                {retreat.location}
+                {displayRetreat.location}
               </span>
-              {retreat.duration && (
+              {displayRetreat.duration && (
                 <span className="flex items-center gap-1.5">
                   <Clock className="w-4 h-4" />
-                  {retreat.duration}
+                  {displayRetreat.duration}
                 </span>
               )}
               <span className="flex items-center gap-1.5">
                 <Calendar className="w-4 h-4" />
-                {formatDateRange(retreat.startDate, retreat.endDate)}
+                {formatDateRange(displayRetreat.startDate, displayRetreat.endDate)}
               </span>
-              {retreat.spotsTotal && (
+              {displayRetreat.spotsTotal && (
                 <span className="flex items-center gap-1.5">
                   <Users className="w-4 h-4" />
-                  {retreat.spotsTotal} max attendees
+                  {displayRetreat.spotsTotal} max attendees
                 </span>
               )}
             </div>
@@ -173,14 +216,14 @@ export default function RetreatDetailClient({
               )}
 
               {/* Meet the Team */}
-              {retreat.teamMembers && retreat.teamMembers.length > 0 && (
+              {displayRetreat.teamMembers && displayRetreat.teamMembers.length > 0 && (
                 <div className="mb-8">
                   <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2 mb-4">
                     <Handshake className="w-4 h-4" />
                     Meet the Team
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {retreat.teamMembers.map((tm, i) => {
+                    {displayRetreat.teamMembers.map((tm, i) => {
                       const profile = teamProfiles.find((p) => p.id === tm.userId);
                       return (
                         <button
@@ -232,10 +275,10 @@ export default function RetreatDetailClient({
                     ...(hasGallery
                       ? [{ key: "gallery" as const, label: "Gallery" }]
                       : []),
-                    ...(retreat.sampleItinerary
+                    ...(displayRetreat.sampleItinerary
                       ? [{ key: "schedule" as const, label: "Schedule" }]
                       : []),
-                    ...(retreat.amenities && retreat.amenities.length > 0
+                    ...(displayRetreat.amenities && displayRetreat.amenities.length > 0
                       ? [{ key: "included" as const, label: "What's Included" }]
                       : []),
                   ] as const
@@ -279,12 +322,12 @@ export default function RetreatDetailClient({
                       <AnimateOnScroll>
                         <h2 className="text-2xl font-display mb-4">About This Retreat</h2>
                         <p className="text-muted-foreground leading-relaxed whitespace-pre-line mb-6">
-                          {retreat.longDescription || retreat.description}
+                          {displayRetreat.longDescription || displayRetreat.description}
                         </p>
 
-                        {retreat.amenities && retreat.amenities.length > 0 && (
+                        {displayRetreat.amenities && displayRetreat.amenities.length > 0 && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-6">
-                            {retreat.amenities.slice(0, 6).map((item, i) => (
+                            {displayRetreat.amenities.slice(0, 6).map((item, i) => (
                               <div key={i} className="flex items-center gap-2.5">
                                 <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                                   <Check className="w-3 h-3 text-primary" />
@@ -302,7 +345,7 @@ export default function RetreatDetailClient({
                     <AnimateOnScroll>
                       <h2 className="text-2xl font-display mb-6">Gallery</h2>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {retreat.galleryImages?.map((url, i) => (
+                        {displayRetreat.galleryImages?.map((url, i) => (
                           <button
                             key={`img-${i}`}
                             onClick={() => setLightboxIndex(i)}
@@ -310,14 +353,14 @@ export default function RetreatDetailClient({
                           >
                             <Image
                               src={url}
-                              alt={`${retreat.title} photo ${i + 1}`}
+                              alt={`${displayRetreat.title} photo ${i + 1}`}
                               fill
                               className="object-cover group-hover:scale-105 transition-transform duration-300"
                               sizes="(max-width: 768px) 50vw, 300px"
                             />
                           </button>
                         ))}
-                        {retreat.galleryVideos?.map((url, i) => (
+                        {displayRetreat.galleryVideos?.map((url, i) => (
                           <div
                             key={`vid-${i}`}
                             className="relative aspect-video rounded-xl overflow-hidden bg-black"
@@ -335,7 +378,7 @@ export default function RetreatDetailClient({
 
                       {/* Lightbox */}
                       <AnimatePresence>
-                        {lightboxIndex !== null && retreat.galleryImages && (
+                        {lightboxIndex !== null && displayRetreat.galleryImages && (
                           <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -351,8 +394,8 @@ export default function RetreatDetailClient({
                               onClick={(e) => e.stopPropagation()}
                             >
                               <Image
-                                src={retreat.galleryImages[lightboxIndex]}
-                                alt={`${retreat.title} photo ${lightboxIndex + 1}`}
+                                src={displayRetreat.galleryImages[lightboxIndex]}
+                                alt={`${displayRetreat.title} photo ${lightboxIndex + 1}`}
                                 width={1200}
                                 height={800}
                                 className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
@@ -365,16 +408,16 @@ export default function RetreatDetailClient({
                                   ×
                                 </button>
                               </div>
-                              {retreat.galleryImages.length > 1 && (
+                              {displayRetreat.galleryImages.length > 1 && (
                                 <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2 pointer-events-none">
                                   <button
-                                    onClick={() => setLightboxIndex((lightboxIndex - 1 + retreat.galleryImages!.length) % retreat.galleryImages!.length)}
+                                    onClick={() => setLightboxIndex((lightboxIndex - 1 + displayRetreat.galleryImages!.length) % displayRetreat.galleryImages!.length)}
                                     className="w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors pointer-events-auto cursor-pointer text-xl"
                                   >
                                     ‹
                                   </button>
                                   <button
-                                    onClick={() => setLightboxIndex((lightboxIndex + 1) % retreat.galleryImages!.length)}
+                                    onClick={() => setLightboxIndex((lightboxIndex + 1) % displayRetreat.galleryImages!.length)}
                                     className="w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors pointer-events-auto cursor-pointer text-xl"
                                   >
                                     ›
@@ -382,7 +425,7 @@ export default function RetreatDetailClient({
                                 </div>
                               )}
                               <p className="text-center text-white/60 text-sm mt-3">
-                                {lightboxIndex + 1} / {retreat.galleryImages.length}
+                                {lightboxIndex + 1} / {displayRetreat.galleryImages.length}
                               </p>
                             </motion.div>
                           </motion.div>
@@ -391,18 +434,18 @@ export default function RetreatDetailClient({
                     </AnimateOnScroll>
                   )}
 
-                  {activeTab === "schedule" && retreat.sampleItinerary && (
+                  {activeTab === "schedule" && displayRetreat.sampleItinerary && (
                     <AnimateOnScroll>
                       <h2 className="text-2xl font-display mb-6">Daily Schedule</h2>
-                      <ItineraryTimeline days={parseItineraryText(retreat.sampleItinerary)} />
+                      <ItineraryTimeline days={parseItineraryText(displayRetreat.sampleItinerary)} />
                     </AnimateOnScroll>
                   )}
 
-                  {activeTab === "included" && retreat.amenities && (
+                  {activeTab === "included" && displayRetreat.amenities && (
                     <AnimateOnScroll>
                       <h2 className="text-2xl font-display mb-6">What&apos;s Included</h2>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {retreat.amenities.map((item, i) => {
+                        {displayRetreat.amenities.map((item, i) => {
                           const Icon = getIncludedIcon(item);
                           return (
                             <div
@@ -425,22 +468,22 @@ export default function RetreatDetailClient({
               {/* Booking — below content */}
               <div id="booking-sidebar" className="mt-16">
                 <AnimateOnScroll>
-                  <BookingSidebar retreat={retreat} isAuthenticated={isAuthenticated} />
+                  <BookingSidebar retreat={displayRetreat} isAuthenticated={isAuthenticated} />
                 </AnimateOnScroll>
               </div>
             </div>
 
             {/* RIGHT COLUMN — 40% Venue Sidebar */}
-            {retreat.property && (
+            {displayRetreat.property && (
               <div className="hidden lg:block lg:col-span-2">
-                <VenueSidebar property={retreat.property} />
+                <VenueSidebar property={displayRetreat.property} />
               </div>
             )}
 
             {/* Mobile Venue — below content on small screens */}
-            {retreat.property && (
+            {displayRetreat.property && (
               <div className="lg:hidden">
-                <VenueSidebar property={retreat.property} />
+                <VenueSidebar property={displayRetreat.property} />
               </div>
             )}
           </div>
@@ -480,7 +523,7 @@ export default function RetreatDetailClient({
       )}
 
       {/* Mobile Bottom Bar */}
-      <MobileBookingBar retreat={retreat} />
+      <MobileBookingBar retreat={displayRetreat} />
     </>
   );
 }

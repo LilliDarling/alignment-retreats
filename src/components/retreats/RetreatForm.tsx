@@ -36,6 +36,8 @@ import ItineraryBuilder from "@/components/retreats/ItineraryBuilder";
 import { uploadRetreatImage, uploadRetreatVideo } from "@/lib/utils/upload";
 import Link from "next/link";
 import FirstTimeSubmitModal from "@/components/ui/FirstTimeSubmitModal";
+import UnsavedChangesModal from "@/components/ui/UnsavedChangesModal";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
 
 interface RetreatFormProps {
   mode: "create" | "edit";
@@ -106,6 +108,30 @@ export default function RetreatForm({
   const [showEditWarning, setShowEditWarning] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [showFirstTimeModal, setShowFirstTimeModal] = useState(false);
+  const { showModal: showUnsavedModal, guardedNavigate, confirmLeave, cancelLeave } = useUnsavedChanges(isDirty);
+
+  const handleSaveAndLeave = async () => {
+    setSaving(true);
+    setError(null);
+    const formWithSchedule = { ...form, sample_itinerary: serializeItinerary(schedule) };
+    if (mode === "create") {
+      const result = await createRetreat(formWithSchedule);
+      setSaving(false);
+      if ("error" in result) { setError(result.error); } else { confirmLeave(); }
+    } else if (retreatId) {
+      const result = await updateRetreat(retreatId, formWithSchedule);
+      setSaving(false);
+      if (result.error) { setError(result.error); } else { confirmLeave(); }
+    }
+  };
+
+  const handlePreview = () => {
+    if (!retreatId) return;
+    const formWithSchedule = { ...form, sample_itinerary: serializeItinerary(schedule) };
+    sessionStorage.setItem(`retreat_unsaved_${retreatId}`, JSON.stringify(formWithSchedule));
+    window.open(`/retreats/${retreatSlug || retreatId}?unsaved=1`, "_blank");
+    cancelLeave();
+  };
 
   // Load published venues for the dropdown
   useEffect(() => {
@@ -283,16 +309,25 @@ export default function RetreatForm({
       onClose={() => setShowFirstTimeModal(false)}
       type="retreat"
     />
+    <UnsavedChangesModal
+      open={showUnsavedModal}
+      onLeave={confirmLeave}
+      onStay={cancelLeave}
+      onSaveAndLeave={handleSaveAndLeave}
+      onPreview={mode === "edit" && retreatId ? handlePreview : undefined}
+      saving={saving}
+    />
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-28">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard"
+          <button
+            type="button"
+            onClick={() => guardedNavigate(() => router.push("/dashboard"))}
             className="w-9 h-9 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-          </Link>
+          </button>
           <div>
             <h1 className="text-2xl font-display text-foreground">
               {mode === "create" ? "Create New Retreat" : "Edit Retreat"}

@@ -264,7 +264,7 @@ export default function PublicProfile({ profile }: PublicProfileProps) {
                     <div className="flex flex-col gap-2">
                       {profile.instagram_handle && (
                         <a
-                          href={`https://instagram.com/${profile.instagram_handle}`}
+                          href={`https://instagram.com/${profile.instagram_handle.replace(/[^a-zA-Z0-9._]/g, '')}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -275,7 +275,7 @@ export default function PublicProfile({ profile }: PublicProfileProps) {
                       )}
                       {profile.tiktok_handle && (
                         <a
-                          href={`https://tiktok.com/@${profile.tiktok_handle}`}
+                          href={`https://tiktok.com/@${profile.tiktok_handle.replace(/[^a-zA-Z0-9._]/g, '')}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -285,7 +285,7 @@ export default function PublicProfile({ profile }: PublicProfileProps) {
                       )}
                       {profile.website_url && (
                         <a
-                          href={profile.website_url.match(/^https?:\/\//) ? profile.website_url : `https://${profile.website_url}`}
+                          href={(() => { try { const u = new URL(profile.website_url.startsWith('http') ? profile.website_url : `https://${profile.website_url}`); return ['http:', 'https:'].includes(u.protocol) ? u.href : ''; } catch { return ''; } })()}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
