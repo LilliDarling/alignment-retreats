@@ -43,7 +43,6 @@ export interface Retreat {
   galleryVideos?: string[];
   hostId?: string;
   sampleItinerary?: string;
-  allowDonations?: boolean;
   amenities?: string[];
   teamMembers?: {
     role: string;

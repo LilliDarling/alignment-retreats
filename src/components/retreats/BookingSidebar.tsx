@@ -2,12 +2,25 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Shield, BadgeCheck, Loader2 } from "lucide-react";
+import { Shield, BadgeCheck, Loader2, ChevronDown, ChevronUp, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Button from "@/components/ui/Button";
 import SupportButton from "@/components/ui/SupportButton";
 import { formatPrice, formatDateRange } from "@/lib/utils/format";
 import type { Retreat } from "@/lib/types";
+
+const ROLE_INCLUDED_LABELS: Record<string, string> = {
+  host: "Hosting & facilitation",
+  venue: "Venue access & accommodations",
+  cohost: "Co-host support",
+  chef: "Chef & catering",
+  photographer: "Photography & videography",
+  yoga_instructor: "Yoga instruction",
+  sound_healer: "Sound healing sessions",
+  massage: "Massage therapy",
+  staff: "On-site staff support",
+  other: "Additional services",
+};
 
 interface BookingSidebarProps {
   retreat: Retreat;
@@ -18,6 +31,16 @@ export default function BookingSidebar({ retreat, isAuthenticated }: BookingSide
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showBreakdown, setShowBreakdown] = useState(false);
+
+  // Build "what's included" from team members + always include host
+  const includedRoles = new Set<string>(["host"]);
+  if (retreat.property) includedRoles.add("venue");
+  if (retreat.teamMembers) {
+    for (const tm of retreat.teamMembers) {
+      includedRoles.add(tm.role);
+    }
+  }
 
   async function handleBook() {
     if (!isAuthenticated) {
@@ -85,12 +108,43 @@ export default function BookingSidebar({ retreat, isAuthenticated }: BookingSide
         )}
       </div>
 
-      {/* Price Display */}
+      {/* What's Included Toggle */}
+      <div className="px-6 pt-4">
+        <button
+          type="button"
+          onClick={() => setShowBreakdown((v) => !v)}
+          className="flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 font-medium transition-colors cursor-pointer"
+        >
+          What&apos;s included
+          {showBreakdown ? (
+            <ChevronUp className="w-3.5 h-3.5" />
+          ) : (
+            <ChevronDown className="w-3.5 h-3.5" />
+          )}
+        </button>
+
+        {showBreakdown && (
+          <div className="mt-3 space-y-2">
+            {[...includedRoles].map((role) => (
+              <div key={role} className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Check className="w-3.5 h-3.5 text-primary shrink-0" />
+                <span>{ROLE_INCLUDED_LABELS[role] || role}</span>
+              </div>
+            ))}
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Check className="w-3.5 h-3.5 text-primary shrink-0" />
+              <span>Secure checkout, scheduling & support</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground/70 pt-1">
+              All team members set their own independent rates. A 25% platform fee is included in the total.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Total */}
       <div className="px-6 py-4">
         <div className="flex justify-between border-t border-border pt-3 text-sm">
-          <span className="text-muted-foreground">Includes 25% platform fee</span>
-        </div>
-        <div className="flex justify-between text-sm mt-2">
           <span className="font-semibold text-foreground">Total per person</span>
           <span className="font-bold text-primary text-lg">
             {formatPrice(retreat.price, retreat.currency)}

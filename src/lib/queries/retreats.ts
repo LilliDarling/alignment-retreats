@@ -57,7 +57,6 @@ function toRetreat(row: Record<string, unknown>): Retreat {
     galleryVideos: (r.gallery_videos as string[]) || [],
     hostId: (r.host_user_id as string) || undefined,
     sampleItinerary: (r.sample_itinerary as string) || undefined,
-    allowDonations: (r.allow_donations as boolean) || false,
     amenities: (property?.amenities as string[]) || undefined,
     property: property
       ? {
@@ -79,7 +78,7 @@ const RETREAT_SELECT = `
   id, slug, title, description, retreat_type, start_date, end_date,
   max_attendees, price_per_person, ticket_price, sample_itinerary, status,
   custom_venue_name, location_details, host_user_id, main_image, what_you_offer,
-  allow_donations, gallery_images, gallery_videos,
+  gallery_images, gallery_videos,
   property:properties(id, name, location, description, capacity, photos, videos, property_features, property_type)
 ` as const;
 
@@ -551,7 +550,6 @@ export async function getOwnRetreat(retreatId: string) {
       main_image: (r.main_image as string) || null,
       gallery_images: (r.gallery_images as string[]) || [],
       gallery_videos: (r.gallery_videos as string[]) || [],
-      allow_donations: (r.allow_donations as boolean) || false,
       status: (r.status as string) || "draft",
       created_at: r.created_at as string,
     };

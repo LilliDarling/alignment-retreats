@@ -84,7 +84,7 @@ serve(async (req) => {
     });
 
     // Parse and validate request body
-    let body: { retreat_id?: string; success_url?: string; cancel_url?: string; donation_amount?: number };
+    let body: { retreat_id?: string; success_url?: string; cancel_url?: string };
     try {
       body = await req.json();
     } catch {
@@ -94,17 +94,7 @@ serve(async (req) => {
       });
     }
 
-    const { retreat_id, success_url, cancel_url, donation_amount } = body;
-
-    // Validate donation amount if provided
-    if (donation_amount !== undefined) {
-      if (typeof donation_amount !== "number" || donation_amount < 0 || donation_amount > 10000) {
-        return new Response(JSON.stringify({ error: "Invalid donation amount" }), {
-          status: 400,
-          headers: { ...getCorsHeaders(req), ...securityHeaders },
-        });
-      }
-    }
+    const { retreat_id, success_url, cancel_url } = body;
 
     // Validate retreat_id format
     if (!retreat_id || !isValidUUID(retreat_id)) {
@@ -145,7 +135,7 @@ serve(async (req) => {
     // Fetch retreat details
     const { data: retreat, error: retreatError } = await supabaseAdmin
       .from("retreats")
-      .select("id, title, retreat_type, price_per_person, ticket_price, status, max_attendees, start_date, allow_donations, retreat_team(*)")
+      .select("id, title, retreat_type, price_per_person, ticket_price, status, max_attendees, start_date, retreat_team(*)")
       .eq("id", retreat_id)
       .eq("status", "published") // Only allow booking published retreats
       .single();
@@ -212,15 +202,6 @@ serve(async (req) => {
       }
     }
 
-    // Validate donation is allowed for this retreat
-    const donationCents = donation_amount ? Math.round(donation_amount * 100) : 0;
-    if (donationCents > 0 && !retreat.allow_donations) {
-      return new Response(JSON.stringify({ error: "Donations are not enabled for this retreat" }), {
-        status: 400,
-        headers: { ...getCorsHeaders(req), ...securityHeaders },
-      });
-    }
-
     // Use ticket_price (calculated all-in price) when available, fall back to price_per_person
     const ticketPrice = retreat.ticket_price || retreat.price_per_person || 0;
     const totalAmount = Math.round(ticketPrice * 100); // Convert to cents
@@ -233,7 +214,7 @@ serve(async (req) => {
       });
     }
 
-    // Calculate platform fee (25%) - only on retreat price, not donation
+    // Calculate platform fee (25%)
     const platformFee = Math.round(totalAmount * 0.25);
 
     // Build checkout session options
@@ -255,20 +236,6 @@ serve(async (req) => {
       },
     ];
 
-    if (donationCents > 0) {
-      lineItems.push({
-        price_data: {
-          currency: "cad",
-          product_data: {
-            name: "Optional Donation",
-            description: "Voluntary donation to support Alignment Retreats",
-          },
-          unit_amount: donationCents,
-        },
-        quantity: 1,
-      });
-    }
-
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ["card"],
       line_items: lineItems,
@@ -279,14 +246,12 @@ serve(async (req) => {
         retreat_id,
         user_id: user?.id || "guest",
         platform_fee: platformFee.toString(),
-        donation_amount: donationCents.toString(),
         request_id: requestId,
       },
       payment_intent_data: {
         metadata: {
           retreat_id,
           user_id: user?.id || "guest",
-          donation_amount: donationCents.toString(),
           request_id: requestId,
         },
       },

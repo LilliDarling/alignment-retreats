@@ -84,7 +84,7 @@ export default function RetreatForm({
     main_image: initialData?.main_image || null,
     gallery_images: initialData?.gallery_images || [],
     gallery_videos: initialData?.gallery_videos || [],
-    allow_donations: initialData?.allow_donations || false,
+    allow_donations: false,
     looking_for: initialData?.looking_for || { needs: [], notes: {} },
   });
 
@@ -881,22 +881,11 @@ export default function RetreatForm({
                   placeholder="0.00"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  This is what you charge per attendee. The final ticket price is the sum of all team rates per person plus a 25% platform fee.
+                  This is your per-person rate and should cover all of your expenses outside of the platform (travel, materials, time, etc.). Each team member (venue, co-host, etc.) sets their own rate separately. A 25% platform fee is added on top of the combined total.
                 </p>
               </div>
             </div>
 
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.allow_donations}
-                onChange={(e) => update("allow_donations", e.target.checked)}
-                className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20"
-              />
-              <span className="text-sm text-foreground">
-                Allow donations (pay-what-you-can option)
-              </span>
-            </label>
           </CardContent>
         </Card>
 
