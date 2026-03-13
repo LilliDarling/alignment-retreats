@@ -1,15 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { DollarSign, Plus, X, Calculator, TrendingUp } from "lucide-react";
+import { Plus, X, Calculator, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
-
-type FeeType =
-  | "flat"
-  | "per_person"
-  | "per_night"
-  | "per_person_per_night"
-  | "percentage";
 
 type TeamRole = "venue" | "cohost" | "chef" | "staff" | "other";
 
@@ -17,23 +10,12 @@ interface TeamCostRow {
   id: string;
   role: TeamRole;
   name: string;
-  feeType: FeeType;
   amount: number;
 }
 
 interface PricingCalculatorProps {
-  maxAttendees?: number | null;
   pricePerPerson?: number | null;
-  nights?: number | null;
 }
-
-const FEE_TYPE_LABELS: Record<FeeType, string> = {
-  flat: "Flat",
-  per_person: "Per Person",
-  per_night: "Per Night",
-  per_person_per_night: "Per Person/Night",
-  percentage: "Percentage",
-};
 
 const ROLE_LABELS: Record<TeamRole, string> = {
   venue: "Venue",
@@ -43,72 +25,33 @@ const ROLE_LABELS: Record<TeamRole, string> = {
   other: "Other",
 };
 
+const PLATFORM_FEE_RATE = 0.25;
+
 function generateId() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-function calculateFeeCost(
-  row: TeamCostRow,
-  attendees: number,
-  nights: number,
-  revenue: number
-): number {
-  switch (row.feeType) {
-    case "flat":
-      return row.amount;
-    case "per_person":
-      return row.amount * attendees;
-    case "per_night":
-      return row.amount * nights;
-    case "per_person_per_night":
-      return row.amount * attendees * nights;
-    case "percentage":
-      return (row.amount / 100) * revenue;
-    default:
-      return 0;
-  }
-}
-
 export default function PricingCalculator({
-  maxAttendees,
   pricePerPerson,
-  nights: defaultNights,
 }: PricingCalculatorProps) {
-  const [attendees, setAttendees] = useState(maxAttendees ?? 10);
-  const [nights, setNights] = useState(defaultNights ?? 3);
-  const [price, setPrice] = useState(pricePerPerson ?? 0);
+  const [hostRate, setHostRate] = useState(pricePerPerson ?? 0);
   const [teamCosts, setTeamCosts] = useState<TeamCostRow[]>([
-    { id: generateId(), role: "venue", name: "", feeType: "flat", amount: 0 },
+    { id: generateId(), role: "venue", name: "", amount: 0 },
   ]);
 
-  const revenue = price * attendees;
-
   const calculations = useMemo(() => {
-    const costBreakdown = teamCosts.map((row) => ({
-      ...row,
-      cost: calculateFeeCost(row, attendees, nights, revenue),
-    }));
+    const teamTotal = teamCosts.reduce((sum, r) => sum + r.amount, 0);
+    const subtotal = hostRate + teamTotal;
+    const platformFee = Math.ceil(subtotal * PLATFORM_FEE_RATE);
+    const ticketPrice = subtotal + platformFee;
 
-    const totalCosts = costBreakdown.reduce((sum, r) => sum + r.cost, 0);
-    const suggestedPrice =
-      attendees > 0 ? Math.ceil((totalCosts * 1.3) / attendees) : 0;
-    const breakevenAttendees =
-      price > 0 ? Math.ceil(totalCosts / price) : Infinity;
-    const profitLoss = revenue - totalCosts;
-
-    return {
-      costBreakdown,
-      totalCosts,
-      suggestedPrice,
-      breakevenAttendees,
-      profitLoss,
-    };
-  }, [teamCosts, attendees, nights, revenue, price]);
+    return { hostRate, teamTotal, subtotal, platformFee, ticketPrice };
+  }, [teamCosts, hostRate]);
 
   function addRow() {
     setTeamCosts((prev) => [
       ...prev,
-      { id: generateId(), role: "staff", name: "", feeType: "flat", amount: 0 },
+      { id: generateId(), role: "staff", name: "", amount: 0 },
     ]);
   }
 
@@ -132,50 +75,29 @@ export default function PricingCalculator({
           </h2>
         </div>
 
-        {/* Inputs */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <div>
-            <label className="block text-sm text-muted-foreground mb-1">
-              Attendees
-            </label>
-            <input
-              type="number"
-              min={1}
-              value={attendees}
-              onChange={(e) => setAttendees(Number(e.target.value) || 1)}
-              className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-muted-foreground mb-1">
-              Nights
-            </label>
-            <input
-              type="number"
-              min={1}
-              value={nights}
-              onChange={(e) => setNights(Number(e.target.value) || 1)}
-              className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-muted-foreground mb-1">
-              Price per Person ($)
-            </label>
-            <input
-              type="number"
-              min={0}
-              value={price}
-              onChange={(e) => setPrice(Number(e.target.value) || 0)}
-              className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-            />
-          </div>
+        <p className="text-sm text-muted-foreground mb-4">
+          All charges are per person. The platform adds a 25% fee on top of the total.
+        </p>
+
+        {/* Host Rate */}
+        <div className="mb-6">
+          <label className="block text-sm text-muted-foreground mb-1">
+            Host Rate (per person)
+          </label>
+          <input
+            type="number"
+            min={0}
+            value={hostRate}
+            onChange={(e) => setHostRate(Number(e.target.value) || 0)}
+            className="w-full max-w-[200px] rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            placeholder="$0"
+          />
         </div>
 
         {/* Team Costs */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold">Team Costs</h3>
+            <h3 className="text-sm font-semibold">Team Rates (per person)</h3>
             <button
               type="button"
               onClick={addRow}
@@ -190,7 +112,7 @@ export default function PricingCalculator({
             {teamCosts.map((row) => (
               <div
                 key={row.id}
-                className="grid grid-cols-[100px_1fr_130px_100px_32px] gap-2 items-center"
+                className="grid grid-cols-[100px_1fr_100px_32px] gap-2 items-center"
               >
                 <select
                   value={row.role}
@@ -214,24 +136,10 @@ export default function PricingCalculator({
                   className="rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
 
-                <select
-                  value={row.feeType}
-                  onChange={(e) =>
-                    updateRow(row.id, { feeType: e.target.value as FeeType })
-                  }
-                  className="rounded-xl border border-border px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                >
-                  {Object.entries(FEE_TYPE_LABELS).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-
                 <input
                   type="number"
                   min={0}
-                  placeholder="$"
+                  placeholder="$/person"
                   value={row.amount || ""}
                   onChange={(e) =>
                     updateRow(row.id, { amount: Number(e.target.value) || 0 })
@@ -257,109 +165,45 @@ export default function PricingCalculator({
           </div>
         </div>
 
-        {/* Results */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <ResultCard
-            label="Total Costs"
-            value={`$${calculations.totalCosts.toLocaleString()}`}
-            variant="neutral"
-          />
-          <ResultCard
-            label="Revenue"
-            value={`$${revenue.toLocaleString()}`}
-            variant="neutral"
-          />
-          <ResultCard
-            label="Profit / Loss"
-            value={`${calculations.profitLoss >= 0 ? "+" : ""}$${calculations.profitLoss.toLocaleString()}`}
-            variant={calculations.profitLoss >= 0 ? "positive" : "negative"}
-          />
-          <ResultCard
-            label="Breakeven"
-            value={
-              calculations.breakevenAttendees === Infinity
-                ? "N/A"
-                : `${calculations.breakevenAttendees} ppl`
-            }
-            variant="neutral"
-          />
+        {/* Breakdown */}
+        <div className="space-y-1.5 text-sm mb-6">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Host</span>
+            <span className="font-medium">${calculations.hostRate.toLocaleString()}/person</span>
+          </div>
+          {teamCosts.filter(r => r.amount > 0).map((row) => (
+            <div key={row.id} className="flex justify-between text-muted-foreground">
+              <span>
+                {ROLE_LABELS[row.role]}
+                {row.name ? ` — ${row.name}` : ""}
+              </span>
+              <span>${row.amount.toLocaleString()}/person</span>
+            </div>
+          ))}
+          <div className="flex justify-between pt-2 border-t border-border">
+            <span className="font-medium">Subtotal</span>
+            <span className="font-medium">${calculations.subtotal.toLocaleString()}/person</span>
+          </div>
+          <div className="flex justify-between text-muted-foreground">
+            <span>Platform Fee (25%)</span>
+            <span>${calculations.platformFee.toLocaleString()}/person</span>
+          </div>
         </div>
 
-        {/* Suggested Pricing */}
+        {/* Ticket Price */}
         <div className="bg-primary/5 rounded-xl border border-primary/20 p-4">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold">Suggested Pricing</span>
+            <span className="text-sm font-semibold">Ticket Price</span>
           </div>
-          <p className="text-sm text-muted-foreground mb-1">
-            With a 30% margin over costs:
-          </p>
           <p className="text-2xl font-bold text-primary">
-            ${calculations.suggestedPrice.toLocaleString()}
+            ${calculations.ticketPrice.toLocaleString()}
             <span className="text-sm font-normal text-muted-foreground ml-1">
               per person
             </span>
           </p>
         </div>
-
-        {/* Breakdown */}
-        {calculations.costBreakdown.length > 0 && (
-          <div className="mt-6">
-            <h3 className="text-sm font-semibold mb-3">Cost Breakdown</h3>
-            <div className="space-y-1.5">
-              {calculations.costBreakdown.map((row) => (
-                <div
-                  key={row.id}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <span className="text-muted-foreground">
-                    {ROLE_LABELS[row.role]}
-                    {row.name ? ` — ${row.name}` : ""}
-                    <span className="text-xs ml-1 text-muted-foreground/70">
-                      ({FEE_TYPE_LABELS[row.feeType]})
-                    </span>
-                  </span>
-                  <span className="font-medium">
-                    ${row.cost.toLocaleString()}
-                  </span>
-                </div>
-              ))}
-              <div className="flex items-center justify-between text-sm font-semibold pt-2 border-t border-border">
-                <span>Total</span>
-                <span>${calculations.totalCosts.toLocaleString()}</span>
-              </div>
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
-  );
-}
-
-function ResultCard({
-  label,
-  value,
-  variant,
-}: {
-  label: string;
-  value: string;
-  variant: "positive" | "negative" | "neutral";
-}) {
-  const colorClasses = {
-    positive: "text-green-600",
-    negative: "text-red-600",
-    neutral: "text-primary",
-  };
-
-  return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-border/50">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-muted-foreground">{label}</span>
-        <DollarSign className="w-3.5 h-3.5 text-primary" />
-      </div>
-      <div className={`text-lg font-bold ${colorClasses[variant]}`}>
-        {value}
-      </div>
-    </div>
   );
 }

@@ -1,21 +1,20 @@
 "use client";
 
-import { X, Phone } from "lucide-react";
+import { X, Phone, Calendar } from "lucide-react";
+
+const CALENDLY_COOP_ONBOARDING_URL =
+  "https://calendly.com/mathew-vetten/co-op-onboarding";
 
 interface FirstTimeSubmitModalProps {
   open: boolean;
   onClose: () => void;
-  type: "retreat" | "venue";
 }
 
 export default function FirstTimeSubmitModal({
   open,
   onClose,
-  type,
 }: FirstTimeSubmitModalProps) {
   if (!open) return null;
-
-  const label = type === "retreat" ? "hosting a retreat" : "listing a venue";
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
@@ -34,7 +33,7 @@ export default function FirstTimeSubmitModal({
               Submission received!
             </h2>
             <p className="text-xs text-muted-foreground">
-              We&apos;ll be in touch shortly
+              Book a call to get your retreat published
             </p>
           </div>
           <button
@@ -48,19 +47,29 @@ export default function FirstTimeSubmitModal({
         {/* Content */}
         <div className="p-6 space-y-4">
           <p className="text-sm text-foreground leading-relaxed">
-            Since this is your first time {label} on Alignment Retreats, a
-            member of our team will reach out to schedule a quick call with you.
+            Since this is your first time hosting a retreat on Alignment
+            Retreats, please book a call with our team so we can go over your
+            retreat and get it published.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed">
             We&apos;ll walk you through the process, make sure we have
             everything we need, and answer any questions you might have. We want
             to make sure your first experience with us is a great one.
           </p>
+          <a
+            href={CALENDLY_COOP_ONBOARDING_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+          >
+            <Calendar className="w-4 h-4" />
+            Book a Call
+          </a>
           <button
             onClick={onClose}
-            className="w-full py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+            className="w-full py-2.5 rounded-full text-sm font-semibold transition-colors bg-muted text-foreground hover:bg-muted/80"
           >
-            Got it, thanks!
+            I&apos;ll do it later
           </button>
         </div>
       </div>

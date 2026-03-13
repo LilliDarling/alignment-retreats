@@ -1,8 +1,9 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import ContactForm from "@/components/contact/ContactForm";
 import PageHero from "@/components/layout/PageHero";
 import { siteConfig } from "@/lib/data/site";
-import { Instagram, Facebook, Linkedin, Mail, MapPin } from "lucide-react";
+import { Instagram, Facebook, Linkedin, Mail, MapPin, ArrowRight } from "lucide-react";
 
 export const metadata = {
   title: "Contact Us | Alignment Retreats",
@@ -67,6 +68,20 @@ export default async function ContactPage() {
                     <p className="text-base text-foreground">Global — wherever retreats happen</p>
                   </div>
                 </div>
+              </div>
+
+              <div className="p-4 rounded-[16px] bg-primary/5 border border-primary/10">
+                <h3 className="font-semibold text-foreground mb-1">Interested in co-founding?</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Join the Alignment Retreats Co-Op — co-own the platform, share in profits, and govern together.
+                </p>
+                <Link
+                  href="/cooperative"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                >
+                  Learn more about the Co-Op
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
               </div>
 
               <div>

@@ -20,18 +20,12 @@ function validateMediaUrl(url: string, isVideo: boolean): boolean {
   }
 }
 
-function validateRetreat(data: RetreatFormData): string | null {
-  if (!data.title.trim()) return "Title is required.";
+function validateRetreatDraft(data: RetreatFormData): string | null {
   if (data.title.length > 150) return "Title must be 150 characters or fewer.";
-  if (!data.description.trim()) return "Description is required.";
   if (data.description.length > 5000) return "Description must be 5,000 characters or fewer.";
-  if (!data.retreat_type) return "Retreat type is required.";
-  if (!data.start_date) return "Start date is required.";
-  if (!data.end_date) return "End date is required.";
-  if (new Date(data.end_date) <= new Date(data.start_date)) {
+  if (data.start_date && data.end_date && new Date(data.end_date) <= new Date(data.start_date)) {
     return "End date must be after start date.";
   }
-  if (!data.property_id && !data.custom_venue_name.trim()) return "Please select a venue or enter a custom location.";
   if (data.custom_venue_name.length > 200) return "Venue name must be 200 characters or fewer.";
   if ((data.location_details?.length ?? 0) > 300) return "Location details must be 300 characters or fewer.";
   if ((data.what_you_offer?.length ?? 0) > 3000) return "What you offer must be 3,000 characters or fewer.";
@@ -69,7 +63,7 @@ export async function createRetreat(
   const userId = await getAuthUserId();
   if (!userId) return { error: "Not authenticated" };
 
-  const validationError = validateRetreat(data);
+  const validationError = validateRetreatDraft(data);
   if (validationError) return { error: validationError };
 
   const supabase = await createClient();
@@ -79,9 +73,9 @@ export async function createRetreat(
       host_user_id: userId,
       title: data.title.trim(),
       description: data.description.trim(),
-      retreat_type: data.retreat_type,
-      start_date: data.start_date,
-      end_date: data.end_date,
+      retreat_type: data.retreat_type || null,
+      start_date: data.start_date || null,
+      end_date: data.end_date || null,
       property_id: data.property_id || null,
       custom_venue_name: data.custom_venue_name.trim(),
       location_details: data.location_details.trim() || null,
@@ -90,7 +84,7 @@ export async function createRetreat(
       what_you_offer: data.what_you_offer.trim() || null,
       what_to_bring: data.what_to_bring.trim() || null,
       sample_itinerary: data.sample_itinerary.trim() || null,
-      main_image: data.main_image,
+      main_image: data.main_image || null,
       gallery_images: data.gallery_images || [],
       gallery_videos: data.gallery_videos || [],
       allow_donations: data.allow_donations,
@@ -113,7 +107,7 @@ export async function updateRetreat(
   const userId = await getAuthUserId();
   if (!userId) return { error: "Not authenticated" };
 
-  const validationError = validateRetreat(data);
+  const validationError = validateRetreatDraft(data);
   if (validationError) return { error: validationError };
 
   const supabase = await createClient();
@@ -136,9 +130,9 @@ export async function updateRetreat(
   const updateData: Record<string, unknown> = {
     title: data.title.trim(),
     description: data.description.trim(),
-    retreat_type: data.retreat_type,
-    start_date: data.start_date,
-    end_date: data.end_date,
+    retreat_type: data.retreat_type || null,
+    start_date: data.start_date || null,
+    end_date: data.end_date || null,
     property_id: data.property_id || null,
     custom_venue_name: data.custom_venue_name.trim(),
     location_details: data.location_details.trim() || null,
@@ -147,7 +141,7 @@ export async function updateRetreat(
     what_you_offer: data.what_you_offer.trim() || null,
     what_to_bring: data.what_to_bring.trim() || null,
     sample_itinerary: data.sample_itinerary.trim() || null,
-    main_image: data.main_image,
+    main_image: data.main_image || null,
     gallery_images: data.gallery_images || [],
     gallery_videos: data.gallery_videos || [],
     allow_donations: data.allow_donations,

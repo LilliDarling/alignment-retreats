@@ -16,8 +16,6 @@ import {
   ChevronUp,
   Undo2,
   Plus,
-  X,
-  Pencil,
   Trash2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -29,7 +27,6 @@ import {
   removeTeamCost,
 } from "@/lib/actions/admin";
 import type { ApprovedRetreat, TeamMemberInfo, AdminMember } from "@/lib/queries/admin";
-import { parseLocalDate } from "@/lib/utils/format";
 
 const ROLE_LABELS: Record<string, string> = {
   host: "Host",
@@ -45,16 +42,10 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const FEE_TYPES = [
-  { value: "flat", label: "Flat" },
   { value: "per_person", label: "Per Person" },
-  { value: "per_night", label: "Per Night" },
-  { value: "per_person_per_night", label: "Per Person/Night" },
-  { value: "percentage", label: "% of Host Earnings" },
 ] as const;
 
-const FEE_TYPE_LABELS: Record<string, string> = Object.fromEntries(
-  FEE_TYPES.map((f) => [f.value, f.label])
-);
+const PLATFORM_FEE_RATE = 0.25;
 
 interface ApprovedTabProps {
   retreats: ApprovedRetreat[];
@@ -374,11 +365,7 @@ function ApprovedRetreatCard({
   onTeamUpdate: (retreatId: string, members: TeamMemberInfo[]) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [expectedAttendees, setExpectedAttendees] = useState(
-    Math.round((retreat.max_attendees || 10) * 0.7)
-  );
   const [showAddForm, setShowAddForm] = useState<string | null>(null); // role or "custom"
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const needs = retreat.looking_for?.needs || [];
@@ -389,42 +376,21 @@ function ApprovedRetreatCard({
   const maxAttendees = retreat.max_attendees || 20;
   const hostRate = retreat.price_per_person || 0;
 
-  const startDate = retreat.start_date ? parseLocalDate(retreat.start_date) : null;
-  const endDate = retreat.end_date ? parseLocalDate(retreat.end_date) : null;
-  const nights =
-    startDate && endDate
-      ? Math.max(
-          1,
-          Math.round(
-            (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
-          )
-        )
-      : 3;
-
-  // Pricing model
-  const hostEarnings = hostRate * expectedAttendees;
-  const platformFee = Math.round(hostEarnings * 0.3);
-
+  // All charges are per person — sum them up, add 25% platform fee
   const agreedMembers = retreat.team_members.filter((tm) => tm.agreed);
   const actualTeamCosts = agreedMembers.map((tm) => ({
     ...tm,
-    cost: calculateMemberCost(
-      tm.fee_type,
-      tm.fee_amount,
-      expectedAttendees,
-      nights,
-      hostEarnings
-    ),
+    cost: tm.fee_amount, // Everything is per person
   }));
 
   const unfilledNeeds = needs.filter(
     (need) => !retreat.team_members.some((tm) => tm.role === need && tm.agreed)
   );
 
-  const totalTeamCosts = actualTeamCosts.reduce((sum, tc) => sum + tc.cost, 0);
-  const totalKnownCosts = hostEarnings + platformFee + totalTeamCosts;
-  const calculatedTicketPrice =
-    expectedAttendees > 0 ? Math.ceil(totalKnownCosts / expectedAttendees) : 0;
+  const totalTeamPerPerson = actualTeamCosts.reduce((sum, tc) => sum + tc.cost, 0);
+  const subtotalPerPerson = hostRate + totalTeamPerPerson;
+  const platformFee = Math.ceil(subtotalPerPerson * PLATFORM_FEE_RATE);
+  const calculatedTicketPrice = subtotalPerPerson + platformFee;
   const allRolesFilled = unfilledNeeds.length === 0;
 
   // Extra team costs not tied to a looking_for need
@@ -581,7 +547,7 @@ function ApprovedRetreatCard({
                           {member && (
                             <p className="text-xs text-muted-foreground mt-0.5">
                               {member.description || member.member_name || "—"} ·{" "}
-                              {formatFee(member.fee_type, member.fee_amount)}
+                              ${member.fee_amount.toLocaleString()}/person
                             </p>
                           )}
                           {pendingMember && (
@@ -605,14 +571,7 @@ function ApprovedRetreatCard({
                           {member && (
                             <>
                               <span className="text-xs font-medium text-muted-foreground mr-1">
-                                $
-                                {calculateMemberCost(
-                                  member.fee_type,
-                                  member.fee_amount,
-                                  expectedAttendees,
-                                  nights,
-                                  hostEarnings
-                                ).toLocaleString()}
+                                ${member.fee_amount.toLocaleString()}/person
                               </span>
                               <button
                                 onClick={() => handleRemove(member.id)}
@@ -684,19 +643,12 @@ function ApprovedRetreatCard({
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {tm.description || tm.member_name || "—"} ·{" "}
-                        {formatFee(tm.fee_type, tm.fee_amount)}
+                        ${tm.fee_amount.toLocaleString()}/person
                       </p>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span className="text-xs font-medium text-muted-foreground mr-1">
-                        $
-                        {calculateMemberCost(
-                          tm.fee_type,
-                          tm.fee_amount,
-                          expectedAttendees,
-                          nights,
-                          hostEarnings
-                        ).toLocaleString()}
+                        ${tm.fee_amount.toLocaleString()}/person
                       </span>
                       {!tm.agreed && (
                         <button
@@ -745,37 +697,10 @@ function ApprovedRetreatCard({
                 <h4 className="text-sm font-semibold">Pricing Calculator</h4>
               </div>
 
-              {/* Attendee slider */}
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs text-muted-foreground">
-                    Expected Attendees
-                  </label>
-                  <span className="text-sm font-semibold tabular-nums">
-                    {expectedAttendees} / {maxAttendees}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min={1}
-                  max={maxAttendees}
-                  value={expectedAttendees}
-                  onChange={(e) =>
-                    setExpectedAttendees(parseInt(e.target.value))
-                  }
-                  className="w-full accent-primary"
-                />
-                <div className="flex justify-between text-[10px] text-muted-foreground/60 mt-0.5">
-                  <span>1</span>
-                  <span>{Math.round(maxAttendees * 0.5)} (50%)</span>
-                  <span>{maxAttendees} (full)</span>
-                </div>
-              </div>
-
               {/* Calculated Ticket Price */}
               <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 mb-4">
                 <p className="text-xs text-muted-foreground mb-1">
-                  Calculated Ticket Price
+                  Ticket Price
                   {!allRolesFilled && (
                     <span className="text-amber-600 ml-1">
                       (estimate — unfilled roles)
@@ -789,26 +714,17 @@ function ApprovedRetreatCard({
                   </span>
                 </p>
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Based on {expectedAttendees} attendees covering $
-                  {totalKnownCosts.toLocaleString()} in total costs
+                  ${subtotalPerPerson.toLocaleString()} subtotal + ${platformFee.toLocaleString()} platform fee (25%)
                 </p>
               </div>
 
               {/* Cost Breakdown */}
               <div className="space-y-1.5 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    Host Earnings ({expectedAttendees} × $
-                    {hostRate.toLocaleString()})
-                  </span>
+                  <span className="text-muted-foreground">Host</span>
                   <span className="font-medium">
-                    ${hostEarnings.toLocaleString()}
+                    ${hostRate.toLocaleString()}/person
                   </span>
-                </div>
-
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Platform Fee (30% on host)</span>
-                  <span>${platformFee.toLocaleString()}</span>
                 </div>
 
                 {actualTeamCosts.map((tc) => (
@@ -819,11 +735,8 @@ function ApprovedRetreatCard({
                     <span>
                       {ROLE_LABELS[tc.role] || tc.role}
                       {tc.description ? ` — ${tc.description}` : tc.member_name ? ` — ${tc.member_name}` : ""}
-                      <span className="text-xs ml-1 opacity-60">
-                        ({FEE_TYPE_LABELS[tc.fee_type] || tc.fee_type})
-                      </span>
                     </span>
-                    <span>${tc.cost.toLocaleString()}</span>
+                    <span>${tc.cost.toLocaleString()}/person</span>
                   </div>
                 ))}
 
@@ -840,14 +753,19 @@ function ApprovedRetreatCard({
                   </div>
                 ))}
 
-                <div className="flex justify-between pt-2 border-t border-border font-semibold">
-                  <span>Total Costs</span>
-                  <span>${totalKnownCosts.toLocaleString()}</span>
+                <div className="flex justify-between pt-2 border-t border-border">
+                  <span className="font-medium">Subtotal</span>
+                  <span className="font-medium">${subtotalPerPerson.toLocaleString()}/person</span>
                 </div>
 
-                <div className="flex justify-between font-semibold text-primary">
-                  <span>÷ {expectedAttendees} attendees =</span>
-                  <span>${calculatedTicketPrice.toLocaleString()}/ticket</span>
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Platform Fee (25%)</span>
+                  <span>${platformFee.toLocaleString()}/person</span>
+                </div>
+
+                <div className="flex justify-between pt-2 border-t border-border font-semibold text-primary">
+                  <span>Ticket Price</span>
+                  <span>${calculatedTicketPrice.toLocaleString()}/person</span>
                 </div>
               </div>
 
@@ -857,7 +775,7 @@ function ApprovedRetreatCard({
                   <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                   <p className="text-xs text-amber-700">
                     Host has not set their rate. Ticket price only covers
-                    team/venue costs.
+                    team/venue costs + platform fee.
                   </p>
                 </div>
               )}
@@ -877,7 +795,7 @@ function ApprovedRetreatCard({
             {/* Actions */}
             <div className="flex items-center gap-3 pt-2 border-t border-border">
               <button
-                onClick={() => onPublish(retreat, { ticketPrice: calculatedTicketPrice, expectedAttendees })}
+                onClick={() => onPublish(retreat, { ticketPrice: calculatedTicketPrice, expectedAttendees: maxAttendees })}
                 disabled={loading === retreat.id}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer"
               >
@@ -941,42 +859,3 @@ function formatDate(dateStr: string) {
   });
 }
 
-function formatFee(feeType: string, amount: number): string {
-  switch (feeType) {
-    case "flat":
-      return `$${amount.toLocaleString()} flat`;
-    case "per_person":
-      return `$${amount}/person`;
-    case "per_night":
-      return `$${amount}/night`;
-    case "per_person_per_night":
-      return `$${amount}/person/night`;
-    case "percentage":
-      return `${amount}% of host earnings`;
-    default:
-      return `$${amount}`;
-  }
-}
-
-function calculateMemberCost(
-  feeType: string,
-  amount: number,
-  attendees: number,
-  nights: number,
-  hostEarnings: number
-): number {
-  switch (feeType) {
-    case "flat":
-      return amount;
-    case "per_person":
-      return amount * attendees;
-    case "per_night":
-      return amount * nights;
-    case "per_person_per_night":
-      return amount * attendees * nights;
-    case "percentage":
-      return Math.round((amount / 100) * hostEarnings);
-    default:
-      return amount;
-  }
-}

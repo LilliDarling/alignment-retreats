@@ -69,7 +69,6 @@ export default function RetreatDetailClient({
             galleryImages: f.gallery_images ?? prev.galleryImages,
             galleryVideos: f.gallery_videos ?? prev.galleryVideos,
             sampleItinerary: f.sample_itinerary ?? prev.sampleItinerary,
-            allowDonations: f.allow_donations ?? prev.allowDonations,
           }));
           setIsUnsavedPreview(true);
         } catch {

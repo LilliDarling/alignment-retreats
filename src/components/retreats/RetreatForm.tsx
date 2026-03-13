@@ -84,7 +84,7 @@ export default function RetreatForm({
     main_image: initialData?.main_image || null,
     gallery_images: initialData?.gallery_images || [],
     gallery_videos: initialData?.gallery_videos || [],
-    allow_donations: initialData?.allow_donations || false,
+    allow_donations: false,
     looking_for: initialData?.looking_for || { needs: [], notes: {} },
   });
 
@@ -117,11 +117,23 @@ export default function RetreatForm({
     if (mode === "create") {
       const result = await createRetreat(formWithSchedule);
       setSaving(false);
-      if ("error" in result) { setError(result.error); } else { confirmLeave(); }
+      if ("error" in result) {
+        setError(result.error);
+        cancelLeave();
+      } else {
+        setIsDirty(false);
+        router.push("/dashboard");
+      }
     } else if (retreatId) {
       const result = await updateRetreat(retreatId, formWithSchedule);
       setSaving(false);
-      if (result.error) { setError(result.error); } else { confirmLeave(); }
+      if (result.error) {
+        setError(result.error);
+        cancelLeave();
+      } else {
+        setIsDirty(false);
+        router.push("/dashboard");
+      }
     }
   };
 
@@ -133,13 +145,22 @@ export default function RetreatForm({
     cancelLeave();
   };
 
-  // Load published venues for the dropdown
+  // Load published venues for the dropdown + auto-select from ?venue= param
   useEffect(() => {
     getPublishedVenues().then((v) => {
       setVenues(v);
       setVenuesLoaded(true);
+
+      const preselectedVenue = searchParams.get("venue");
+      if (preselectedVenue && mode === "create" && !initialData?.property_id) {
+        const match = v.find((venue) => venue.id === preselectedVenue);
+        if (match) {
+          setForm((prev) => ({ ...prev, property_id: match.id }));
+          setVenueMode("platform");
+        }
+      }
     });
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Show success message when redirected after creating a draft
   useEffect(() => {
@@ -307,7 +328,6 @@ export default function RetreatForm({
     <FirstTimeSubmitModal
       open={showFirstTimeModal}
       onClose={() => setShowFirstTimeModal(false)}
-      type="retreat"
     />
     <UnsavedChangesModal
       open={showUnsavedModal}
@@ -394,6 +414,18 @@ export default function RetreatForm({
             This retreat is saved as a <strong>draft</strong> and is only visible to you.
             When you&apos;re ready, click <strong>Submit for Review</strong> to have it reviewed and published.
           </p>
+        </div>
+      )}
+
+      {/* Error / Success */}
+      {error && (
+        <div className="mb-6 p-4 rounded-xl border border-red-200 bg-red-50 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="mb-6 p-4 rounded-xl border border-green-200 bg-green-50 text-sm text-green-700">
+          {success}
         </div>
       )}
 
@@ -849,22 +881,11 @@ export default function RetreatForm({
                   placeholder="0.00"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  This is what you earn per attendee. The final ticket price will include a 30% platform fee plus venue and team costs.
+                  This is your per-person rate and should cover all of your expenses outside of the platform (travel, materials, time, etc.). Each team member (venue, co-host, etc.) sets their own rate separately. A 25% platform fee is added on top of the combined total.
                 </p>
               </div>
             </div>
 
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.allow_donations}
-                onChange={(e) => update("allow_donations", e.target.checked)}
-                className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20"
-              />
-              <span className="text-sm text-foreground">
-                Allow donations (pay-what-you-can option)
-              </span>
-            </label>
           </CardContent>
         </Card>
 
@@ -1007,17 +1028,6 @@ export default function RetreatForm({
           </CardContent>
         </Card>
 
-        {/* Error / Success */}
-        {error && (
-          <div className="p-4 rounded-xl border border-red-200 bg-red-50 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="p-4 rounded-xl border border-green-200 bg-green-50 text-sm text-green-700">
-            {success}
-          </div>
-        )}
 
         {/* Actions */}
         <div className="flex flex-wrap items-center gap-3">

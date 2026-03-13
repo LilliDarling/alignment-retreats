@@ -51,7 +51,7 @@ export default async function EditRetreatPage({
         main_image: retreat.main_image,
         gallery_images: retreat.gallery_images,
         gallery_videos: retreat.gallery_videos,
-        allow_donations: retreat.allow_donations,
+        allow_donations: false,
         looking_for: ((retreat as Record<string, unknown>).looking_for as LookingFor) || { needs: [], notes: {} },
         status: retreat.status,
       }}
