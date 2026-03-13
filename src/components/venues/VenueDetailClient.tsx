@@ -8,7 +8,6 @@ import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import SupportButton from "@/components/ui/SupportButton";
 import VenueGallery from "@/components/venues/VenueGallery";
-import { useIsAuthenticated } from "@/lib/hooks/useAuth";
 import { VenueDetail } from "@/types/venue";
 
 const typeLabels: Record<string, string> = {
@@ -26,10 +25,11 @@ function formatFeature(feature: string): string {
 interface VenueDetailClientProps {
   venue: VenueDetail;
   isPreview?: boolean;
+  isHost?: boolean;
+  isAuthenticated?: boolean;
 }
 
-export default function VenueDetailClient({ venue, isPreview = false }: VenueDetailClientProps) {
-  const isAuthenticated = useIsAuthenticated();
+export default function VenueDetailClient({ venue, isPreview = false, isHost = false, isAuthenticated = false }: VenueDetailClientProps) {
   const [displayVenue, setDisplayVenue] = useState(venue);
   const [isUnsavedPreview, setIsUnsavedPreview] = useState(false);
 
@@ -185,35 +185,20 @@ export default function VenueDetailClient({ venue, isPreview = false }: VenueDet
                 </AnimateOnScroll>
               )}
 
-              {/* Contact (shown on published pages only) */}
-              {!isPreview && (displayVenue.contact_name || displayVenue.contact_email || displayVenue.instagram_handle || displayVenue.tiktok_handle) && (
+              {/* Socials (shown on published pages only) */}
+              {!isPreview && (displayVenue.instagram_handle || displayVenue.tiktok_handle) && (
                 <AnimateOnScroll>
-                  <h2 className="text-2xl font-display mb-4">Get in Touch</h2>
-                  <div className="space-y-3">
-                    {displayVenue.contact_name && (
-                      <p className="text-muted-foreground">
-                        <span className="font-medium text-foreground">Contact: </span>
-                        {displayVenue.contact_name}
-                      </p>
-                    )}
-                    {displayVenue.contact_email && (
-                      <a
-                        href={`mailto:${displayVenue.contact_email}`}
-                        className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
-                      >
-                        <Mail className="w-4 h-4" />
-                        {displayVenue.contact_email}
-                      </a>
-                    )}
+                  <h2 className="text-2xl font-display mb-4">Follow This Venue</h2>
+                  <div className="flex items-center gap-3">
                     {displayVenue.instagram_handle && (
                       <a
                         href={`https://instagram.com/${displayVenue.instagram_handle.replace(/[^a-zA-Z0-9._]/g, '')}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
+                        className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                        aria-label="Instagram"
                       >
-                        <Instagram className="w-4 h-4" />
-                        @{displayVenue.instagram_handle}
+                        <Instagram className="w-5 h-5" />
                       </a>
                     )}
                     {displayVenue.tiktok_handle && (
@@ -221,10 +206,10 @@ export default function VenueDetailClient({ venue, isPreview = false }: VenueDet
                         href={`https://tiktok.com/@${displayVenue.tiktok_handle.replace(/[^a-zA-Z0-9._]/g, '')}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
+                        className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                        aria-label="TikTok"
                       >
-                        <span className="w-4 h-4 text-xs font-bold flex items-center justify-center">TK</span>
-                        @{displayVenue.tiktok_handle}
+                        <span className="text-xs font-bold">TK</span>
                       </a>
                     )}
                   </div>
@@ -245,9 +230,23 @@ export default function VenueDetailClient({ venue, isPreview = false }: VenueDet
                           Imagine leading your group through a transformative experience in this setting.
                           From intimate workshops to full-scale retreats, this space is ready to support your vision.
                         </p>
-                        <Button href="/contact" variant="primary" size="sm">
-                          Inquire About Hosting Here
-                        </Button>
+                        {isHost ? (
+                          <Button
+                            href={`/host/retreats/new?venue=${venue.id}`}
+                            variant="primary"
+                            size="sm"
+                          >
+                            Create a Retreat Here
+                          </Button>
+                        ) : (
+                          <Button
+                            href={isAuthenticated ? "/contact" : "/signup?role=host"}
+                            variant="primary"
+                            size="sm"
+                          >
+                            {isAuthenticated ? "Inquire About Hosting Here" : "Become a Host"}
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -296,20 +295,23 @@ export default function VenueDetailClient({ venue, isPreview = false }: VenueDet
                   )}
 
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Interested in hosting a retreat at {displayVenue.name}? Get in touch to discuss
-                    availability, logistics, and how this space can work for your group.
+                    {isHost
+                      ? `Ready to host a retreat at ${displayVenue.name}? Create your retreat and this venue will be pre-selected for you.`
+                      : `Interested in hosting a retreat at ${displayVenue.name}? Sign up as a host to get started.`}
                   </p>
 
-                  <Button href="/contact" className="w-full">
-                    Inquire About This Venue
-                  </Button>
-                  <Button
-                    href={isAuthenticated ? "/dashboard" : "/signup?role=host"}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    {isAuthenticated ? "Go to Dashboard" : "Become a Host"}
-                  </Button>
+                  {isHost ? (
+                    <Button href={`/host/retreats/new?venue=${venue.id}`} className="w-full">
+                      Create a Retreat Here
+                    </Button>
+                  ) : (
+                    <Button
+                      href={isAuthenticated ? "/contact" : "/signup?role=host"}
+                      className="w-full"
+                    >
+                      {isAuthenticated ? "Inquire About Hosting" : "Become a Host"}
+                    </Button>
+                  )}
                   <div className="pt-1">
                     <SupportButton variant="link" className="text-muted-foreground text-xs justify-center w-full" label="Have a question? Get support" />
                   </div>

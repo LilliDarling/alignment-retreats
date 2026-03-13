@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 
 export function useUnsavedChanges(isDirty: boolean) {
   const [showModal, setShowModal] = useState(false);
-  const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null);
+  const pendingNavRef = useRef<(() => void) | null>(null);
 
   // Warn on browser-level navigation (tab close, refresh, address bar)
   useEffect(() => {
@@ -23,7 +23,7 @@ export function useUnsavedChanges(isDirty: boolean) {
     (navigate: () => void) => {
       if (isDirty) {
         setShowModal(true);
-        setPendingNavigation(() => navigate);
+        pendingNavRef.current = navigate;
       } else {
         navigate();
       }
@@ -33,14 +33,14 @@ export function useUnsavedChanges(isDirty: boolean) {
 
   const confirmLeave = useCallback(() => {
     setShowModal(false);
-    const nav = pendingNavigation;
-    setPendingNavigation(null);
+    const nav = pendingNavRef.current;
+    pendingNavRef.current = null;
     nav?.();
-  }, [pendingNavigation]);
+  }, []);
 
   const cancelLeave = useCallback(() => {
     setShowModal(false);
-    setPendingNavigation(null);
+    pendingNavRef.current = null;
   }, []);
 
   return { showModal, guardedNavigate, confirmLeave, cancelLeave };

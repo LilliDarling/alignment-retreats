@@ -14,7 +14,7 @@ export default function AnnouncementBanner() {
       <div className="max-w-[1240px] mx-auto text-center text-[11px] sm:text-sm whitespace-nowrap">
         <span>Want to host retreats in 2026?</span>
         <Link
-          href="/get-started"
+          href="/cooperative"
           className="font-semibold underline hover:opacity-80 ml-1 sm:ml-2"
         >
           Join now

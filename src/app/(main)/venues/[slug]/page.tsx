@@ -22,25 +22,41 @@ export async function generateMetadata({
   };
 }
 
+async function getUserRoles(userId: string): Promise<string[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId);
+  return (data || []).map((r: { role: string }) => r.role);
+}
+
 export default async function VenueDetailPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-
-  // Try public published venue first
-  const venue = await getVenueById(slug);
-  if (venue) {
-    return <VenueDetailClient venue={venue} isPreview={false} />;
-  }
-
-  // Check if the viewer is the owner (draft/pending preview)
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Try public published venue first
+  const venue = await getVenueById(slug);
+  if (venue) {
+    const userRoles = user ? await getUserRoles(user.id) : [];
+    return (
+      <VenueDetailClient
+        venue={venue}
+        isPreview={false}
+        isHost={userRoles.includes("host")}
+        isAuthenticated={!!user}
+      />
+    );
+  }
+
+  // Check if the viewer is the owner (draft/pending preview)
   if (user) {
     const ownProperty = await getOwnProperty(slug, user.id);
     if (ownProperty) {

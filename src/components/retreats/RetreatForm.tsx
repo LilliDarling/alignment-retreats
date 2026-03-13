@@ -117,11 +117,23 @@ export default function RetreatForm({
     if (mode === "create") {
       const result = await createRetreat(formWithSchedule);
       setSaving(false);
-      if ("error" in result) { setError(result.error); } else { confirmLeave(); }
+      if ("error" in result) {
+        setError(result.error);
+        cancelLeave();
+      } else {
+        setIsDirty(false);
+        router.push("/dashboard");
+      }
     } else if (retreatId) {
       const result = await updateRetreat(retreatId, formWithSchedule);
       setSaving(false);
-      if (result.error) { setError(result.error); } else { confirmLeave(); }
+      if (result.error) {
+        setError(result.error);
+        cancelLeave();
+      } else {
+        setIsDirty(false);
+        router.push("/dashboard");
+      }
     }
   };
 
@@ -133,13 +145,22 @@ export default function RetreatForm({
     cancelLeave();
   };
 
-  // Load published venues for the dropdown
+  // Load published venues for the dropdown + auto-select from ?venue= param
   useEffect(() => {
     getPublishedVenues().then((v) => {
       setVenues(v);
       setVenuesLoaded(true);
+
+      const preselectedVenue = searchParams.get("venue");
+      if (preselectedVenue && mode === "create" && !initialData?.property_id) {
+        const match = v.find((venue) => venue.id === preselectedVenue);
+        if (match) {
+          setForm((prev) => ({ ...prev, property_id: match.id }));
+          setVenueMode("platform");
+        }
+      }
     });
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Show success message when redirected after creating a draft
   useEffect(() => {
@@ -307,7 +328,6 @@ export default function RetreatForm({
     <FirstTimeSubmitModal
       open={showFirstTimeModal}
       onClose={() => setShowFirstTimeModal(false)}
-      type="retreat"
     />
     <UnsavedChangesModal
       open={showUnsavedModal}
@@ -394,6 +414,18 @@ export default function RetreatForm({
             This retreat is saved as a <strong>draft</strong> and is only visible to you.
             When you&apos;re ready, click <strong>Submit for Review</strong> to have it reviewed and published.
           </p>
+        </div>
+      )}
+
+      {/* Error / Success */}
+      {error && (
+        <div className="mb-6 p-4 rounded-xl border border-red-200 bg-red-50 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="mb-6 p-4 rounded-xl border border-green-200 bg-green-50 text-sm text-green-700">
+          {success}
         </div>
       )}
 
@@ -1007,17 +1039,6 @@ export default function RetreatForm({
           </CardContent>
         </Card>
 
-        {/* Error / Success */}
-        {error && (
-          <div className="p-4 rounded-xl border border-red-200 bg-red-50 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="p-4 rounded-xl border border-green-200 bg-green-50 text-sm text-green-700">
-            {success}
-          </div>
-        )}
 
         {/* Actions */}
         <div className="flex flex-wrap items-center gap-3">

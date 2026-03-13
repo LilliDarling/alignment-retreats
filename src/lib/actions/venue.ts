@@ -22,13 +22,9 @@ function validateMediaUrl(url: string, isVideo: boolean): boolean {
   }
 }
 
-function validateVenue(data: VenueFormData): string | null {
-  if (!data.name.trim()) return "Venue name is required.";
+function validateVenueDraft(data: VenueFormData): string | null {
   if (data.name.length > 100) return "Venue name must be 100 characters or fewer.";
-  if (!data.property_type) return "Property type is required.";
-  if (!data.description.trim()) return "Description is required.";
   if (data.description.length > 5000) return "Description must be 5,000 characters or fewer.";
-  if (!data.location.trim()) return "Location is required.";
   if (data.location.length > 200) return "Location must be 200 characters or fewer.";
   if ((data.contact_name?.length ?? 0) > 100) return "Contact name must be 100 characters or fewer.";
   if (data.capacity !== null && data.capacity < 1) {
@@ -66,7 +62,7 @@ export async function createProperty(
   const userId = await getAuthUserId();
   if (!userId) return { error: "Not authenticated" };
 
-  const validationError = validateVenue(data);
+  const validationError = validateVenueDraft(data);
   if (validationError) return { error: validationError };
 
   const supabase = await createClient();
@@ -105,7 +101,7 @@ export async function updateProperty(
   const userId = await getAuthUserId();
   if (!userId) return { error: "Not authenticated" };
 
-  const validationError = validateVenue(data);
+  const validationError = validateVenueDraft(data);
   if (validationError) return { error: validationError };
 
   const supabase = await createClient();

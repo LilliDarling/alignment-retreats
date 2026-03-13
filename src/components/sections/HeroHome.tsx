@@ -48,19 +48,12 @@ export default function HeroHome({ searchData }: HeroHomeProps) {
       ref={sectionRef}
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
     >
-      {/* Video Background — deployed app's approach for bulletproof coverage */}
+      {/* Video Background */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div className="absolute inset-0" style={{ y: videoY }}>
           <video
             ref={videoRef}
-            className="absolute top-1/2 left-1/2 pointer-events-none object-cover hidden md:block"
-            style={{
-              width: "177.78vh",
-              minWidth: "100%",
-              height: "56.25vw",
-              minHeight: "120%",
-              transform: "translate(-50%, -50%)",
-            }}
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
             src={siteConfig.videoUrl}
             autoPlay
             muted
@@ -70,16 +63,7 @@ export default function HeroHome({ searchData }: HeroHomeProps) {
           />
         </motion.div>
 
-        {/* Static image fallback for mobile */}
-        <div
-          className="absolute inset-0 md:hidden bg-cover bg-center"
-          style={{
-            backgroundImage:
-              "url(https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&h=800&fit=crop)",
-          }}
-        />
-
-        {/* Gradient overlay with parallax fade — from deployed app */}
+        {/* Gradient overlay with parallax fade */}
         <motion.div
           style={{ opacity: videoOpacity }}
           className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40"

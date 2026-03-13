@@ -37,7 +37,7 @@ import {
 } from "@/lib/constants/venue";
 import { uploadVenueImage, uploadVenueVideo } from "@/lib/utils/upload";
 import Link from "next/link";
-import FirstTimeSubmitModal from "@/components/ui/FirstTimeSubmitModal";
+
 import UnsavedChangesModal from "@/components/ui/UnsavedChangesModal";
 import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
 
@@ -88,7 +88,7 @@ export default function VenueForm({
   const [success, setSuccess] = useState<string | null>(null);
   const [showEditWarning, setShowEditWarning] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-  const [showFirstTimeModal, setShowFirstTimeModal] = useState(false);
+
   const { showModal: showUnsavedModal, guardedNavigate, confirmLeave, cancelLeave } = useUnsavedChanges(isDirty);
 
   const handleSaveAndLeave = async () => {
@@ -97,11 +97,23 @@ export default function VenueForm({
     if (mode === "create") {
       const result = await createProperty(form);
       setSaving(false);
-      if ("error" in result) { setError(result.error); } else { confirmLeave(); }
+      if ("error" in result) {
+        setError(result.error);
+        cancelLeave();
+      } else {
+        setIsDirty(false);
+        router.push("/dashboard");
+      }
     } else if (propertyId) {
       const result = await updateProperty(propertyId, form);
       setSaving(false);
-      if (result.error) { setError(result.error); } else { confirmLeave(); }
+      if (result.error) {
+        setError(result.error);
+        cancelLeave();
+      } else {
+        setIsDirty(false);
+        router.push("/dashboard");
+      }
     }
   };
 
@@ -259,7 +271,6 @@ export default function VenueForm({
       setSuccess(
         "Property submitted for review! You'll be notified once it's approved and listed publicly."
       );
-      if (result.isFirstTime) setShowFirstTimeModal(true);
     }
     setSubmitting(false);
   };
@@ -286,11 +297,6 @@ export default function VenueForm({
 
   return (
     <>
-    <FirstTimeSubmitModal
-      open={showFirstTimeModal}
-      onClose={() => setShowFirstTimeModal(false)}
-      type="venue"
-    />
     <UnsavedChangesModal
       open={showUnsavedModal}
       onLeave={confirmLeave}
@@ -379,6 +385,18 @@ export default function VenueForm({
             <strong>Submit for Review</strong> to have it reviewed and listed
             publicly.
           </p>
+        </div>
+      )}
+
+      {/* Error / Success */}
+      {error && (
+        <div className="mb-6 p-4 rounded-xl border border-red-200 bg-red-50 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="mb-6 p-4 rounded-xl border border-green-200 bg-green-50 text-sm text-green-700">
+          {success}
         </div>
       )}
 
@@ -782,18 +800,6 @@ export default function VenueForm({
             </div>
           </CardContent>
         </Card>
-
-        {/* Error / Success */}
-        {error && (
-          <div className="p-4 rounded-xl border border-red-200 bg-red-50 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="p-4 rounded-xl border border-green-200 bg-green-50 text-sm text-green-700">
-            {success}
-          </div>
-        )}
 
         {/* Actions */}
         <div className="flex flex-wrap items-center gap-3">
