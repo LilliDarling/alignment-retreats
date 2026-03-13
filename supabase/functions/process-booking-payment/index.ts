@@ -233,8 +233,8 @@ serve(async (req) => {
       });
     }
 
-    // Calculate platform fee (30%) - only on retreat price, not donation
-    const platformFee = Math.round(totalAmount * 0.30);
+    // Calculate platform fee (25%) - only on retreat price, not donation
+    const platformFee = Math.round(totalAmount * 0.25);
 
     // Build checkout session options
     const idempotencyKey = `checkout_${user?.id || clientIP}_${retreat_id}_${Date.now()}`;

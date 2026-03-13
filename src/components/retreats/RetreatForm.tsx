@@ -881,7 +881,7 @@ export default function RetreatForm({
                   placeholder="0.00"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  This is what you earn per attendee. The final ticket price will include a 30% platform fee plus venue and team costs.
+                  This is what you charge per attendee. The final ticket price is the sum of all team rates per person plus a 25% platform fee.
                 </p>
               </div>
             </div>

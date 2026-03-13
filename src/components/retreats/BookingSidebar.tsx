@@ -88,7 +88,10 @@ export default function BookingSidebar({ retreat, isAuthenticated }: BookingSide
       {/* Price Display */}
       <div className="px-6 py-4">
         <div className="flex justify-between border-t border-border pt-3 text-sm">
-          <span className="font-semibold text-foreground">Total</span>
+          <span className="text-muted-foreground">Includes 25% platform fee</span>
+        </div>
+        <div className="flex justify-between text-sm mt-2">
+          <span className="font-semibold text-foreground">Total per person</span>
           <span className="font-bold text-primary text-lg">
             {formatPrice(retreat.price, retreat.currency)}
           </span>
