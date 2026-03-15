@@ -11,7 +11,7 @@
    Parchment:   #F5F2ED — backgrounds
    Gold Leaf:   #C5A059 — CTA highlights
    Display font: Tenor Sans (headings)
-   Body font:    Barlow (body text)
+   Body font:    Golos Text (body text)
 */
 
 /* ============================================
@@ -186,9 +186,9 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* Fonts — next/font sets --font-tenor and --font-barlow on <html> */
+  /* Fonts — next/font sets --font-tenor and --font-golos on <html> */
   --font-display: var(--font-tenor), "Tenor Sans", sans-serif;
-  --font-body: var(--font-barlow), "Barlow", sans-serif;
+  --font-body: var(--font-golos), "Golos Text", sans-serif;
 
   /* Layout tokens */
   --radius-card: 16px;
@@ -226,6 +226,10 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+
+  html, body {
+    overflow-x: hidden;
   }
 
   body {
