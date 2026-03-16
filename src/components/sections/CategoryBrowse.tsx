@@ -53,13 +53,22 @@ export default function CategoryBrowse({ categories = [] }: CategoryBrowseProps)
 
   if (categories.length === 0) return null;
 
-  const gridColsMap: Record<number, string> = {
+  // When items fit (≤4), use grid at all breakpoints; only scroll when 5+
+  const fitsOnScreen = categories.length <= 4;
+  const mobileColsMap: Record<number, string> = {
+    1: "grid-cols-1",
+    2: "grid-cols-2",
+    3: "grid-cols-2 sm:grid-cols-3",
+    4: "grid-cols-2 sm:grid-cols-4",
+  };
+  const lgColsMap: Record<number, string> = {
     1: "lg:grid-cols-1",
     2: "lg:grid-cols-2",
     3: "lg:grid-cols-3",
     4: "lg:grid-cols-4",
   };
-  const gridCols = gridColsMap[categories.length] || "lg:grid-cols-5";
+  const mobileCols = mobileColsMap[categories.length] || "";
+  const lgCols = lgColsMap[categories.length] || "lg:grid-cols-5";
 
   return (
     <section className="py-16 sm:py-20">
@@ -79,7 +88,11 @@ export default function CategoryBrowse({ categories = [] }: CategoryBrowseProps)
             visible: { transition: { staggerChildren: 0.08 } },
             hidden: {},
           }}
-          className={`flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 ${gridCols} lg:grid lg:overflow-visible`}
+          className={
+            fitsOnScreen
+              ? `grid ${mobileCols} ${lgCols} gap-4`
+              : `flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 ${lgCols} lg:grid lg:overflow-visible`
+          }
         >
           {categories.map((cat) => (
             <motion.div
@@ -92,7 +105,7 @@ export default function CategoryBrowse({ categories = [] }: CategoryBrowseProps)
                   transition: { duration: 0.5, ease: "easeOut" },
                 },
               }}
-              className="shrink-0 w-[200px] lg:w-auto"
+              className={fitsOnScreen ? "" : "shrink-0 w-[200px] lg:w-auto"}
             >
               <Link
                 href={`/retreats?category=${encodeURIComponent(cat)}`}

@@ -112,7 +112,7 @@ export default function ValueProp() {
                 Join to host, collaborate, or discover retreats.
               </p>
             </div>
-            <Button href="/about" size="sm">
+            <Button href="/about" size="sm" className="whitespace-nowrap">
               Our Story
             </Button>
           </motion.div>
