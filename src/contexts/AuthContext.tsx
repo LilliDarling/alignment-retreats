@@ -153,7 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     userTypes: AppRole[],
     onboardingData?: OnboardingMetadata
   ) => {
-    const redirectUrl = `${window.location.origin}/auth/callback`;
+    const redirectUrl = `${window.location.origin}/callback`;
 
     const { error } = await supabase.auth.signUp({
       email,
@@ -192,7 +192,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/callback`,
         shouldCreateUser: false,
       },
     });
