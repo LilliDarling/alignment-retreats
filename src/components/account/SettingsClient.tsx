@@ -6,7 +6,6 @@ import {
   KeyRound,
   Mail,
   Eye,
-  EyeOff,
   Trash2,
   User,
   Loader2,
@@ -98,10 +97,6 @@ export default function SettingsClient({
   const supabase = createClient();
 
   // Password
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showNew, setShowNew] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordFeedback, setPasswordFeedback] = useState<FeedbackState>(null);
 
@@ -130,28 +125,20 @@ export default function SettingsClient({
   const roleLabel = (r: string) =>
     r === "landowner" ? "Venue Owner" : r.charAt(0).toUpperCase() + r.slice(1);
 
-  async function handlePasswordChange() {
+  async function handlePasswordReset() {
     setPasswordFeedback(null);
-    if (newPassword.length < 8) {
-      setPasswordFeedback({
-        type: "error",
-        message: "Password must be at least 8 characters.",
-      });
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordFeedback({ type: "error", message: "Passwords do not match." });
-      return;
-    }
     setPasswordSaving(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
     setPasswordSaving(false);
     if (error) {
       setPasswordFeedback({ type: "error", message: error.message });
     } else {
-      setPasswordFeedback({ type: "success", message: "Password updated." });
-      setNewPassword("");
-      setConfirmPassword("");
+      setPasswordFeedback({
+        type: "success",
+        message: "Password reset link sent to your email.",
+      });
     }
   }
 
@@ -275,81 +262,27 @@ export default function SettingsClient({
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <KeyRound className="w-4 h-4 text-muted-foreground" />
-              Change Password
+              Password
             </CardTitle>
-            <CardDescription>Update your account password</CardDescription>
+            <CardDescription>
+              Reset your password via email
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
-            <div className="space-y-1.5">
-              <label
-                htmlFor="new-password"
-                className="text-sm font-medium text-foreground"
-              >
-                New Password
-              </label>
-              <div className="relative">
-                <input
-                  id="new-password"
-                  type={showNew ? "text" : "password"}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="At least 8 characters"
-                  className="w-full pr-10 px-3 py-2 text-sm border border-border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowNew(!showNew)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  tabIndex={-1}
-                >
-                  {showNew ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <label
-                htmlFor="confirm-password"
-                className="text-sm font-medium text-foreground"
-              >
-                Confirm Password
-              </label>
-              <div className="relative">
-                <input
-                  id="confirm-password"
-                  type={showConfirm ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Re-enter password"
-                  className="w-full pr-10 px-3 py-2 text-sm border border-border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm(!showConfirm)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  tabIndex={-1}
-                >
-                  {showConfirm ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            </div>
+            <p className="text-sm text-muted-foreground">
+              We&apos;ll send a secure reset link to{" "}
+              <span className="font-medium text-foreground">{user.email}</span>.
+            </p>
             <Feedback state={passwordFeedback} />
             <Button
-              onClick={handlePasswordChange}
-              disabled={passwordSaving || !newPassword || !confirmPassword}
+              onClick={handlePasswordReset}
+              disabled={passwordSaving}
               size="sm"
             >
               {passwordSaving && (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               )}
-              Update Password
+              Send Reset Link
             </Button>
           </CardContent>
         </Card>

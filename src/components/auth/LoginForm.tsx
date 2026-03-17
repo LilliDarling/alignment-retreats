@@ -14,6 +14,7 @@ export default function LoginForm() {
   const [useMagicLink, setUseMagicLink] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [error, setError] = useState("");
+  const [showVerifyLink, setShowVerifyLink] = useState(false);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -30,6 +31,7 @@ export default function LoginForm() {
   async function handlePasswordSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setShowVerifyLink(false);
 
     if (!email.trim() || !password) return;
     if (password.length < 8) {
@@ -45,11 +47,18 @@ export default function LoginForm() {
     setLoading(false);
 
     if (signInError) {
-      setError(
-        signInError.message === "Invalid login credentials"
-          ? "Invalid email or password. Please try again."
-          : signInError.message
-      );
+      if (signInError.message === "Email not confirmed") {
+        setError(
+          "Your email hasn't been verified yet. Check your inbox or resend the verification email."
+        );
+        setShowVerifyLink(true);
+      } else {
+        setError(
+          signInError.message === "Invalid login credentials"
+            ? "Invalid email or password. Please try again."
+            : signInError.message
+        );
+      }
       return;
     }
 
@@ -125,6 +134,16 @@ export default function LoginForm() {
       {error && (
         <div className="mb-6 p-3 rounded-xl bg-destructive/10 text-destructive text-sm">
           {error}
+          {showVerifyLink && (
+            <div className="mt-2">
+              <Link
+                href={`/verify${email ? `?email=${encodeURIComponent(email.trim())}` : ""}`}
+                className="text-primary hover:underline font-medium"
+              >
+                Resend verification email
+              </Link>
+            </div>
+          )}
         </div>
       )}
 
@@ -265,6 +284,10 @@ export default function LoginForm() {
       <p className="text-center text-sm text-muted-foreground mt-2">
         <Link href="/forgot-password" className="text-primary hover:underline">
           Forgot password?
+        </Link>
+        {" · "}
+        <Link href="/verify" className="text-primary hover:underline">
+          Resend verification email
         </Link>
       </p>
     </div>
