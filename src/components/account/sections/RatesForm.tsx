@@ -14,8 +14,7 @@ interface RatesFormProps {
 const CURRENCIES = ["USD", "CAD", "EUR", "GBP", "AUD", "MXN"];
 
 export default function RatesForm({ profile, onSaved, onCancel }: RatesFormProps) {
-  const [hourlyRate, setHourlyRate] = useState(profile.hourly_rate != null ? String(profile.hourly_rate) : "");
-  const [dailyRate, setDailyRate] = useState(profile.daily_rate != null ? String(profile.daily_rate) : "");
+  const [rate, setRate] = useState(profile.rate != null ? String(profile.rate) : "");
   const [currency, setCurrency] = useState(profile.rate_currency || "USD");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,8 +23,7 @@ export default function RatesForm({ profile, onSaved, onCancel }: RatesFormProps
     setSaving(true);
     setError(null);
     const data: RatesUpdate = {
-      hourly_rate: hourlyRate ? parseFloat(hourlyRate) : null,
-      daily_rate: dailyRate ? parseFloat(dailyRate) : null,
+      rate: rate ? parseFloat(rate) : null,
       rate_currency: currency,
     };
     const result = await updateRates(data);
@@ -39,58 +37,39 @@ export default function RatesForm({ profile, onSaved, onCancel }: RatesFormProps
 
   return (
     <div className="space-y-6">
-      <div>
-        <label htmlFor="currency" className="text-sm font-medium text-foreground mb-1 block">
-          Currency
-        </label>
-        <select
-          id="currency"
-          value={currency}
-          onChange={(e) => setCurrency(e.target.value)}
-          className="w-40 px-4 py-2.5 rounded-xl border border-border bg-white text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-        >
-          {CURRENCIES.map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
-      </div>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="hourly" className="text-sm font-medium text-foreground mb-1 block">
-            Hourly Rate
+          <label htmlFor="rate" className="text-sm font-medium text-foreground mb-1 block">
+            Rate (per person)
           </label>
           <div className="relative">
             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
-              id="hourly"
+              id="rate"
               type="number"
               min={0}
               step={0.01}
-              value={hourlyRate}
-              onChange={(e) => setHourlyRate(e.target.value)}
+              value={rate}
+              onChange={(e) => setRate(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-white text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               placeholder="0.00"
             />
           </div>
         </div>
         <div>
-          <label htmlFor="daily" className="text-sm font-medium text-foreground mb-1 block">
-            Daily Rate
+          <label htmlFor="currency" className="text-sm font-medium text-foreground mb-1 block">
+            Currency
           </label>
-          <div className="relative">
-            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              id="daily"
-              type="number"
-              min={0}
-              step={0.01}
-              value={dailyRate}
-              onChange={(e) => setDailyRate(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-white text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              placeholder="0.00"
-            />
-          </div>
+          <select
+            id="currency"
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+            className="w-full px-4 py-2.5 rounded-xl border border-border bg-white text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+          >
+            {CURRENCIES.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
         </div>
       </div>
 

@@ -195,25 +195,6 @@ export async function unpublishProperty(
 
 // ─── Member Actions ──────────────────────────────────────────────────
 
-export async function toggleHostVerification(
-  userId: string,
-  verified: boolean
-): Promise<{ error: string | null }> {
-  const adminId = await requireAdmin();
-  if (!adminId) return { error: "Not authorized" };
-
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("hosts")
-    .update({ verified })
-    .eq("user_id", userId);
-
-  if (error) return { error: error.message };
-
-  revalidatePath("/admin");
-  return { error: null };
-}
-
 export async function toggleCoopMembership(
   userId: string,
   isMember: boolean
@@ -378,13 +359,6 @@ export async function exportMembersCSV(
   ]);
 
   const csv = [headers.join(","), ...rows.map((r) => r.map((c) => `"${(c || "").replace(/"/g, '""')}"`).join(","))].join("\n");
-
-  await supabase.from("admin_audit_log").insert({
-    admin_user_id: adminId,
-    action: "csv_export",
-    resource_type: roleFilter ? `members:${roleFilter}` : "members:all",
-    resource_count: members.length,
-  });
 
   return { csv };
 }

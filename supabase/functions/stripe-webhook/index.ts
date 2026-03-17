@@ -283,16 +283,8 @@ serve(async (req) => {
           }
         }
 
-        // Notify admin: insert notification + send email
+        // Notify admin via email
         try {
-          await supabaseAdmin.from("admin_notifications").insert({
-            type: "new_booking",
-            title: `New Booking: ${retreat?.title || "Unknown Retreat"}`,
-            message: `${attendeeName} booked ${retreat?.title || "a retreat"} for $${totalAmount.toFixed(2)}`,
-            reference_id: booking.id,
-            reference_type: "booking",
-          });
-
           const adminEmail = Deno.env.get("ADMIN_EMAIL");
           if (adminEmail && resendApiKey && retreat) {
             await fetch("https://api.resend.com/emails", {
@@ -349,7 +341,7 @@ serve(async (req) => {
           console.error("Admin booking notification failed:", notifyErr);
         }
 
-        // Check if retreat is now full and notify admin
+        // Log if retreat is now full
         if (retreat?.max_attendees) {
           try {
             const { count: totalBookings } = await supabaseAdmin
@@ -358,16 +350,10 @@ serve(async (req) => {
               .eq("retreat_id", retreat_id);
 
             if ((totalBookings ?? 0) >= retreat.max_attendees) {
-              await supabaseAdmin.from("admin_notifications").insert({
-                type: "retreat_full",
-                title: `Sold Out: ${retreat.title}`,
-                message: `${retreat.title} has reached maximum capacity (${retreat.max_attendees} attendees)`,
-                reference_id: retreat_id,
-                reference_type: "retreat",
-              });
+              console.log(`Retreat ${retreat.title} is now full (${retreat.max_attendees} attendees)`);
             }
           } catch (fullErr) {
-            console.error("Retreat full notification failed:", fullErr);
+            console.error("Retreat full check failed:", fullErr);
           }
         }
 

@@ -424,24 +424,15 @@ export default function ProfileClient({ profile: initialProfile }: ProfileClient
               <RatesForm profile={profile} onSaved={handleSaved} onCancel={handleCancel} />
             ) : (
               <div className="space-y-3">
-                {profile.hourly_rate != null && (
+                {profile.rate != null ? (
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Hourly</p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Per Person</p>
                     <p className="text-foreground font-semibold">
-                      {new Intl.NumberFormat("en-US", { style: "currency", currency: profile.rate_currency || "USD" }).format(profile.hourly_rate)}
+                      {new Intl.NumberFormat("en-US", { style: "currency", currency: profile.rate_currency || "USD" }).format(profile.rate)}
                     </p>
                   </div>
-                )}
-                {profile.daily_rate != null && (
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Daily</p>
-                    <p className="text-foreground font-semibold">
-                      {new Intl.NumberFormat("en-US", { style: "currency", currency: profile.rate_currency || "USD" }).format(profile.daily_rate)}
-                    </p>
-                  </div>
-                )}
-                {profile.hourly_rate == null && profile.daily_rate == null && (
-                  <p className="text-sm text-muted-foreground italic">No rates set</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">No rate set</p>
                 )}
               </div>
             )}
