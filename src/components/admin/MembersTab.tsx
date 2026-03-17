@@ -17,7 +17,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { toggleCoopMembership, toggleHostVerification } from "@/lib/actions/admin";
+import { toggleCoopMembership } from "@/lib/actions/admin";
 import type { AdminMember } from "@/lib/queries/admin";
 
 interface MembersTabProps {
