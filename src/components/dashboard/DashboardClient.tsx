@@ -85,7 +85,7 @@ export default function DashboardClient({
           </TabPanel>
 
           <TabPanel value="cohost" activeTab={activeTab}>
-            <CohostTab />
+            <CohostTab collaborations={data.cohostCollaborations} />
           </TabPanel>
 
           <TabPanel value="landowner" activeTab={activeTab}>
