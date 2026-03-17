@@ -41,10 +41,28 @@ export interface DashboardBooking {
   retreat_end: string | null;
 }
 
+export interface CohostCollaboration {
+  id: string;
+  role: string;
+  fee_amount: number;
+  fee_type: string;
+  agreed: boolean;
+  agreed_at: string | null;
+  created_at: string;
+  retreat_id: string;
+  retreat_slug: string;
+  retreat_title: string;
+  retreat_start: string | null;
+  retreat_end: string | null;
+  retreat_status: string;
+  retreat_location: string | null;
+}
+
 export interface DashboardData {
   profile: DashboardProfile;
   roles: AppRole[];
   hostRetreats: HostRetreat[];
   properties: DashboardProperty[];
   bookings: DashboardBooking[];
+  cohostCollaborations: CohostCollaboration[];
 }
