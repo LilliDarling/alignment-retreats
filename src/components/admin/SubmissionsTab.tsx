@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { parseLocalDate } from "@/lib/utils/format";
 import {
   ChevronDown,
   ChevronUp,
@@ -470,7 +471,7 @@ function DetailItem({
 
 function formatDate(dateStr: string) {
   if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("en-US", {
+  return parseLocalDate(dateStr).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",

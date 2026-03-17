@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { parseLocalDate } from "@/lib/utils/format";
 import {
   Check,
   Circle,
@@ -852,7 +853,7 @@ function DetailItem({
 
 function formatDate(dateStr: string) {
   if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("en-US", {
+  return parseLocalDate(dateStr).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
