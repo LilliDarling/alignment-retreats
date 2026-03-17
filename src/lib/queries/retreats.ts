@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { parseLocalDate } from "@/lib/utils/format";
 import { geocodeLocation } from "@/lib/data/locations";
 import type { Retreat } from "@/lib/types";
 import { HostProfileData } from "@/types/profile";
@@ -270,7 +271,7 @@ export async function getHeroSearchData(): Promise<HeroSearchData> {
     const monthSet = new Map<string, string>();
     for (const r of data) {
       if (!r.start_date) continue;
-      const d = new Date(r.start_date as string);
+      const d = parseLocalDate(r.start_date as string);
       if (d < now) continue;
       const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       if (!monthSet.has(value)) {

@@ -127,6 +127,7 @@ export interface ContactSubmission {
   created_at: string;
   read: boolean;
   resolved: boolean;
+  archived: boolean;
 }
 
 export interface RevenueMetrics {
@@ -438,7 +439,7 @@ async function getContactSubmissions(): Promise<ContactSubmission[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from("contact_submissions")
-    .select("id, name, email, subject, message, created_at, read, resolved")
+    .select("id, name, email, subject, message, created_at, read, resolved, archived")
     .order("created_at", { ascending: false });
 
   if (error || !data) return [];
@@ -452,6 +453,7 @@ async function getContactSubmissions(): Promise<ContactSubmission[]> {
     created_at: (r.created_at as string) || "",
     read: (r.read as boolean) || false,
     resolved: (r.resolved as boolean) || false,
+    archived: (r.archived as boolean) || false,
   }));
 }
 
