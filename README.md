@@ -309,3 +309,5 @@ See [INFRASTRUCTURE_MAP.md](docs/INFRASTRUCTURE_MAP.md) for the full infrastruct
 | [Database ERD](docs/DATABASE_ERD.md) | GitHub | Full database schema + relationships |
 | [Infrastructure Map](docs/INFRASTRUCTURE_MAP.md) | GitHub | Cloud architecture + deployment |
 | [Team Application Flow](docs/TEAM_APPLICATION_FLOW.md) | GitHub | Implementation plan for team applications feature |
+
+
