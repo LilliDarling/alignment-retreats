@@ -628,10 +628,10 @@ export default function RetreatForm({
                     <video
                       src={url}
                       className="w-full h-full object-cover"
+                      controls
                       muted
                       playsInline
-                      onMouseEnter={(e) => e.currentTarget.play()}
-                      onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                      preload="metadata"
                     />
                     <button
                       type="button"
