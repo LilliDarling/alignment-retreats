@@ -1,30 +1,48 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, ChevronDown, ChevronUp, Inbox, CheckCircle2, Circle, RotateCcw } from "lucide-react";
+import {
+  Mail,
+  ChevronDown,
+  ChevronUp,
+  Inbox,
+  CheckCircle2,
+  Circle,
+  RotateCcw,
+  Archive,
+  ArchiveRestore,
+  Trash2,
+  Copy,
+  Check,
+  Loader2,
+} from "lucide-react";
 import { format } from "date-fns";
 import type { ContactSubmission } from "@/lib/queries/admin";
 import {
   markContactSubmissionRead,
   markContactSubmissionResolved,
+  archiveContactSubmission,
+  deleteContactSubmission,
 } from "@/lib/actions/contact";
 
 interface ContactSubmissionsTabProps {
   submissions: ContactSubmission[];
 }
 
-type Filter = "open" | "resolved";
+type Filter = "open" | "resolved" | "archived";
 
 export default function ContactSubmissionsTab({ submissions: initial }: ContactSubmissionsTabProps) {
   const [submissions, setSubmissions] = useState(initial);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("open");
   const [loading, setLoading] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const open = submissions.filter((s) => !s.resolved);
-  const resolved = submissions.filter((s) => s.resolved);
+  const open = submissions.filter((s) => !s.resolved && !s.archived);
+  const resolved = submissions.filter((s) => s.resolved && !s.archived);
+  const archived = submissions.filter((s) => s.archived);
   const unreadCount = open.filter((s) => !s.read).length;
-  const visible = filter === "open" ? open : resolved;
+  const visible = filter === "open" ? open : filter === "resolved" ? resolved : archived;
 
   const handleExpand = async (sub: ContactSubmission) => {
     if (expanded === sub.id) {
@@ -57,6 +75,40 @@ export default function ContactSubmissionsTab({ submissions: initial }: ContactS
       prev.map((s) => (s.id === sub.id ? { ...s, resolved: false } : s))
     );
     setLoading(null);
+  };
+
+  const handleArchive = async (sub: ContactSubmission) => {
+    setLoading(sub.id);
+    await archiveContactSubmission(sub.id, true);
+    setSubmissions((prev) =>
+      prev.map((s) => (s.id === sub.id ? { ...s, archived: true } : s))
+    );
+    setExpanded(null);
+    setLoading(null);
+  };
+
+  const handleUnarchive = async (sub: ContactSubmission) => {
+    setLoading(sub.id);
+    await archiveContactSubmission(sub.id, false);
+    setSubmissions((prev) =>
+      prev.map((s) => (s.id === sub.id ? { ...s, archived: false } : s))
+    );
+    setLoading(null);
+  };
+
+  const handleDelete = async (sub: ContactSubmission) => {
+    if (!confirm(`Delete submission from "${sub.name}"? This cannot be undone.`)) return;
+    setLoading(sub.id);
+    await deleteContactSubmission(sub.id);
+    setSubmissions((prev) => prev.filter((s) => s.id !== sub.id));
+    setExpanded(null);
+    setLoading(null);
+  };
+
+  const handleCopyEmail = async (sub: ContactSubmission) => {
+    await navigator.clipboard.writeText(sub.email);
+    setCopiedId(sub.id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   if (submissions.length === 0) {
@@ -105,6 +157,21 @@ export default function ContactSubmissionsTab({ submissions: initial }: ContactS
               </span>
             )}
           </button>
+          <button
+            onClick={() => setFilter("archived")}
+            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              filter === "archived"
+                ? "bg-white text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Archived
+            {archived.length > 0 && (
+              <span className="min-w-[18px] h-[18px] rounded-full bg-muted-foreground text-white text-[10px] font-bold flex items-center justify-center px-1">
+                {archived.length}
+              </span>
+            )}
+          </button>
         </div>
         {unreadCount > 0 && filter === "open" && (
           <p className="text-sm text-muted-foreground">{unreadCount} unread</p>
@@ -115,13 +182,16 @@ export default function ContactSubmissionsTab({ submissions: initial }: ContactS
         <div className="py-12 text-center text-sm text-muted-foreground">
           {filter === "open"
             ? "All caught up — no open submissions."
-            : "No resolved submissions yet."}
+            : filter === "resolved"
+              ? "No resolved submissions yet."
+              : "No archived submissions."}
         </div>
       ) : (
         <div className="divide-y divide-border border border-border rounded-[12px] overflow-hidden bg-white">
           {visible.map((sub) => {
             const isExpanded = expanded === sub.id;
             const isLoading = loading === sub.id;
+            const isCopied = copiedId === sub.id;
             return (
               <div key={sub.id} className={sub.read ? "" : "bg-primary/[0.02]"}>
                 <button
@@ -172,7 +242,22 @@ export default function ContactSubmissionsTab({ submissions: initial }: ContactS
                       <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                         {sub.message}
                       </p>
-                      <div className="flex flex-wrap items-center gap-3 pt-1">
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
+                        {/* Copy email */}
+                        <button
+                          onClick={() => handleCopyEmail(sub)}
+                          className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                          title={`Copy ${sub.email}`}
+                        >
+                          {isCopied ? (
+                            <Check className="w-3.5 h-3.5" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                          {isCopied ? "Copied!" : "Copy Email"}
+                        </button>
+
+                        {/* Resolve / Reopen */}
                         {sub.resolved ? (
                           <button
                             onClick={() => handleReopen(sub)}
@@ -189,7 +274,7 @@ export default function ContactSubmissionsTab({ submissions: initial }: ContactS
                             className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
                           >
                             {isLoading ? (
-                              <Circle className="w-3.5 h-3.5 animate-spin" />
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
                             ) : (
                               <CheckCircle2 className="w-3.5 h-3.5" />
                             )}
@@ -197,7 +282,42 @@ export default function ContactSubmissionsTab({ submissions: initial }: ContactS
                           </button>
                         )}
 
-                        <span className="text-xs text-muted-foreground">
+                        {/* Archive / Unarchive */}
+                        {sub.archived ? (
+                          <button
+                            onClick={() => handleUnarchive(sub)}
+                            disabled={isLoading}
+                            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold bg-muted text-foreground hover:bg-muted/80 transition-colors disabled:opacity-50"
+                          >
+                            <ArchiveRestore className="w-3.5 h-3.5" />
+                            {isLoading ? "Restoring..." : "Unarchive"}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleArchive(sub)}
+                            disabled={isLoading}
+                            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors disabled:opacity-50"
+                          >
+                            <Archive className="w-3.5 h-3.5" />
+                            {isLoading ? "Archiving..." : "Archive"}
+                          </button>
+                        )}
+
+                        {/* Delete */}
+                        <button
+                          onClick={() => handleDelete(sub)}
+                          disabled={isLoading}
+                          className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold bg-red-100 text-red-700 hover:bg-red-200 transition-colors disabled:opacity-50"
+                        >
+                          {isLoading ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-3.5 h-3.5" />
+                          )}
+                          Delete
+                        </button>
+
+                        <span className="text-xs text-muted-foreground ml-1">
                           {format(new Date(sub.created_at), "MMM d, yyyy 'at' h:mm a")}
                         </span>
                       </div>

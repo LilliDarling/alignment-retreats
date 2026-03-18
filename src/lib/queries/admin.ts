@@ -127,6 +127,7 @@ export interface ContactSubmission {
   created_at: string;
   read: boolean;
   resolved: boolean;
+  archived: boolean;
 }
 
 export interface RevenueMetrics {
@@ -438,7 +439,7 @@ async function getContactSubmissions(): Promise<ContactSubmission[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from("contact_submissions")
-    .select("id, name, email, subject, message, created_at, read, resolved")
+    .select("id, name, email, subject, message, created_at, read, resolved, archived")
     .order("created_at", { ascending: false });
 
   if (error || !data) return [];
@@ -452,6 +453,7 @@ async function getContactSubmissions(): Promise<ContactSubmission[]> {
     created_at: (r.created_at as string) || "",
     read: (r.read as boolean) || false,
     resolved: (r.resolved as boolean) || false,
+    archived: (r.archived as boolean) || false,
   }));
 }
 
@@ -511,75 +513,5 @@ async function getRevenueMetrics(): Promise<RevenueMetrics> {
     approvedRetreats: approvedRetreatsResult.count || 0,
     publishedRetreats: publishedRetreatsResult.count || 0,
     contactSubmissions: contactResult.count || 0,
-  };
-}
-
-export async function getMemberDetail(memberId: string) {
-  const supabase = await createClient();
-
-  const [profileResult, rolesResult, hostResult, retreatsResult] =
-    await Promise.all([
-      supabase
-        .from("profiles")
-        .select("id, name, bio, profile_photo, created_at, is_coop_member")
-        .eq("id", memberId)
-        .single(),
-      supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", memberId),
-      supabase
-        .from("hosts")
-        .select("*")
-        .eq("user_id", memberId)
-        .maybeSingle(),
-      supabase
-        .from("retreats")
-        .select("id, title, status, created_at")
-        .eq("host_user_id", memberId)
-        .order("created_at", { ascending: false }),
-    ]);
-
-  const profile = profileResult.data as Record<string, unknown> | null;
-  const roles = (rolesResult.data || []).map(
-    (r) => (r as Record<string, unknown>).role as string
-  );
-  const host = hostResult.data as Record<string, unknown> | null;
-  const retreats = (retreatsResult.data || []) as Record<string, unknown>[];
-
-  // Get email via admin RPC
-  let email = "";
-  try {
-    const { data: emailData } = await supabase.rpc("get_profile_email_admin", {
-      profile_id: memberId,
-    });
-    if (emailData) email = emailData as string;
-  } catch {
-    // Email access may fail if RPC doesn't exist
-  }
-
-  return {
-    id: memberId,
-    name: profile ? (profile.name as string) || null : null,
-    email,
-    bio: profile ? (profile.bio as string) || null : null,
-    profile_photo: profile ? (profile.profile_photo as string) || null : null,
-    created_at: profile ? (profile.created_at as string) || null : null,
-    is_coop_member: profile ? (profile.is_coop_member as boolean) || false : false,
-    roles,
-    host_data: host
-      ? {
-          expertise_areas: (host.expertise_areas as string[]) || [],
-          min_rate: (host.min_rate as number) || null,
-          max_rate: (host.max_rate as number) || null,
-          verified: (host.verified as boolean) || false,
-        }
-      : null,
-    retreats: retreats.map((r) => ({
-      id: r.id as string,
-      title: (r.title as string) || "",
-      status: (r.status as string) || "",
-      created_at: (r.created_at as string) || "",
-    })),
   };
 }

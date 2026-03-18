@@ -1,13 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import type { AppRole } from "@/types/auth";
-import { DashboardBooking, DashboardData, DashboardProfile, DashboardProperty, HostRetreat } from "@/types/dashboard";
+import { CohostCollaboration, DashboardBooking, DashboardData, DashboardProfile, DashboardProperty, HostRetreat } from "@/types/dashboard";
 
 export async function getDashboardData(
   userId: string
 ): Promise<DashboardData> {
   const supabase = await createClient();
 
-  const [profileResult, rolesResult, retreatsResult, propertiesResult, bookingsResult] =
+  const [profileResult, rolesResult, retreatsResult, propertiesResult, bookingsResult, cohostResult] =
     await Promise.all([
       supabase
         .from("profiles")
@@ -33,6 +33,12 @@ export async function getDashboardData(
         .select("id, booking_date, retreats(title, start_date, end_date)")
         .eq("attendee_user_id", userId)
         .order("booking_date", { ascending: false }),
+      supabase
+        .from("retreat_team")
+        .select("id, role, fee_amount, fee_type, agreed, agreed_at, created_at, retreat_id, retreats(title, slug, start_date, end_date, status, custom_venue_name, host_user_id)")
+        .eq("user_id", userId)
+        .neq("role", "host")
+        .order("created_at", { ascending: false }),
     ]);
 
   const profileData = profileResult.data;
@@ -94,9 +100,41 @@ export async function getDashboardData(
     }
   );
 
-  return { profile, roles, hostRetreats, properties, bookings };
+  const cohostCollaborations: CohostCollaboration[] = (cohostResult.data || [])
+    .filter((c) => {
+      const retreat = c.retreats as unknown as { host_user_id: string } | null;
+      return retreat?.host_user_id !== userId;
+    })
+    .map((c) => {
+      const retreat = c.retreats as unknown as {
+        title: string;
+        slug: string | null;
+        start_date: string | null;
+        end_date: string | null;
+        status: string;
+        custom_venue_name: string | null;
+      } | null;
+      return {
+        id: c.id as string,
+        role: c.role as string,
+        fee_amount: c.fee_amount as number,
+        fee_type: c.fee_type as string,
+        agreed: c.agreed as boolean,
+        agreed_at: (c.agreed_at as string) || null,
+        created_at: c.created_at as string,
+        retreat_id: c.retreat_id as string,
+        retreat_slug: retreat?.slug || (c.retreat_id as string),
+        retreat_title: retreat?.title || "Untitled Retreat",
+        retreat_start: retreat?.start_date || null,
+        retreat_end: retreat?.end_date || null,
+        retreat_status: retreat?.status || "draft",
+        retreat_location: retreat?.custom_venue_name || null,
+      };
+    });
+
+  return { profile, roles, hostRetreats, properties, bookings, cohostCollaborations };
 }
-export type { DashboardBooking, HostRetreat, DashboardProfile, DashboardProperty };
+export type { CohostCollaboration, DashboardBooking, HostRetreat, DashboardProfile, DashboardProperty };
 
 export interface MyBooking {
   id: string;

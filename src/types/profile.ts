@@ -44,8 +44,7 @@ export interface EditableProfile {
   website_url: string | null;
   portfolio_photos: string[] | null;
   portfolio_videos: string[] | null;
-  hourly_rate: number | null;
-  daily_rate: number | null;
+  rate: number | null;
   rate_currency: string | null;
   travel_willing: boolean;
   show_in_directory: boolean;
@@ -82,8 +81,7 @@ export interface AboutUpdate {
 }
 
 export interface RatesUpdate {
-  hourly_rate: number | null;
-  daily_rate: number | null;
+  rate: number | null;
   rate_currency: string | null;
 }
 

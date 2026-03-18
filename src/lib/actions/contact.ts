@@ -131,6 +131,32 @@ export async function markContactSubmissionResolved(id: string, resolved: boolea
   return { error: null };
 }
 
+export async function archiveContactSubmission(id: string, archived: boolean): Promise<{ error: string | null }> {
+  const auth = await requireAdmin();
+  if ("error" in auth) return auth;
+  const supabase = await createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
+    .from("contact_submissions")
+    .update({ archived })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  return { error: null };
+}
+
+export async function deleteContactSubmission(id: string): Promise<{ error: string | null }> {
+  const auth = await requireAdmin();
+  if ("error" in auth) return auth;
+  const supabase = await createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
+    .from("contact_submissions")
+    .delete()
+    .eq("id", id);
+  if (error) return { error: error.message };
+  return { error: null };
+}
+
 export async function submitContactForm(data: {
   name: string;
   email: string;

@@ -40,7 +40,7 @@ const handler = async (req: Request): Promise<Response> => {
       type: 'signup',
       email: email,
       options: {
-        emailRedirectTo: `${req.headers.get('origin') || supabaseUrl}/`,
+        emailRedirectTo: `${req.headers.get('origin') || supabaseUrl}/callback`,
       },
     });
 

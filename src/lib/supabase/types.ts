@@ -14,111 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      admin_audit_log: {
-        Row: {
-          action: string
-          admin_user_id: string
-          created_at: string
-          id: string
-          ip_address: string | null
-          resource_count: number | null
-          resource_type: string
-        }
-        Insert: {
-          action: string
-          admin_user_id: string
-          created_at?: string
-          id?: string
-          ip_address?: string | null
-          resource_count?: number | null
-          resource_type: string
-        }
-        Update: {
-          action?: string
-          admin_user_id?: string
-          created_at?: string
-          id?: string
-          ip_address?: string | null
-          resource_count?: number | null
-          resource_type?: string
-        }
-        Relationships: []
-      }
-      admin_notifications: {
-        Row: {
-          created_at: string | null
-          id: string
-          message: string | null
-          read: boolean | null
-          reference_id: string | null
-          reference_type: string | null
-          title: string
-          type: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          message?: string | null
-          read?: boolean | null
-          reference_id?: string | null
-          reference_type?: string | null
-          title: string
-          type: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          message?: string | null
-          read?: boolean | null
-          reference_id?: string | null
-          reference_type?: string | null
-          title?: string
-          type?: string
-        }
-        Relationships: []
-      }
-      analytics_events: {
-        Row: {
-          created_at: string
-          event_category: string
-          event_name: string
-          id: string
-          metadata: Json | null
-          page_path: string | null
-          page_url: string | null
-          referrer: string | null
-          session_id: string
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          event_category?: string
-          event_name: string
-          id?: string
-          metadata?: Json | null
-          page_path?: string | null
-          page_url?: string | null
-          referrer?: string | null
-          session_id: string
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          event_category?: string
-          event_name?: string
-          id?: string
-          metadata?: Json | null
-          page_path?: string | null
-          page_url?: string | null
-          referrer?: string | null
-          session_id?: string
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       booking_payments: {
         Row: {
           amount_paid: number | null
@@ -191,6 +86,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "bookings_attendee_user_id_fkey"
+            columns: ["attendee_user_id"]
+            isOneToOne: false
+            referencedRelation: "make_user_export"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "bookings_retreat_id_fkey"
             columns: ["retreat_id"]
             isOneToOne: false
@@ -206,184 +108,42 @@ export type Database = {
           },
         ]
       }
-      channel_messages: {
+      contact_submissions: {
         Row: {
-          channel_id: string
-          content: string
-          created_at: string
-          edited_at: string | null
-          id: string
-          user_id: string | null
-        }
-        Insert: {
-          channel_id: string
-          content: string
-          created_at?: string
-          edited_at?: string | null
-          id?: string
-          user_id?: string | null
-        }
-        Update: {
-          channel_id?: string
-          content?: string
-          created_at?: string
-          edited_at?: string | null
-          id?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "channel_messages_channel_id_fkey"
-            columns: ["channel_id"]
-            isOneToOne: false
-            referencedRelation: "chat_channels"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      chat_channels: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          is_private: boolean
-          name: string
-          position: number
-          server_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_private?: boolean
-          name: string
-          position?: number
-          server_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_private?: boolean
-          name?: string
-          position?: number
-          server_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "chat_channels_server_id_fkey"
-            columns: ["server_id"]
-            isOneToOne: false
-            referencedRelation: "chat_servers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      chat_servers: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          description: string | null
-          icon_url: string | null
-          id: string
-          name: string
-          retreat_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          icon_url?: string | null
-          id?: string
-          name: string
-          retreat_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          icon_url?: string | null
-          id?: string
-          name?: string
-          retreat_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "chat_servers_retreat_id_fkey"
-            columns: ["retreat_id"]
-            isOneToOne: false
-            referencedRelation: "retreats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chat_servers_retreat_id_fkey"
-            columns: ["retreat_id"]
-            isOneToOne: false
-            referencedRelation: "retreats_public"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      cohosts: {
-        Row: {
-          availability: string | null
-          available_from: string | null
-          available_to: string | null
+          archived: boolean
           created_at: string | null
-          daily_rate: number | null
-          hourly_rate: number | null
+          email: string
           id: string
-          max_rate: number | null
-          min_rate: number | null
-          past_collaborations_count: number | null
-          preferred_climates: string[] | null
-          preferred_regions: string | null
-          rating: number | null
-          skills: string[] | null
-          user_id: string
-          verified: boolean | null
+          message: string
+          name: string
+          read: boolean
+          resolved: boolean
+          subject: string
+          updated_at: string
         }
         Insert: {
-          availability?: string | null
-          available_from?: string | null
-          available_to?: string | null
+          archived?: boolean
           created_at?: string | null
-          daily_rate?: number | null
-          hourly_rate?: number | null
+          email: string
           id?: string
-          max_rate?: number | null
-          min_rate?: number | null
-          past_collaborations_count?: number | null
-          preferred_climates?: string[] | null
-          preferred_regions?: string | null
-          rating?: number | null
-          skills?: string[] | null
-          user_id: string
-          verified?: boolean | null
+          message: string
+          name: string
+          read?: boolean
+          resolved?: boolean
+          subject: string
+          updated_at?: string
         }
         Update: {
-          availability?: string | null
-          available_from?: string | null
-          available_to?: string | null
+          archived?: boolean
           created_at?: string | null
-          daily_rate?: number | null
-          hourly_rate?: number | null
+          email?: string
           id?: string
-          max_rate?: number | null
-          min_rate?: number | null
-          past_collaborations_count?: number | null
-          preferred_climates?: string[] | null
-          preferred_regions?: string | null
-          rating?: number | null
-          skills?: string[] | null
-          user_id?: string
-          verified?: boolean | null
+          message?: string
+          name?: string
+          read?: boolean
+          resolved?: boolean
+          subject?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -442,63 +202,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      hosts: {
-        Row: {
-          available_from: string | null
-          available_to: string | null
-          created_at: string | null
-          expertise_areas: string[] | null
-          has_marketing_material: boolean | null
-          id: string
-          marketing_description: string | null
-          max_rate: number | null
-          min_rate: number | null
-          past_retreats_count: number | null
-          portfolio_links: string | null
-          preferred_climates: string[] | null
-          preferred_regions: string | null
-          rating: number | null
-          user_id: string
-          verified: boolean | null
-        }
-        Insert: {
-          available_from?: string | null
-          available_to?: string | null
-          created_at?: string | null
-          expertise_areas?: string[] | null
-          has_marketing_material?: boolean | null
-          id?: string
-          marketing_description?: string | null
-          max_rate?: number | null
-          min_rate?: number | null
-          past_retreats_count?: number | null
-          portfolio_links?: string | null
-          preferred_climates?: string[] | null
-          preferred_regions?: string | null
-          rating?: number | null
-          user_id: string
-          verified?: boolean | null
-        }
-        Update: {
-          available_from?: string | null
-          available_to?: string | null
-          created_at?: string | null
-          expertise_areas?: string[] | null
-          has_marketing_material?: boolean | null
-          id?: string
-          marketing_description?: string | null
-          max_rate?: number | null
-          min_rate?: number | null
-          past_retreats_count?: number | null
-          portfolio_links?: string | null
-          preferred_climates?: string[] | null
-          preferred_regions?: string | null
-          rating?: number | null
-          user_id?: string
-          verified?: boolean | null
-        }
-        Relationships: []
       }
       messages: {
         Row: {
@@ -580,21 +283,16 @@ export type Database = {
       }
       profiles: {
         Row: {
-          about_me_html: string | null
           availability_status: string | null
           bio: string | null
           certifications: string[] | null
           cover_photo: string | null
           created_at: string | null
-          daily_rate: number | null
           expertise_areas: string[] | null
-          hourly_rate: number | null
           id: string
-          instagram_followers: number | null
           instagram_handle: string | null
           is_coop_member: boolean | null
           languages: string[] | null
-          layout_style: string | null
           location: string | null
           name: string | null
           newsletter_opt_in: boolean
@@ -602,16 +300,13 @@ export type Database = {
           portfolio_photos: string[] | null
           portfolio_videos: string[] | null
           profile_completed: boolean | null
-          profile_completed_at: string | null
-          profile_effects: string | null
           profile_photo: string | null
-          profile_song_url: string | null
+          rate: number | null
           rate_currency: string | null
           show_in_directory: boolean | null
-          theme_color: string | null
+          slug: string
           tiktok_handle: string | null
           travel_willing: boolean | null
-          user_roles: string[] | null
           verified: boolean | null
           website_url: string | null
           what_i_offer: string | null
@@ -619,21 +314,16 @@ export type Database = {
           years_experience: number | null
         }
         Insert: {
-          about_me_html?: string | null
           availability_status?: string | null
           bio?: string | null
           certifications?: string[] | null
           cover_photo?: string | null
           created_at?: string | null
-          daily_rate?: number | null
           expertise_areas?: string[] | null
-          hourly_rate?: number | null
           id: string
-          instagram_followers?: number | null
           instagram_handle?: string | null
           is_coop_member?: boolean | null
           languages?: string[] | null
-          layout_style?: string | null
           location?: string | null
           name?: string | null
           newsletter_opt_in?: boolean
@@ -641,16 +331,13 @@ export type Database = {
           portfolio_photos?: string[] | null
           portfolio_videos?: string[] | null
           profile_completed?: boolean | null
-          profile_completed_at?: string | null
-          profile_effects?: string | null
           profile_photo?: string | null
-          profile_song_url?: string | null
+          rate?: number | null
           rate_currency?: string | null
           show_in_directory?: boolean | null
-          theme_color?: string | null
+          slug: string
           tiktok_handle?: string | null
           travel_willing?: boolean | null
-          user_roles?: string[] | null
           verified?: boolean | null
           website_url?: string | null
           what_i_offer?: string | null
@@ -658,21 +345,16 @@ export type Database = {
           years_experience?: number | null
         }
         Update: {
-          about_me_html?: string | null
           availability_status?: string | null
           bio?: string | null
           certifications?: string[] | null
           cover_photo?: string | null
           created_at?: string | null
-          daily_rate?: number | null
           expertise_areas?: string[] | null
-          hourly_rate?: number | null
           id?: string
-          instagram_followers?: number | null
           instagram_handle?: string | null
           is_coop_member?: boolean | null
           languages?: string[] | null
-          layout_style?: string | null
           location?: string | null
           name?: string | null
           newsletter_opt_in?: boolean
@@ -680,26 +362,32 @@ export type Database = {
           portfolio_photos?: string[] | null
           portfolio_videos?: string[] | null
           profile_completed?: boolean | null
-          profile_completed_at?: string | null
-          profile_effects?: string | null
           profile_photo?: string | null
-          profile_song_url?: string | null
+          rate?: number | null
           rate_currency?: string | null
           show_in_directory?: boolean | null
-          theme_color?: string | null
+          slug?: string
           tiktok_handle?: string | null
           travel_willing?: boolean | null
-          user_roles?: string[] | null
           verified?: boolean | null
           website_url?: string | null
           what_i_offer?: string | null
           what_im_looking_for?: string | null
           years_experience?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "make_user_export"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       properties: {
         Row: {
+          admin_notes: string | null
           amenities: string[] | null
           base_price: number | null
           capacity: number | null
@@ -722,11 +410,15 @@ export type Database = {
           property_features: string[] | null
           property_type: Database["public"]["Enums"]["property_type"]
           residency_available_dates: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           status: string | null
           tiktok_handle: string | null
           videos: string[] | null
+          website: string | null
         }
         Insert: {
+          admin_notes?: string | null
           amenities?: string[] | null
           base_price?: number | null
           capacity?: number | null
@@ -749,11 +441,15 @@ export type Database = {
           property_features?: string[] | null
           property_type: Database["public"]["Enums"]["property_type"]
           residency_available_dates?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string | null
           tiktok_handle?: string | null
           videos?: string[] | null
+          website?: string | null
         }
         Update: {
+          admin_notes?: string | null
           amenities?: string[] | null
           base_price?: number | null
           capacity?: number | null
@@ -776,11 +472,29 @@ export type Database = {
           property_features?: string[] | null
           property_type?: Database["public"]["Enums"]["property_type"]
           residency_available_dates?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string | null
           tiktok_handle?: string | null
           videos?: string[] | null
+          website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "properties_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "make_user_export"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "properties_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "make_user_export"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       retreat_team: {
         Row: {
@@ -840,142 +554,11 @@ export type Database = {
             referencedRelation: "retreats_public"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      retreat_waitlist: {
-        Row: {
-          created_at: string | null
-          id: string
-          notified: boolean | null
-          notified_at: string | null
-          position: number
-          retreat_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          notified?: boolean | null
-          notified_at?: string | null
-          position: number
-          retreat_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          notified?: boolean | null
-          notified_at?: string | null
-          position?: number
-          retreat_id?: string
-          user_id?: string
-        }
-        Relationships: [
           {
-            foreignKeyName: "retreat_waitlist_retreat_id_fkey"
-            columns: ["retreat_id"]
+            foreignKeyName: "retreat_team_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "retreats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "retreat_waitlist_retreat_id_fkey"
-            columns: ["retreat_id"]
-            isOneToOne: false
-            referencedRelation: "retreats_public"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      retreat_wishes: {
-        Row: {
-          bringing_others: boolean | null
-          budget_flexibility: string | null
-          budget_max: number | null
-          budget_min: number | null
-          created_at: string | null
-          dates_flexible: boolean | null
-          description: string | null
-          desired_experiences: string[] | null
-          email_notifications: boolean | null
-          group_size: number | null
-          id: string
-          international_ok: boolean | null
-          location_preferences: string[] | null
-          matched_at: string | null
-          matched_retreat_id: string | null
-          preferred_dates_end: string | null
-          preferred_dates_start: string | null
-          preferred_timeframe: string | null
-          priority: string | null
-          retreat_types: string[] | null
-          status: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          bringing_others?: boolean | null
-          budget_flexibility?: string | null
-          budget_max?: number | null
-          budget_min?: number | null
-          created_at?: string | null
-          dates_flexible?: boolean | null
-          description?: string | null
-          desired_experiences?: string[] | null
-          email_notifications?: boolean | null
-          group_size?: number | null
-          id?: string
-          international_ok?: boolean | null
-          location_preferences?: string[] | null
-          matched_at?: string | null
-          matched_retreat_id?: string | null
-          preferred_dates_end?: string | null
-          preferred_dates_start?: string | null
-          preferred_timeframe?: string | null
-          priority?: string | null
-          retreat_types?: string[] | null
-          status?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          bringing_others?: boolean | null
-          budget_flexibility?: string | null
-          budget_max?: number | null
-          budget_min?: number | null
-          created_at?: string | null
-          dates_flexible?: boolean | null
-          description?: string | null
-          desired_experiences?: string[] | null
-          email_notifications?: boolean | null
-          group_size?: number | null
-          id?: string
-          international_ok?: boolean | null
-          location_preferences?: string[] | null
-          matched_at?: string | null
-          matched_retreat_id?: string | null
-          preferred_dates_end?: string | null
-          preferred_dates_start?: string | null
-          preferred_timeframe?: string | null
-          priority?: string | null
-          retreat_types?: string[] | null
-          status?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "retreat_wishes_matched_retreat_id_fkey"
-            columns: ["matched_retreat_id"]
-            isOneToOne: false
-            referencedRelation: "retreats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "retreat_wishes_matched_retreat_id_fkey"
-            columns: ["matched_retreat_id"]
-            isOneToOne: false
-            referencedRelation: "retreats_public"
+            referencedRelation: "make_user_export"
             referencedColumns: ["id"]
           },
         ]
@@ -988,10 +571,14 @@ export type Database = {
           custom_venue_name: string | null
           description: string | null
           end_date: string | null
+          expected_attendees: number | null
+          gallery_images: string[] | null
+          gallery_videos: string[] | null
           host_name: string | null
           host_user_id: string
           id: string
           location: string | null
+          location_details: string | null
           looking_for: Json | null
           main_image: string | null
           max_attendees: number | null
@@ -1002,14 +589,17 @@ export type Database = {
           reviewed_at: string | null
           reviewed_by: string | null
           sample_itinerary: string | null
+          slug: string
           start_date: string | null
           status: Database["public"]["Enums"]["retreat_status"] | null
           target_attendees_max: number | null
           target_attendees_min: number | null
           team_budget_total: number | null
+          ticket_price: number | null
           title: string
           venue_budget_max: number | null
           venue_budget_min: number | null
+          what_to_bring: string | null
           what_you_offer: string | null
           what_you_want: string | null
         }
@@ -1020,10 +610,14 @@ export type Database = {
           custom_venue_name?: string | null
           description?: string | null
           end_date?: string | null
+          expected_attendees?: number | null
+          gallery_images?: string[] | null
+          gallery_videos?: string[] | null
           host_name?: string | null
           host_user_id: string
           id?: string
           location?: string | null
+          location_details?: string | null
           looking_for?: Json | null
           main_image?: string | null
           max_attendees?: number | null
@@ -1034,14 +628,17 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           sample_itinerary?: string | null
+          slug: string
           start_date?: string | null
           status?: Database["public"]["Enums"]["retreat_status"] | null
           target_attendees_max?: number | null
           target_attendees_min?: number | null
           team_budget_total?: number | null
+          ticket_price?: number | null
           title: string
           venue_budget_max?: number | null
           venue_budget_min?: number | null
+          what_to_bring?: string | null
           what_you_offer?: string | null
           what_you_want?: string | null
         }
@@ -1052,10 +649,14 @@ export type Database = {
           custom_venue_name?: string | null
           description?: string | null
           end_date?: string | null
+          expected_attendees?: number | null
+          gallery_images?: string[] | null
+          gallery_videos?: string[] | null
           host_name?: string | null
           host_user_id?: string
           id?: string
           location?: string | null
+          location_details?: string | null
           looking_for?: Json | null
           main_image?: string | null
           max_attendees?: number | null
@@ -1066,18 +667,28 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           sample_itinerary?: string | null
+          slug?: string
           start_date?: string | null
           status?: Database["public"]["Enums"]["retreat_status"] | null
           target_attendees_max?: number | null
           target_attendees_min?: number | null
           team_budget_total?: number | null
+          ticket_price?: number | null
           title?: string
           venue_budget_max?: number | null
           venue_budget_min?: number | null
+          what_to_bring?: string | null
           what_you_offer?: string | null
           what_you_want?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "retreats_host_user_id_fkey"
+            columns: ["host_user_id"]
+            isOneToOne: false
+            referencedRelation: "make_user_export"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "retreats_property_id_fkey"
             columns: ["property_id"]
@@ -1149,6 +760,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "scheduled_payouts_recipient_user_id_fkey"
+            columns: ["recipient_user_id"]
+            isOneToOne: false
+            referencedRelation: "make_user_export"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "scheduled_payouts_retreat_team_id_fkey"
             columns: ["retreat_team_id"]
             isOneToOne: false
@@ -1156,83 +774,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      server_members: {
-        Row: {
-          id: string
-          joined_at: string
-          role: Database["public"]["Enums"]["server_role"]
-          server_id: string
-          user_id: string
-        }
-        Insert: {
-          id?: string
-          joined_at?: string
-          role?: Database["public"]["Enums"]["server_role"]
-          server_id: string
-          user_id: string
-        }
-        Update: {
-          id?: string
-          joined_at?: string
-          role?: Database["public"]["Enums"]["server_role"]
-          server_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "server_members_server_id_fkey"
-            columns: ["server_id"]
-            isOneToOne: false
-            referencedRelation: "chat_servers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      staff_profiles: {
-        Row: {
-          availability: string | null
-          created_at: string | null
-          day_rate: number | null
-          experience_years: number | null
-          id: string
-          max_rate: number | null
-          min_rate: number | null
-          portfolio_url: string | null
-          rating: number | null
-          service_type: string | null
-          user_id: string
-          verified: boolean | null
-        }
-        Insert: {
-          availability?: string | null
-          created_at?: string | null
-          day_rate?: number | null
-          experience_years?: number | null
-          id?: string
-          max_rate?: number | null
-          min_rate?: number | null
-          portfolio_url?: string | null
-          rating?: number | null
-          service_type?: string | null
-          user_id: string
-          verified?: boolean | null
-        }
-        Update: {
-          availability?: string | null
-          created_at?: string | null
-          day_rate?: number | null
-          experience_years?: number | null
-          id?: string
-          max_rate?: number | null
-          min_rate?: number | null
-          portfolio_url?: string | null
-          rating?: number | null
-          service_type?: string | null
-          user_id?: string
-          verified?: boolean | null
-        }
-        Relationships: []
       }
       stripe_connected_accounts: {
         Row: {
@@ -1271,7 +812,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "stripe_connected_accounts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "make_user_export"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -1292,88 +841,89 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
-        Relationships: []
-      }
-      venue_inquiries: {
-        Row: {
-          created_at: string | null
-          guest_count: number | null
-          id: string
-          inquirer_user_id: string
-          message: string
-          preferred_dates: string | null
-          property_id: string
-          status: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          guest_count?: number | null
-          id?: string
-          inquirer_user_id: string
-          message: string
-          preferred_dates?: string | null
-          property_id: string
-          status?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          guest_count?: number | null
-          id?: string
-          inquirer_user_id?: string
-          message?: string
-          preferred_dates?: string | null
-          property_id?: string
-          status?: string | null
-          updated_at?: string | null
-        }
         Relationships: [
           {
-            foreignKeyName: "venue_inquiries_property_id_fkey"
-            columns: ["property_id"]
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "venue_inquiries_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "properties_public"
+            referencedRelation: "make_user_export"
             referencedColumns: ["id"]
           },
         ]
       }
-      waitlist: {
+    }
+    Views: {
+      directory_profiles: {
         Row: {
-          created_at: string | null
-          email: string
-          id: string
-          interested_roles: string[]
-          invited_at: string | null
+          availability_status: string | null
+          bio: string | null
+          expertise_areas: string[] | null
+          id: string | null
+          location: string | null
           name: string | null
+          profile_photo: string | null
+          rate: number | null
+          rate_currency: string | null
+          roles: string[] | null
+          verified: boolean | null
+          website_url: string | null
+          what_i_offer: string | null
+          years_experience: number | null
         }
         Insert: {
-          created_at?: string | null
-          email: string
-          id?: string
-          interested_roles?: string[]
-          invited_at?: string | null
+          availability_status?: string | null
+          bio?: string | null
+          expertise_areas?: string[] | null
+          id?: string | null
+          location?: string | null
           name?: string | null
+          profile_photo?: string | null
+          rate?: number | null
+          rate_currency?: string | null
+          roles?: never
+          verified?: boolean | null
+          website_url?: string | null
+          what_i_offer?: string | null
+          years_experience?: number | null
         }
         Update: {
-          created_at?: string | null
-          email?: string
-          id?: string
-          interested_roles?: string[]
-          invited_at?: string | null
+          availability_status?: string | null
+          bio?: string | null
+          expertise_areas?: string[] | null
+          id?: string | null
+          location?: string | null
           name?: string | null
+          profile_photo?: string | null
+          rate?: number | null
+          rate_currency?: string | null
+          roles?: never
+          verified?: boolean | null
+          website_url?: string | null
+          what_i_offer?: string | null
+          years_experience?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "make_user_export"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      make_user_export: {
+        Row: {
+          all_roles: string | null
+          created_at: string | null
+          email: string | null
+          id: string | null
+          last_active: string | null
+          name: string | null
+          profile_completed: boolean | null
         }
         Relationships: []
       }
-    }
-    Views: {
       properties_public: {
         Row: {
           amenities: string[] | null
@@ -1480,6 +1030,11 @@ export type Database = {
         }
         Returns: number
       }
+      generate_unique_retreat_slug: {
+        Args: { base_title: string }
+        Returns: string
+      }
+      generate_unique_slug: { Args: { base_name: string }; Returns: string }
       get_all_profiles_admin: {
         Args: never
         Returns: {
@@ -1488,17 +1043,6 @@ export type Database = {
           id: string
           name: string
           roles: string[]
-        }[]
-      }
-      get_analytics_stats: {
-        Args: { end_date?: string; start_date?: string }
-        Returns: {
-          date: string
-          event_category: string
-          event_count: number
-          event_name: string
-          unique_sessions: number
-          unique_users: number
         }[]
       }
       get_at_risk_retreats: {
@@ -1609,15 +1153,6 @@ export type Database = {
           retreat_id: string
         }[]
       }
-      get_market_rate_averages: {
-        Args: never
-        Returns: {
-          avg_max_rate: number
-          avg_min_rate: number
-          count: number
-          role_type: string
-        }[]
-      }
       get_payout_breakdown: {
         Args: { _booking_id: string }
         Returns: {
@@ -1641,19 +1176,76 @@ export type Database = {
       get_public_profile: {
         Args: { profile_id: string }
         Returns: {
+          availability_status: string
           bio: string
+          certifications: string[]
+          cover_photo: string
+          expertise_areas: string[]
           id: string
+          instagram_handle: string
+          languages: string[]
+          location: string
           name: string
+          portfolio_photos: string[]
+          portfolio_videos: string[]
           profile_photo: string
+          slug: string
+          tiktok_handle: string
+          travel_willing: boolean
+          verified: boolean
+          website_url: string
+          what_i_offer: string
+          years_experience: number
+        }[]
+      }
+      get_public_profile_by_slug: {
+        Args: { profile_slug: string }
+        Returns: {
+          availability_status: string
+          bio: string
+          certifications: string[]
+          cover_photo: string
+          expertise_areas: string[]
+          id: string
+          instagram_handle: string
+          languages: string[]
+          location: string
+          name: string
+          portfolio_photos: string[]
+          portfolio_videos: string[]
+          profile_photo: string
+          slug: string
+          tiktok_handle: string
+          travel_willing: boolean
+          verified: boolean
+          website_url: string
+          what_i_offer: string
+          years_experience: number
         }[]
       }
       get_public_profiles: {
         Args: { profile_ids: string[] }
         Returns: {
+          availability_status: string
           bio: string
+          certifications: string[]
+          cover_photo: string
+          expertise_areas: string[]
           id: string
+          instagram_handle: string
+          languages: string[]
+          location: string
           name: string
+          portfolio_photos: string[]
+          portfolio_videos: string[]
           profile_photo: string
+          slug: string
+          tiktok_handle: string
+          travel_willing: boolean
+          verified: boolean
+          website_url: string
+          what_i_offer: string
+          years_experience: number
         }[]
       }
       get_retreat_availability: {
@@ -1690,13 +1282,7 @@ export type Database = {
         Returns: boolean
       }
       is_user_verified: { Args: { _user_id: string }; Returns: boolean }
-      join_retreat_waitlist: {
-        Args: { _retreat_id: string }
-        Returns: {
-          position: number
-          waitlist_id: string
-        }[]
-      }
+      slugify: { Args: { input: string }; Returns: string }
       user_has_booking_for_retreat: {
         Args: { retreat_uuid: string }
         Returns: boolean
@@ -1739,7 +1325,17 @@ export type Database = {
         | "active"
         | "restricted"
         | "disabled"
-      team_member_role: "host" | "cohost" | "venue" | "chef" | "staff" | "other"
+      team_member_role:
+        | "host"
+        | "cohost"
+        | "venue"
+        | "chef"
+        | "staff"
+        | "other"
+        | "photographer"
+        | "yoga_instructor"
+        | "sound_healer"
+        | "massage"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1902,7 +1498,18 @@ export const Constants = {
         "restricted",
         "disabled",
       ],
-      team_member_role: ["host", "cohost", "venue", "chef", "staff", "other"],
+      team_member_role: [
+        "host",
+        "cohost",
+        "venue",
+        "chef",
+        "staff",
+        "other",
+        "photographer",
+        "yoga_instructor",
+        "sound_healer",
+        "massage",
+      ],
     },
   },
 } as const

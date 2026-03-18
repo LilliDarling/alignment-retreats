@@ -18,7 +18,7 @@ const PROFILE_SELECT = `
   availability_status, what_i_offer, what_im_looking_for,
   instagram_handle, tiktok_handle, website_url,
   portfolio_photos, portfolio_videos,
-  hourly_rate, daily_rate, rate_currency,
+  rate, rate_currency,
   travel_willing, show_in_directory, profile_completed
 ` as const;
 
@@ -62,8 +62,7 @@ export async function getOwnProfile(): Promise<EditableProfile | null> {
     website_url: data.website_url as string | null,
     portfolio_photos: data.portfolio_photos as string[] | null,
     portfolio_videos: data.portfolio_videos as string[] | null,
-    hourly_rate: data.hourly_rate as number | null,
-    daily_rate: data.daily_rate as number | null,
+    rate: data.rate as number | null,
     rate_currency: data.rate_currency as string | null,
     travel_willing: (data.travel_willing as boolean) || false,
     show_in_directory: (data.show_in_directory as boolean) || false,
