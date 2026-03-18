@@ -262,18 +262,25 @@
     color: hsl(var(--primary-foreground));
   }
 
+  /* Thin sleek scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.4) transparent;
+  }
+
   ::-webkit-scrollbar {
-    width: 8px;
+    width: 5px;
+    height: 5px;
   }
   ::-webkit-scrollbar-track {
-    background: hsl(var(--background));
+    background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground));
-    border-radius: 4px;
+    background: hsl(var(--muted-foreground) / 0.4);
+    border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--foreground));
+    background: hsl(var(--muted-foreground) / 0.7);
   }
 }
 

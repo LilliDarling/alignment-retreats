@@ -152,7 +152,7 @@ export default function Footer() {
               <li>
                 <a
                   href={`mailto:${siteConfig.email}`}
-                  className="hover:text-white hover:underline underline-offset-2 transition-colors"
+                  className="hover:text-white hover:underline underline-offset-2 transition-colors break-all"
                 >
                   {siteConfig.email}
                 </a>
@@ -193,7 +193,7 @@ export default function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-center sm:text-left">
           <p>
             &copy; {new Date().getFullYear()} Alignment Retreats. Bringing
             people together for transformative experiences.

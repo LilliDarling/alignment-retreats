@@ -267,7 +267,7 @@ export default function RetreatDetailClient({
               )}
 
               {/* Tab bar */}
-              <div className="flex gap-1 border-b border-border mb-8 overflow-x-auto">
+              <div className="flex border-b border-border mb-8">
                 {(
                   [
                     { key: "overview", label: "Overview" },
@@ -285,7 +285,7 @@ export default function RetreatDetailClient({
                   <button
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key as typeof activeTab)}
-                    className={`relative px-5 py-3 text-sm font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                    className={`relative flex-1 min-w-0 px-2 sm:px-5 py-3 text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                       activeTab === tab.key
                         ? "text-primary"
                         : "text-muted-foreground hover:text-foreground"
