@@ -39,6 +39,7 @@ import { uploadVenueImage, uploadVenueVideo } from "@/lib/utils/upload";
 import Link from "next/link";
 
 import UnsavedChangesModal from "@/components/ui/UnsavedChangesModal";
+import FirstTimeSubmitModal from "@/components/ui/FirstTimeSubmitModal";
 import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
 
 interface VenueFormProps {
@@ -81,17 +82,40 @@ export default function VenueForm({
 
   const status = initialData?.status || "draft";
   const [saving, setSaving] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState<string | null>(null);
   const [showEditWarning, setShowEditWarning] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
   const { showModal: showUnsavedModal, guardedNavigate, confirmLeave, cancelLeave } = useUnsavedChanges(isDirty);
 
+  const validateFields = (): Record<string, string> => {
+    const errors: Record<string, string> = {};
+    if (form.name.length > 150) errors.name = "Name must be 150 characters or fewer.";
+    if (form.description.length > 5000) errors.description = "Description must be 5,000 characters or fewer.";
+    if (form.location.length > 300) errors.location = "Location must be 300 characters or fewer.";
+    if (form.capacity != null && form.capacity < 1) errors.capacity = "Capacity must be at least 1.";
+    if (form.contact_name.length > 100) errors.contact_name = "Contact name must be 100 characters or fewer.";
+    if (form.contact_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.contact_email)) {
+      errors.contact_email = "Please enter a valid email address.";
+    }
+    return errors;
+  };
+
   const handleSaveAndLeave = async () => {
+    const errors = validateFields();
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      const firstErrorField = document.getElementById(Object.keys(errors)[0]);
+      firstErrorField?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    setFieldErrors({});
     setSaving(true);
     setError(null);
     if (mode === "create") {
@@ -142,6 +166,9 @@ export default function VenueForm({
     setIsDirty(true);
     setError(null);
     setSuccess(null);
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => { const next = { ...prev }; delete next[field]; return next; });
+    }
   };
 
   const toggleAmenity = (id: string) => {
@@ -226,6 +253,14 @@ export default function VenueForm({
       return;
     }
 
+    const errors = validateFields();
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      const firstErrorField = document.getElementById(Object.keys(errors)[0]);
+      firstErrorField?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    setFieldErrors({});
     setSaving(true);
     setError(null);
     setSuccess(null);
@@ -260,19 +295,27 @@ export default function VenueForm({
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
+    setShowSubmitModal(true);
+  };
+
+  const handleBookAndSubmit = async () => {
     if (!propertyId) return;
     setSubmitting(true);
     setError(null);
-    const result = await submitPropertyForReview(propertyId);
-    if (result.error) {
-      setError(result.error);
-    } else {
-      setSuccess(
-        "Property submitted for review! You'll be notified once it's approved and listed publicly."
-      );
+    try {
+      const result = await submitPropertyForReview(propertyId);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setSuccess("Property submitted for review! You'll be notified once it's approved.");
+        setShowSubmitModal(false);
+      }
+    } catch {
+      setError("Something went wrong. Please check your connection and try again.");
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
   const handleDelete = async () => {
@@ -291,12 +334,27 @@ export default function VenueForm({
     }
   };
 
-  const inputClass =
-    "w-full px-4 py-2.5 rounded-xl border border-border bg-white text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary";
+  const inputBase =
+    "w-full px-4 py-2.5 rounded-xl border bg-white text-foreground text-sm focus:outline-none focus:ring-2";
+  const inputClass = (field?: string) =>
+    `${inputBase} ${field && fieldErrors[field] ? "border-red-300 focus:ring-red-200 focus:border-red-400" : "border-border focus:ring-primary/20 focus:border-primary"}`;
   const labelClass = "text-sm font-medium text-foreground mb-1 block";
+  const fieldError = (field: string) =>
+    fieldErrors[field] ? <p className="text-xs text-red-600 mt-1">{fieldErrors[field]}</p> : null;
 
   return (
     <>
+    <FirstTimeSubmitModal
+      open={showSubmitModal}
+      onSaveAsDraft={() => {
+        setShowSubmitModal(false);
+        setSuccess("Draft saved. Book a call when you're ready to submit for review.");
+      }}
+      onBookAndSubmit={handleBookAndSubmit}
+      submitting={submitting}
+      saving={saving}
+      type="venue"
+    />
     <UnsavedChangesModal
       open={showUnsavedModal}
       onLeave={confirmLeave}
@@ -489,13 +547,10 @@ export default function VenueForm({
                   <video
                     src={url}
                     className="w-full h-full object-cover"
+                    controls
                     muted
                     playsInline
-                    onMouseEnter={(e) => e.currentTarget.play()}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.pause();
-                      e.currentTarget.currentTime = 0;
-                    }}
+                    preload="metadata"
                   />
                   <button
                     type="button"
@@ -551,9 +606,10 @@ export default function VenueForm({
                 type="text"
                 value={form.name}
                 onChange={(e) => update("name", e.target.value)}
-                className={inputClass}
+                className={inputClass("name")}
                 placeholder="e.g. Blue Ridge Retreat Center"
               />
+              {fieldError("name")}
             </div>
 
             <div>
@@ -564,7 +620,7 @@ export default function VenueForm({
                 id="property_type"
                 value={form.property_type}
                 onChange={(e) => update("property_type", e.target.value)}
-                className={inputClass}
+                className={inputClass("property_type")}
               >
                 <option value="">Select a type</option>
                 {PROPERTY_TYPES.map((t) => (
@@ -584,9 +640,10 @@ export default function VenueForm({
                 value={form.description}
                 onChange={(e) => update("description", e.target.value)}
                 rows={5}
-                className={`${inputClass} resize-none`}
+                className={`${inputClass("description")} resize-none`}
                 placeholder="Describe your property — the setting, vibe, what makes it unique, and what kinds of retreats it's suited for..."
               />
+              {fieldError("description")}
             </div>
           </CardContent>
         </Card>
@@ -607,12 +664,14 @@ export default function VenueForm({
                 type="text"
                 value={form.location}
                 onChange={(e) => update("location", e.target.value)}
-                className={inputClass}
+                className={inputClass("location")}
                 placeholder="e.g. Asheville, North Carolina, USA"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                City, State / Region, Country
-              </p>
+              {fieldError("location") || (
+                <p className="text-xs text-muted-foreground mt-1">
+                  City, State / Region, Country
+                </p>
+              )}
             </div>
 
             <div>
@@ -631,13 +690,15 @@ export default function VenueForm({
                     e.target.value ? parseInt(e.target.value) : null
                   )
                 }
-                className={inputClass}
+                className={inputClass("capacity")}
                 placeholder="How many guests can your property host?"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Total number of people that can be accommodated (sleeping +
-                day-use).
-              </p>
+              {fieldError("capacity") || (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Total number of people that can be accommodated (sleeping +
+                  day-use).
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -731,9 +792,10 @@ export default function VenueForm({
                   type="text"
                   value={form.contact_name}
                   onChange={(e) => update("contact_name", e.target.value)}
-                  className={inputClass}
+                  className={inputClass("contact_name")}
                   placeholder="Your name or booking contact"
                 />
+                {fieldError("contact_name")}
               </div>
               <div>
                 <label htmlFor="contact_email" className={labelClass}>
@@ -744,9 +806,10 @@ export default function VenueForm({
                   type="email"
                   value={form.contact_email}
                   onChange={(e) => update("contact_email", e.target.value)}
-                  className={inputClass}
+                  className={inputClass("contact_email")}
                   placeholder="bookings@yourproperty.com"
                 />
+                {fieldError("contact_email")}
               </div>
             </div>
 
@@ -769,7 +832,7 @@ export default function VenueForm({
                         e.target.value.replace(/^@/, "")
                       )
                     }
-                    className={`${inputClass} pl-8`}
+                    className={`${inputClass("instagram_handle")} pl-8`}
                     placeholder="yourproperty"
                   />
                 </div>
@@ -792,7 +855,7 @@ export default function VenueForm({
                         e.target.value.replace(/^@/, "")
                       )
                     }
-                    className={`${inputClass} pl-8`}
+                    className={`${inputClass("tiktok_handle")} pl-8`}
                     placeholder="yourproperty"
                   />
                 </div>
@@ -825,14 +888,10 @@ export default function VenueForm({
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleSubmit}
-                  disabled={submitting || isDirty}
+                  disabled={isDirty}
                   className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors disabled:opacity-50 cursor-pointer"
                 >
-                  {submitting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Send className="w-4 h-4" />
-                  )}
+                  <Send className="w-4 h-4" />
                   {status === "pending_review"
                     ? "Resubmit for Review"
                     : "Submit for Review"}

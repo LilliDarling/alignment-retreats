@@ -85,7 +85,7 @@ export default function HeroHome({ searchData }: HeroHomeProps) {
       />
 
       {/* Content — copy from deployed app */}
-      <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto">
+      <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto pt-20 sm:pt-0">
         <motion.div style={{ y: h1Y }}>
           <motion.div
             initial={{ opacity: 0, y: 30 }}

@@ -1,27 +1,38 @@
 "use client";
 
-import { X, Phone, Calendar } from "lucide-react";
+import { Phone, Calendar, Save, Loader2 } from "lucide-react";
 
-const CALENDLY_COOP_ONBOARDING_URL =
-  "https://calendly.com/mathew-vetten/co-op-onboarding";
+const CALENDLY_URL = "https://calendly.com/mathew-vetten/co-op-onboarding";
 
 interface FirstTimeSubmitModalProps {
   open: boolean;
-  onClose: () => void;
+  onSaveAsDraft: () => void;
+  onBookAndSubmit: () => void;
+  submitting?: boolean;
+  saving?: boolean;
+  type?: "retreat" | "venue";
 }
 
 export default function FirstTimeSubmitModal({
   open,
-  onClose,
+  onSaveAsDraft,
+  onBookAndSubmit,
+  submitting,
+  saving,
+  type = "retreat",
 }: FirstTimeSubmitModalProps) {
   if (!open) return null;
 
+  const label = type === "retreat" ? "retreat" : "property";
+
+  const handleBookCall = () => {
+    window.open(CALENDLY_URL, "_blank", "noopener,noreferrer");
+    onBookAndSubmit();
+  };
+
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <div className="relative bg-white rounded-[20px] shadow-2xl w-full max-w-md overflow-hidden">
         {/* Header */}
         <div className="flex items-center gap-3 p-6 pb-4 border-b border-border">
@@ -30,46 +41,47 @@ export default function FirstTimeSubmitModal({
           </div>
           <div className="flex-1">
             <h2 className="text-base font-semibold text-foreground">
-              Submission received!
+              Ready to submit?
             </h2>
             <p className="text-xs text-muted-foreground">
-              Book a call to get your retreat published
+              Book a call to get your {label} reviewed
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
-          >
-            <X className="w-4 h-4 text-muted-foreground" />
-          </button>
         </div>
 
         {/* Content */}
         <div className="p-6 space-y-4">
           <p className="text-sm text-foreground leading-relaxed">
-            Since this is your first time hosting a retreat on Alignment
-            Retreats, please book a call with our team so we can go over your
-            retreat and get it published.
+            Before we can review your {label}, we need to hop on a quick call
+            to make sure everything is set up for success.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            We&apos;ll walk you through the process, make sure we have
-            everything we need, and answer any questions you might have. We want
-            to make sure your first experience with us is a great one.
+            We&apos;ll go over the details together, answer any questions, and
+            get your {label} on the path to being published. If you&apos;re not
+            ready to book a call yet, you can save your progress as a draft and
+            come back anytime.
           </p>
-          <a
-            href={CALENDLY_COOP_ONBOARDING_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
-          >
-            <Calendar className="w-4 h-4" />
-            Book a Call
-          </a>
+
           <button
-            onClick={onClose}
-            className="w-full py-2.5 rounded-full text-sm font-semibold transition-colors bg-muted text-foreground hover:bg-muted/80"
+            onClick={handleBookCall}
+            disabled={submitting}
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
-            I&apos;ll do it later
+            {submitting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Calendar className="w-4 h-4" />
+            )}
+            {submitting ? "Submitting..." : "Book a Call & Submit"}
+          </button>
+
+          <button
+            onClick={onSaveAsDraft}
+            disabled={saving || submitting}
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-full text-sm font-semibold transition-colors border-2 border-border text-foreground hover:bg-muted disabled:opacity-50"
+          >
+            <Save className="w-4 h-4" />
+            {saving ? "Saving..." : "Save as Draft"}
           </button>
         </div>
       </div>

@@ -108,7 +108,7 @@ export default function CohostTab({ collaborations }: CohostTabProps) {
 
       {/* Find Opportunities CTA */}
       <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="flex items-center justify-between">
+        <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h3 className="font-display font-semibold text-lg mb-1">
               Find Opportunities
@@ -117,7 +117,7 @@ export default function CohostTab({ collaborations }: CohostTabProps) {
               Browse retreats looking for co-hosts and collaborators.
             </p>
           </div>
-          <Button href="/retreats" size="sm">
+          <Button href="/retreats" size="sm" className="shrink-0 w-full sm:w-auto">
             <Search className="w-4 h-4 mr-1" />
             Browse Retreats
           </Button>
@@ -149,9 +149,9 @@ export default function CohostTab({ collaborations }: CohostTabProps) {
                 href={`/retreats/${collab.retreat_slug}`}
               >
                 <Card className="hover:shadow-md transition-shadow">
-                  <CardContent className="flex items-center gap-4">
+                  <CardContent className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-start sm:items-center gap-2 mb-1 flex-wrap">
                         <h4 className="font-semibold truncate">
                           {collab.retreat_title}
                         </h4>
@@ -190,7 +190,7 @@ export default function CohostTab({ collaborations }: CohostTabProps) {
                         )}
                       </div>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0 hidden sm:block" />
                   </CardContent>
                 </Card>
               </Link>

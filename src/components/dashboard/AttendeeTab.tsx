@@ -67,7 +67,7 @@ export default function AttendeeTab({ bookings }: AttendeeTabProps) {
 
       {/* Browse CTA */}
       <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="flex items-center justify-between">
+        <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h3 className="font-display font-semibold text-lg mb-1">
               Find Your Next Retreat
@@ -76,7 +76,7 @@ export default function AttendeeTab({ bookings }: AttendeeTabProps) {
               Discover transformative experiences curated by our community.
             </p>
           </div>
-          <Button href="/retreats" size="sm">
+          <Button href="/retreats" size="sm" className="shrink-0 w-full sm:w-auto">
             <Search className="w-4 h-4 mr-1" />
             Browse Retreats
           </Button>
@@ -106,7 +106,7 @@ export default function AttendeeTab({ bookings }: AttendeeTabProps) {
                 key={booking.id}
                 className="hover:shadow-md transition-shadow"
               >
-                <CardContent className="flex items-center gap-4">
+                <CardContent className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   <div className="flex-1 min-w-0">
                     <h4 className="font-semibold truncate">
                       {booking.retreat_title || "Untitled Retreat"}
@@ -122,7 +122,7 @@ export default function AttendeeTab({ bookings }: AttendeeTabProps) {
                       )}
                     </div>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0 hidden sm:block" />
                 </CardContent>
               </Card>
             ))}

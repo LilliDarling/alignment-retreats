@@ -14,7 +14,6 @@ export const RETREAT_TYPES = [
 ] as const;
 
 export const TEAM_NEEDS_OPTIONS = [
-  { id: "venue", label: "Venue / Location" },
   { id: "cohost", label: "Co-Host" },
   { id: "chef", label: "Chef / Catering" },
   { id: "photographer", label: "Photographer / Videographer" },

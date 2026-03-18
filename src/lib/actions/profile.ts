@@ -91,7 +91,7 @@ async function updateProfileFields(
 
 export async function updateBasicInfo(data: BasicInfoUpdate) {
   if (data.name && data.name.length > 100) return { error: "Name must be 100 characters or fewer." };
-  if (data.bio && data.bio.length > 1000) return { error: "Bio must be 1,000 characters or fewer." };
+  if (data.bio && data.bio.length > 8000) return { error: "Bio must be 8,000 characters or fewer." };
   if (data.location && data.location.length > 200) return { error: "Location must be 200 characters or fewer." };
   return updateProfileFields({ ...data });
 }

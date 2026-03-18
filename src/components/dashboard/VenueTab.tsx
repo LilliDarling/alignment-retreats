@@ -98,7 +98,7 @@ export default function VenueTab({ properties }: VenueTabProps) {
 
       {/* Add Property CTA */}
       <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="flex items-center justify-between">
+        <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h3 className="font-display font-semibold text-lg mb-1">
               List a Property
@@ -107,7 +107,7 @@ export default function VenueTab({ properties }: VenueTabProps) {
               Connect your venue with retreat hosts worldwide.
             </p>
           </div>
-          <Button href="/venues/new" size="sm">
+          <Button href="/venues/new" size="sm" className="shrink-0 w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-1" />
             New Property
           </Button>
@@ -132,24 +132,24 @@ export default function VenueTab({ properties }: VenueTabProps) {
           <div className="space-y-3">
             {properties.map((property) => (
               <Card key={property.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="flex items-center gap-4">
+                <CardContent className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   {property.photos[0] ? (
-                    <div className="relative w-20 h-14 rounded-lg overflow-hidden shrink-0">
+                    <div className="relative w-full h-32 sm:w-20 sm:h-14 rounded-lg overflow-hidden shrink-0">
                       <Image
                         src={property.photos[0]}
                         alt={property.name}
                         fill
                         className="object-cover"
-                        sizes="80px"
+                        sizes="(max-width: 640px) 100vw, 80px"
                       />
                     </div>
                   ) : (
-                    <div className="w-20 h-14 rounded-lg bg-muted shrink-0 flex items-center justify-center">
+                    <div className="w-full h-32 sm:w-20 sm:h-14 rounded-lg bg-muted shrink-0 flex items-center justify-center">
                       <MapPin className="w-5 h-5 text-muted-foreground" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-start sm:items-center gap-2 mb-1 flex-wrap">
                       <h4 className="font-semibold truncate">{property.name}</h4>
                       <Badge variant={statusVariant[property.status || ""] || "muted"}>
                         {statusLabel[property.status || ""] || "Draft"}

@@ -65,6 +65,7 @@ export default function SignupForm() {
   const [userTypes, setUserTypes] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [signupSuccess, setSignupSuccess] = useState(false);
 
   const { signUp } = useAuth();
@@ -75,6 +76,7 @@ export default function SignupForm() {
     setUserTypes((prev) =>
       prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]
     );
+    if (fieldErrors.roles) setFieldErrors((prev) => { const next = { ...prev }; delete next.roles; return next; });
   };
 
   const hasRolesSelected = userTypes.length > 0;
@@ -82,21 +84,17 @@ export default function SignupForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setFieldErrors({});
 
-    if (!name.trim()) {
-      setError("Name is required");
-      return;
-    }
-    if (!email.trim()) {
-      setError("Email is required");
-      return;
-    }
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters");
-      return;
-    }
-    if (!hasRolesSelected) {
-      setError("Select at least one role");
+    const errors: Record<string, string> = {};
+    if (!name.trim()) errors.name = "Name is required";
+    if (!email.trim()) errors.email = "Email is required";
+    if (password.length < 8) errors.password = "Password must be at least 8 characters";
+    if (!hasRolesSelected) errors.roles = "Select at least one role";
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      const firstEl = document.getElementById(Object.keys(errors)[0]);
+      firstEl?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
 
@@ -144,12 +142,6 @@ export default function SignupForm() {
             ? "A quick note about hosting"
             : "Create your account"}
       </p>
-
-      {error && (
-        <div className="mb-6 p-3 rounded-xl bg-destructive/10 text-destructive text-sm">
-          {error}
-        </div>
-      )}
 
       {step === "role-selection" && (
         <div className="space-y-4">
@@ -211,14 +203,18 @@ export default function SignupForm() {
             </div>
           </div>
 
+          {fieldErrors.roles && (
+            <p className="text-xs text-red-600">{fieldErrors.roles}</p>
+          )}
+
           <button
             type="button"
             onClick={() => {
               if (!hasRolesSelected) {
-                setError("Select at least one role");
+                setFieldErrors({ roles: "Select at least one role" });
                 return;
               }
-              setError("");
+              setFieldErrors({});
               if (userTypes.includes("host" as AppRole)) {
                 setStep("host-message");
               } else {
@@ -299,12 +295,13 @@ export default function SignupForm() {
               id="name"
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => { setName(e.target.value); if (fieldErrors.name) setFieldErrors((prev) => { const n = { ...prev }; delete n.name; return n; }); }}
               placeholder="Your full name"
               required
-              className="input-base"
+              className={`input-base ${fieldErrors.name ? "!border-red-300 focus:!ring-red-200" : ""}`}
               autoComplete="name"
             />
+            {fieldErrors.name && <p className="text-xs text-red-600 mt-1">{fieldErrors.name}</p>}
           </div>
 
           <div>
@@ -315,12 +312,13 @@ export default function SignupForm() {
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); if (fieldErrors.email) setFieldErrors((prev) => { const n = { ...prev }; delete n.email; return n; }); }}
               placeholder="you@example.com"
               required
-              className="input-base"
+              className={`input-base ${fieldErrors.email ? "!border-red-300 focus:!ring-red-200" : ""}`}
               autoComplete="email"
             />
+            {fieldErrors.email && <p className="text-xs text-red-600 mt-1">{fieldErrors.email}</p>}
           </div>
 
           <div>
@@ -332,11 +330,11 @@ export default function SignupForm() {
                 id="password"
                 type={showPassword ? "text" : "password"}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { setPassword(e.target.value); if (fieldErrors.password) setFieldErrors((prev) => { const n = { ...prev }; delete n.password; return n; }); }}
                 placeholder="At least 8 characters"
                 required
                 minLength={8}
-                className="input-base pr-10"
+                className={`input-base pr-10 ${fieldErrors.password ? "!border-red-300 focus:!ring-red-200" : ""}`}
                 autoComplete="new-password"
               />
               <button
@@ -349,7 +347,14 @@ export default function SignupForm() {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+            {fieldErrors.password && <p className="text-xs text-red-600 mt-1">{fieldErrors.password}</p>}
           </div>
+
+          {error && (
+            <div className="p-3 rounded-xl bg-destructive/10 text-destructive text-sm">
+              {error}
+            </div>
+          )}
 
           <button
             type="submit"

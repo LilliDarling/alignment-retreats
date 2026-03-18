@@ -60,7 +60,7 @@ export default function SharedProfileSection({
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
               <div>
                 <h1 className="font-display text-2xl font-bold">
                   {profile.name || "Welcome"}
@@ -69,7 +69,7 @@ export default function SharedProfileSection({
                   {userEmail}
                 </p>
               </div>
-              <Button href="/account" size="sm" variant="outline">
+              <Button href="/account" size="sm" variant="outline" className="shrink-0 w-full sm:w-auto">
                 <Pencil className="w-3.5 h-3.5 mr-1.5" />
                 Edit Profile
               </Button>

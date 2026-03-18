@@ -104,36 +104,66 @@ export default function RetreatForm({
   const [deleting, setDeleting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState<string | null>(null);
   const [showEditWarning, setShowEditWarning] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [showFirstTimeModal, setShowFirstTimeModal] = useState(false);
   const { showModal: showUnsavedModal, guardedNavigate, confirmLeave, cancelLeave } = useUnsavedChanges(isDirty);
 
+  const validateFields = (): Record<string, string> => {
+    const errors: Record<string, string> = {};
+    if (form.title.length > 150) errors.title = "Title must be 150 characters or fewer.";
+    if (form.description.length > 5000) errors.description = "Description must be 5,000 characters or fewer.";
+    if (form.start_date && form.end_date && new Date(form.end_date) <= new Date(form.start_date)) {
+      errors.end_date = "End date must be after start date.";
+    }
+    if (form.custom_venue_name.length > 200) errors.custom_venue_name = "Venue name must be 200 characters or fewer.";
+    if ((form.location_details?.length ?? 0) > 300) errors.location_details = "Location details must be 300 characters or fewer.";
+    if ((form.what_you_offer?.length ?? 0) > 3000) errors.what_you_offer = "What you offer must be 3,000 characters or fewer.";
+    if ((form.what_to_bring?.length ?? 0) > 2000) errors.what_to_bring = "What to bring must be 2,000 characters or fewer.";
+    if (form.price_per_person != null && form.price_per_person < 0) errors.price_per_person = "Price cannot be negative.";
+    if (form.max_attendees != null && form.max_attendees < 1) errors.max_attendees = "Max attendees must be at least 1.";
+    return errors;
+  };
+
   const handleSaveAndLeave = async () => {
+    const errors = validateFields();
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      const firstErrorField = document.getElementById(Object.keys(errors)[0]);
+      firstErrorField?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    setFieldErrors({});
     setSaving(true);
     setError(null);
     const formWithSchedule = { ...form, sample_itinerary: serializeItinerary(schedule) };
-    if (mode === "create") {
-      const result = await createRetreat(formWithSchedule);
-      setSaving(false);
-      if ("error" in result) {
-        setError(result.error);
-        cancelLeave();
-      } else {
-        setIsDirty(false);
-        router.push("/dashboard");
+    try {
+      if (mode === "create") {
+        const result = await createRetreat(formWithSchedule);
+        if ("error" in result) {
+          setError(result.error);
+          cancelLeave();
+        } else {
+          setIsDirty(false);
+          router.push("/dashboard");
+        }
+      } else if (retreatId) {
+        const result = await updateRetreat(retreatId, formWithSchedule);
+        if (result.error) {
+          setError(result.error);
+          cancelLeave();
+        } else {
+          setIsDirty(false);
+          router.push("/dashboard");
+        }
       }
-    } else if (retreatId) {
-      const result = await updateRetreat(retreatId, formWithSchedule);
+    } catch {
+      setError("Something went wrong. Please check your connection and try again.");
+      cancelLeave();
+    } finally {
       setSaving(false);
-      if (result.error) {
-        setError(result.error);
-        cancelLeave();
-      } else {
-        setIsDirty(false);
-        router.push("/dashboard");
-      }
     }
   };
 
@@ -180,6 +210,9 @@ export default function RetreatForm({
     setIsDirty(true);
     setError(null);
     setSuccess(null);
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => { const next = { ...prev }; delete next[field]; return next; });
+    }
   };
 
   const handleImageUpload = async (file: File) => {
@@ -253,6 +286,14 @@ export default function RetreatForm({
       return;
     }
 
+    const errors = validateFields();
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      const firstErrorField = document.getElementById(Object.keys(errors)[0]);
+      firstErrorField?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    setFieldErrors({});
     setSaving(true);
     setError(null);
     setSuccess(null);
@@ -263,48 +304,62 @@ export default function RetreatForm({
       sample_itinerary: serializeItinerary(schedule),
     };
 
-    if (mode === "create") {
-      const result = await createRetreat(formWithSchedule);
-      if ("error" in result) {
-        setError(result.error);
-        setSaving(false);
-      } else {
-        router.push(`/host/retreats/${result.id}/edit?saved=1`);
+    try {
+      if (mode === "create") {
+        const result = await createRetreat(formWithSchedule);
+        if ("error" in result) {
+          setError(result.error);
+        } else {
+          setIsDirty(false);
+          router.push(`/host/retreats/${result.id}/edit?saved=1`);
+        }
+      } else if (retreatId) {
+        const result = await updateRetreat(retreatId, formWithSchedule);
+        if (result.error) {
+          setError(result.error);
+        } else if (result.statusChanged) {
+          setSuccess(
+            "Retreat saved. Because it was previously published, it has been moved back to Pending Review and will need to be re-approved."
+          );
+          setShowEditWarning(false);
+          setIsDirty(false);
+        } else {
+          setSuccess(
+            status === "draft"
+              ? "Draft saved. You can continue editing anytime — it won't be visible until you submit for review."
+              : "Changes saved successfully."
+          );
+          setIsDirty(false);
+        }
       }
-    } else if (retreatId) {
-      const result = await updateRetreat(retreatId, formWithSchedule);
-      if (result.error) {
-        setError(result.error);
-      } else if (result.statusChanged) {
-        setSuccess(
-          "Retreat saved. Because it was previously published, it has been moved back to Pending Review and will need to be re-approved."
-        );
-        setShowEditWarning(false);
-        setIsDirty(false);
-      } else {
-        setSuccess(
-          status === "draft"
-            ? "Draft saved. You can continue editing anytime — it won't be visible until you submit for review."
-            : "Changes saved successfully."
-        );
-        setIsDirty(false);
-      }
+    } catch {
+      setError("Something went wrong. Please check your connection and try again.");
+    } finally {
       setSaving(false);
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
+    setShowFirstTimeModal(true);
+  };
+
+  const handleBookAndSubmit = async () => {
     if (!retreatId) return;
     setSubmitting(true);
     setError(null);
-    const result = await submitRetreatForReview(retreatId);
-    if (result.error) {
-      setError(result.error);
-    } else {
-      setSuccess("Retreat submitted for review! You'll be notified once it's approved.");
-      if (result.isFirstTime) setShowFirstTimeModal(true);
+    try {
+      const result = await submitRetreatForReview(retreatId);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setSuccess("Retreat submitted for review! You'll be notified once it's approved.");
+        setShowFirstTimeModal(false);
+      }
+    } catch {
+      setError("Something went wrong. Please check your connection and try again.");
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
   const handleDelete = async () => {
@@ -319,15 +374,26 @@ export default function RetreatForm({
     // redirect happens in the action
   };
 
-  const inputClass =
-    "w-full px-4 py-2.5 rounded-xl border border-border bg-white text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary";
+  const inputBase =
+    "w-full px-4 py-2.5 rounded-xl border bg-white text-foreground text-sm focus:outline-none focus:ring-2";
+  const inputClass = (field?: string) =>
+    `${inputBase} ${field && fieldErrors[field] ? "border-red-300 focus:ring-red-200 focus:border-red-400" : "border-border focus:ring-primary/20 focus:border-primary"}`;
   const labelClass = "text-sm font-medium text-foreground mb-1 block";
+  const fieldError = (field: string) =>
+    fieldErrors[field] ? <p className="text-xs text-red-600 mt-1">{fieldErrors[field]}</p> : null;
 
   return (
     <>
     <FirstTimeSubmitModal
       open={showFirstTimeModal}
-      onClose={() => setShowFirstTimeModal(false)}
+      onSaveAsDraft={() => {
+        setShowFirstTimeModal(false);
+        setSuccess("Draft saved. Book a call when you're ready to submit for review.");
+      }}
+      onBookAndSubmit={handleBookAndSubmit}
+      submitting={submitting}
+      saving={saving}
+      type="retreat"
     />
     <UnsavedChangesModal
       open={showUnsavedModal}
@@ -562,10 +628,10 @@ export default function RetreatForm({
                     <video
                       src={url}
                       className="w-full h-full object-cover"
+                      controls
                       muted
                       playsInline
-                      onMouseEnter={(e) => e.currentTarget.play()}
-                      onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                      preload="metadata"
                     />
                     <button
                       type="button"
@@ -622,9 +688,10 @@ export default function RetreatForm({
                 type="text"
                 value={form.title}
                 onChange={(e) => update("title", e.target.value)}
-                className={inputClass}
+                className={inputClass("title")}
                 placeholder="e.g. 7-Day Yoga & Meditation Retreat"
               />
+              {fieldError("title")}
             </div>
 
             <div>
@@ -635,7 +702,7 @@ export default function RetreatForm({
                 id="retreat_type"
                 value={form.retreat_type}
                 onChange={(e) => update("retreat_type", e.target.value)}
-                className={inputClass}
+                className={inputClass("retreat_type")}
               >
                 <option value="">Select a category</option>
                 {RETREAT_TYPES.map((type) => (
@@ -655,9 +722,10 @@ export default function RetreatForm({
                 value={form.description}
                 onChange={(e) => update("description", e.target.value)}
                 rows={5}
-                className={`${inputClass} resize-none`}
+                className={`${inputClass("description")} resize-none`}
                 placeholder="Describe your retreat experience..."
               />
+              {fieldError("description")}
             </div>
           </CardContent>
         </Card>
@@ -679,8 +747,9 @@ export default function RetreatForm({
                   type="date"
                   value={form.start_date}
                   onChange={(e) => update("start_date", e.target.value)}
-                  className={inputClass}
+                  className={inputClass("start_date")}
                 />
+                {fieldError("start_date")}
               </div>
               <div>
                 <label htmlFor="end_date" className={labelClass}>
@@ -691,8 +760,9 @@ export default function RetreatForm({
                   type="date"
                   value={form.end_date}
                   onChange={(e) => update("end_date", e.target.value)}
-                  className={inputClass}
+                  className={inputClass("end_date")}
                 />
+                {fieldError("end_date")}
               </div>
             </div>
 
@@ -764,7 +834,7 @@ export default function RetreatForm({
                         update("custom_venue_name", "");
                       }
                     }}
-                    className={inputClass}
+                    className={inputClass("property_id")}
                   >
                     <option value="">
                       {venuesLoaded
@@ -810,9 +880,10 @@ export default function RetreatForm({
                       type="text"
                       value={form.custom_venue_name}
                       onChange={(e) => update("custom_venue_name", e.target.value)}
-                      className={inputClass}
+                      className={inputClass("custom_venue_name")}
                       placeholder="e.g. Blue Spirit Retreat Center, Nosara, Costa Rica"
                     />
+                    {fieldError("custom_venue_name")}
                   </div>
                   <div>
                     <label htmlFor="location_details" className={labelClass}>
@@ -823,9 +894,10 @@ export default function RetreatForm({
                       value={form.location_details}
                       onChange={(e) => update("location_details", e.target.value)}
                       rows={3}
-                      className={`${inputClass} resize-none`}
+                      className={`${inputClass("location_details")} resize-none`}
                       placeholder="Directions, what to expect on arrival, nearby airports..."
                     />
+                    {fieldError("location_details")}
                   </div>
                 </div>
               )}
@@ -857,9 +929,10 @@ export default function RetreatForm({
                       e.target.value ? parseInt(e.target.value) : null
                     )
                   }
-                  className={inputClass}
+                  className={inputClass("max_attendees")}
                   placeholder="Leave blank for unlimited"
                 />
+                {fieldError("max_attendees")}
               </div>
               <div>
                 <label htmlFor="price_per_person" className={labelClass}>
@@ -877,9 +950,10 @@ export default function RetreatForm({
                       e.target.value ? parseFloat(e.target.value) : null
                     )
                   }
-                  className={inputClass}
+                  className={inputClass("price_per_person")}
                   placeholder="0.00"
                 />
+                {fieldError("price_per_person")}
                 <p className="text-xs text-muted-foreground mt-1">
                   This is your per-person rate and should cover all of your expenses outside of the platform (travel, materials, time, etc.). Each team member (venue, co-host, etc.) sets their own rate separately. A 25% platform fee is added on top of the combined total.
                 </p>
@@ -905,9 +979,10 @@ export default function RetreatForm({
                 value={form.what_you_offer}
                 onChange={(e) => update("what_you_offer", e.target.value)}
                 rows={4}
-                className={`${inputClass} resize-none`}
+                className={`${inputClass("what_you_offer")} resize-none`}
                 placeholder="Describe what attendees will experience: classes, workshops, meals, accommodation..."
               />
+              {fieldError("what_you_offer")}
             </div>
 
             <div>
@@ -919,7 +994,7 @@ export default function RetreatForm({
                 value={form.what_to_bring}
                 onChange={(e) => update("what_to_bring", e.target.value)}
                 rows={3}
-                className={`${inputClass} resize-none`}
+                className={`${inputClass("what_to_bring")} resize-none`}
                 placeholder="Yoga mat, comfortable clothing, journal..."
               />
             </div>
@@ -1002,7 +1077,7 @@ export default function RetreatForm({
                           }));
                           setIsDirty(true);
                         }}
-                        className={inputClass}
+                        className={inputClass()}
                         placeholder={`What are you looking for in a ${option.label.toLowerCase()}?`}
                       />
                     </div>
@@ -1052,14 +1127,10 @@ export default function RetreatForm({
             <div className="flex items-center gap-3">
               <button
                 onClick={handleSubmit}
-                disabled={submitting || isDirty}
+                disabled={isDirty}
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors disabled:opacity-50 cursor-pointer"
               >
-                {submitting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
+                <Send className="w-4 h-4" />
                 {status === "pending_review"
                   ? "Resubmit for Review"
                   : "Submit for Review"}

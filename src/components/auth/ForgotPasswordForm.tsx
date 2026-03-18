@@ -69,12 +69,6 @@ export default function ForgotPasswordForm() {
         password.
       </p>
 
-      {error && (
-        <div className="mb-6 p-3 rounded-xl bg-destructive/10 text-destructive text-sm">
-          {error}
-        </div>
-      )}
-
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label
@@ -94,6 +88,12 @@ export default function ForgotPasswordForm() {
             autoComplete="email"
           />
         </div>
+
+        {error && (
+          <div className="p-3 rounded-xl bg-destructive/10 text-destructive text-sm">
+            {error}
+          </div>
+        )}
 
         <button
           type="submit"
