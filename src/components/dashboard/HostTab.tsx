@@ -99,7 +99,7 @@ export default function HostTab({ retreats }: HostTabProps) {
 
       {/* Create CTA */}
       <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="flex items-center justify-between">
+        <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h3 className="font-display font-semibold text-lg mb-1">
               Create a New Retreat
@@ -108,7 +108,7 @@ export default function HostTab({ retreats }: HostTabProps) {
               Share your next transformative experience with the community.
             </p>
           </div>
-          <Button href="/host/retreats/new" size="sm">
+          <Button href="/host/retreats/new" size="sm" className="shrink-0 w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-1" />
             New Retreat
           </Button>
@@ -138,20 +138,20 @@ export default function HostTab({ retreats }: HostTabProps) {
                 key={retreat.id}
                 className="hover:shadow-md transition-shadow"
               >
-                <CardContent className="flex items-center gap-4">
+                <CardContent className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   {retreat.main_image && (
-                    <div className="relative w-20 h-14 rounded-lg overflow-hidden shrink-0">
+                    <div className="relative w-full h-32 sm:w-20 sm:h-14 rounded-lg overflow-hidden shrink-0">
                       <Image
                         src={retreat.main_image}
                         alt={retreat.title}
                         fill
                         className="object-cover"
-                        sizes="80px"
+                        sizes="(max-width: 640px) 100vw, 80px"
                       />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-start sm:items-center gap-2 mb-1 flex-wrap">
                       <h4 className="font-semibold truncate">
                         {retreat.title}
                       </h4>

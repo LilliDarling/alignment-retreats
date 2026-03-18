@@ -14,6 +14,7 @@ export default function LoginForm() {
   const [useMagicLink, setUseMagicLink] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [error, setError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [showVerifyLink, setShowVerifyLink] = useState(false);
 
   const router = useRouter();
@@ -31,11 +32,12 @@ export default function LoginForm() {
   async function handlePasswordSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setPasswordError("");
     setShowVerifyLink(false);
 
     if (!email.trim() || !password) return;
     if (password.length < 8) {
-      setError("Password must be at least 8 characters");
+      setPasswordError("Password must be at least 8 characters");
       return;
     }
 
@@ -131,22 +133,6 @@ export default function LoginForm() {
         </div>
       )}
 
-      {error && (
-        <div className="mb-6 p-3 rounded-xl bg-destructive/10 text-destructive text-sm">
-          {error}
-          {showVerifyLink && (
-            <div className="mt-2">
-              <Link
-                href={`/verify${email ? `?email=${encodeURIComponent(email.trim())}` : ""}`}
-                className="text-primary hover:underline font-medium"
-              >
-                Resend verification email
-              </Link>
-            </div>
-          )}
-        </div>
-      )}
-
       {useMagicLink ? (
         <form onSubmit={handleMagicLinkSubmit} className="space-y-4">
           <div>
@@ -164,6 +150,12 @@ export default function LoginForm() {
               autoComplete="email"
             />
           </div>
+
+          {error && (
+            <div className="p-3 rounded-xl bg-destructive/10 text-destructive text-sm">
+              {error}
+            </div>
+          )}
 
           <button
             type="submit"
@@ -221,7 +213,7 @@ export default function LoginForm() {
                 id="password"
                 type={showPassword ? "text" : "password"}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { setPassword(e.target.value); setPasswordError(""); }}
                 placeholder="Enter your password"
                 required
                 className="input-base pr-10"
@@ -237,7 +229,26 @@ export default function LoginForm() {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+            {passwordError && (
+              <p className="text-xs text-red-600 mt-1">{passwordError}</p>
+            )}
           </div>
+
+          {error && (
+            <div className="p-3 rounded-xl bg-destructive/10 text-destructive text-sm">
+              {error}
+              {showVerifyLink && (
+                <div className="mt-2">
+                  <Link
+                    href={`/verify${email ? `?email=${encodeURIComponent(email.trim())}` : ""}`}
+                    className="text-primary hover:underline font-medium"
+                  >
+                    Resend verification email
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
 
           <button
             type="submit"

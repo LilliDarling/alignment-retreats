@@ -35,7 +35,7 @@ export default function HeroSearchBar({ searchData }: HeroSearchBarProps) {
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, delay: 1.1 }}
-      className="mt-10 w-full max-w-3xl mx-auto"
+      className="mt-10 mb-12 sm:mb-0 w-full max-w-3xl mx-auto"
     >
       <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2 shadow-2xl border border-white/20">
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">

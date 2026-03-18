@@ -12,6 +12,36 @@ interface SocialLinksFormProps {
   onCancel?: () => void;
 }
 
+// Extract handle from a value that might be a full URL or @handle
+function extractHandle(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+
+  try {
+    const url = new URL(trimmed);
+    // Pull the last non-empty path segment as the handle
+    const segments = url.pathname.split("/").filter(Boolean);
+    return segments.length > 0 ? segments[segments.length - 1] : "";
+  } catch {
+    // Not a URL — strip @ and any leading/trailing slashes
+    return trimmed.replace(/^@/, "").replace(/\//g, "");
+  }
+}
+
+// Only allows alphanumeric, underscores, and dots (standard social handle chars)
+const HANDLE_REGEX = /^[a-zA-Z0-9._]*$/;
+
+function validateHandle(value: string, platform: string): string | null {
+  if (!value) return null;
+  if (!HANDLE_REGEX.test(value)) {
+    return `Enter your ${platform} username only (e.g. yourname), not a URL`;
+  }
+  if (value.length > 30) {
+    return "Handle must be 30 characters or fewer";
+  }
+  return null;
+}
+
 export default function SocialLinksForm({ profile, onSaved, onCancel }: SocialLinksFormProps) {
   const [instagram, setInstagram] = useState(profile.instagram_handle || "");
   const [tiktok, setTiktok] = useState(profile.tiktok_handle || "");
@@ -20,21 +50,43 @@ export default function SocialLinksForm({ profile, onSaved, onCancel }: SocialLi
   const [error, setError] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
 
+  const igError = validateHandle(instagram, "Instagram");
+  const ttError = validateHandle(tiktok, "TikTok");
+  const hasValidationErrors = !!igError || !!ttError;
+
   const isDirty =
     instagram !== (profile.instagram_handle || "") ||
     tiktok !== (profile.tiktok_handle || "") ||
     website !== (profile.website_url || "");
+
+  const handleInstagramChange = (value: string) => {
+    // Auto-extract handle if user pastes a URL
+    if (value.includes("/") || value.includes("instagram.com")) {
+      setInstagram(extractHandle(value));
+    } else {
+      setInstagram(value.replace(/^@/, ""));
+    }
+  };
+
+  const handleTiktokChange = (value: string) => {
+    if (value.includes("/") || value.includes("tiktok.com")) {
+      setTiktok(extractHandle(value));
+    } else {
+      setTiktok(value.replace(/^@/, ""));
+    }
+  };
 
   const handleCancel = () => {
     if (isDirty) { setShowCancelModal(true); } else { onCancel?.(); }
   };
 
   const handleSave = async () => {
+    if (hasValidationErrors) return;
     setSaving(true);
     setError(null);
     const data: SocialLinksUpdate = {
-      instagram_handle: instagram.trim().replace(/^@/, "") || null,
-      tiktok_handle: tiktok.trim().replace(/^@/, "") || null,
+      instagram_handle: instagram.trim() || null,
+      tiktok_handle: tiktok.trim() || null,
       website_url: website.trim() || null,
     };
     const result = await updateSocialLinks(data);
@@ -45,6 +97,11 @@ export default function SocialLinksForm({ profile, onSaved, onCancel }: SocialLi
     }
     setSaving(false);
   };
+
+  const inputBase =
+    "w-full pl-10 pr-4 py-2.5 rounded-xl border bg-white text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary";
+  const inputError = "border-red-300 focus:ring-red-200 focus:border-red-400";
+  const inputNormal = "border-border";
 
   return (
     <div className="space-y-6">
@@ -58,11 +115,17 @@ export default function SocialLinksForm({ profile, onSaved, onCancel }: SocialLi
             id="instagram"
             type="text"
             value={instagram}
-            onChange={(e) => setInstagram(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-white text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            onChange={(e) => handleInstagramChange(e.target.value)}
+            className={`${inputBase} ${igError ? inputError : inputNormal}`}
             placeholder="yourusername"
           />
         </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          Handle only — no @ or full URL
+        </p>
+        {igError && (
+          <p className="text-xs text-red-600 mt-1">{igError}</p>
+        )}
       </div>
 
       <div>
@@ -75,11 +138,17 @@ export default function SocialLinksForm({ profile, onSaved, onCancel }: SocialLi
             id="tiktok"
             type="text"
             value={tiktok}
-            onChange={(e) => setTiktok(e.target.value)}
-            className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-border bg-white text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            onChange={(e) => handleTiktokChange(e.target.value)}
+            className={`w-full pl-8 pr-4 py-2.5 rounded-xl border bg-white text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary ${ttError ? inputError : inputNormal}`}
             placeholder="yourusername"
           />
         </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          Handle only — no @ or full URL
+        </p>
+        {ttError && (
+          <p className="text-xs text-red-600 mt-1">{ttError}</p>
+        )}
       </div>
 
       <div>
@@ -93,7 +162,7 @@ export default function SocialLinksForm({ profile, onSaved, onCancel }: SocialLi
             type="url"
             value={website}
             onChange={(e) => setWebsite(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-white text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            className={`${inputBase} ${inputNormal}`}
             placeholder="https://yoursite.com"
           />
         </div>
@@ -124,7 +193,7 @@ export default function SocialLinksForm({ profile, onSaved, onCancel }: SocialLi
         <button
           type="button"
           onClick={handleSave}
-          disabled={saving}
+          disabled={saving || hasValidationErrors}
           className="px-6 py-2.5 rounded-full text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer"
         >
           {saving ? "Saving..." : "Save"}

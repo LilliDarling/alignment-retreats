@@ -3,14 +3,15 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Menu, X, ChevronDown, Settings, Shield, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { navLinks } from "@/lib/data/site";
 import Button from "@/components/ui/Button";
 import UserMenu from "@/components/layout/UserMenu";
 import SupportButton from "@/components/ui/SupportButton";
 import { useLenis } from "@/components/providers/SmoothScrollProvider";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { NavbarProps } from "@/types/ui";
 
@@ -29,7 +30,19 @@ export default function Navbar({
   const megaTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
   const { pause, resume } = useLenis();
   const pathname = usePathname();
+  const router = useRouter();
+  const supabase = createClient();
   const isHome = pathname === "/";
+
+  const isAdmin = user?.roles?.includes("admin");
+  const isHost = user?.roles?.includes("host") || isAdmin;
+
+  async function handleMobileSignOut() {
+    await supabase.auth.signOut();
+    setMobileOpen(false);
+    router.push("/");
+    router.refresh();
+  }
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -374,61 +387,98 @@ export default function Navbar({
                 </div>
 
                 {user ? (
-                  <div className="space-y-1 mb-6">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground px-3 mb-2">
-                      Account
-                    </p>
-                    <Link
-                      href="/account"
-                      className="block px-3 py-3 text-lg font-display text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-colors"
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      My Account
-                    </Link>
-                    <Link
-                      href="/dashboard"
-                      className="block px-3 py-3 text-lg font-display text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-colors"
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      Dashboard
-                    </Link>
-                    <Link
-                      href="/bookings"
-                      className="block px-3 py-3 text-lg font-display text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-colors"
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      My Bookings
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="space-y-1 mb-6">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground px-3 mb-2">
-                      Account
-                    </p>
-                    <Link
-                      href="/login"
-                      className="block px-3 py-3 text-lg font-display text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-colors"
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      Sign In
-                    </Link>
-                  </div>
-                )}
+                  <>
+                    <div className="space-y-1 mb-6">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground px-3 mb-2">
+                        Account
+                      </p>
+                      <Link
+                        href="/dashboard"
+                        className="block px-3 py-3 text-lg font-display text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-colors"
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        Dashboard
+                      </Link>
+                      <Link
+                        href="/account"
+                        className="block px-3 py-3 text-lg font-display text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-colors"
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        My Account
+                      </Link>
+                      <Link
+                        href="/bookings"
+                        className="block px-3 py-3 text-lg font-display text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-colors"
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        My Bookings
+                      </Link>
+                      <Link
+                        href="/account/settings"
+                        className="flex items-center gap-3 px-3 py-3 text-lg font-display text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-colors"
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        <Settings className="w-5 h-5 text-muted-foreground" />
+                        Settings
+                      </Link>
+                      {isAdmin && (
+                        <Link
+                          href="/admin"
+                          className="flex items-center gap-3 px-3 py-3 text-lg font-display text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-colors"
+                          onClick={() => setMobileOpen(false)}
+                        >
+                          <Shield className="w-5 h-5 text-muted-foreground" />
+                          Admin Dashboard
+                        </Link>
+                      )}
+                    </div>
 
-                <div className="pt-4 border-t border-border space-y-3">
-                  <SupportButton
-                    variant="ghost"
-                    className="w-full justify-center"
-                    label="Get Support"
-                  />
-                  <Button
-                    href={user ? "/account" : "/signup"}
-                    className="w-full"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    {user ? "My Account" : "Get Started"}
-                  </Button>
-                </div>
+                    <div className="pt-4 border-t border-border space-y-3">
+                      <SupportButton
+                        variant="ghost"
+                        className="w-full justify-center"
+                        label="Get Support"
+                      />
+                      <button
+                        onClick={handleMobileSignOut}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-1 mb-6">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground px-3 mb-2">
+                        Account
+                      </p>
+                      <Link
+                        href="/login"
+                        className="block px-3 py-3 text-lg font-display text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-colors"
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        Sign In
+                      </Link>
+                    </div>
+
+                    <div className="pt-4 border-t border-border space-y-3">
+                      <SupportButton
+                        variant="ghost"
+                        className="w-full justify-center"
+                        label="Get Support"
+                      />
+                      <Button
+                        href="/signup"
+                        className="w-full"
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        Get Started
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
             </motion.div>
           </>

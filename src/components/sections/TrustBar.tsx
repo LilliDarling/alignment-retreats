@@ -33,7 +33,7 @@ export default function TrustBar() {
             visible: { transition: { staggerChildren: 0.1 } },
             hidden: {},
           }}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-6"
+          className="hidden sm:grid sm:grid-cols-3 gap-6"
         >
           {trustItems.map((item) => (
             <motion.div
@@ -42,7 +42,7 @@ export default function TrustBar() {
                 hidden: { opacity: 0, y: 10 },
                 visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
               }}
-              className="flex items-center gap-4 justify-center sm:justify-start"
+              className="flex items-center gap-4"
             >
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                 <item.icon className="w-5 h-5 text-primary" />
@@ -53,6 +53,39 @@ export default function TrustBar() {
               </div>
             </motion.div>
           ))}
+        </motion.div>
+
+        {/* Mobile: center the group while keeping items left-aligned */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.5 }}
+          variants={{
+            visible: { transition: { staggerChildren: 0.1 } },
+            hidden: {},
+          }}
+          className="flex flex-col items-center gap-4 sm:hidden"
+        >
+          <div className="flex flex-col gap-4 w-fit">
+            {trustItems.map((item) => (
+              <motion.div
+                key={item.title}
+                variants={{
+                  hidden: { opacity: 0, y: 10 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+                }}
+                className="flex items-center gap-4"
+              >
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <item.icon className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{item.title}</p>
+                  <p className="text-xs text-muted-foreground">{item.description}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </motion.div>
       </div>
     </section>

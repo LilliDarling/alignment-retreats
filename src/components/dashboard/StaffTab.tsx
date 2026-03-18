@@ -46,7 +46,7 @@ export default function StaffTab() {
 
       {/* Find Work */}
       <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="flex items-center justify-between">
+        <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h3 className="font-display font-semibold text-lg mb-1">
               Find Opportunities
@@ -55,7 +55,7 @@ export default function StaffTab() {
               Browse retreats looking for staff and service providers.
             </p>
           </div>
-          <Button href="/retreats" size="sm">
+          <Button href="/retreats" size="sm" className="shrink-0 w-full sm:w-auto">
             <Search className="w-4 h-4 mr-1" />
             Browse Retreats
           </Button>

@@ -57,13 +57,16 @@ export default function ProfileClient({ profile: initialProfile }: ProfileClient
     setUploading("cover");
     const result = await uploadProfilePhoto(profile.id, file);
     if (!("error" in result)) {
-      setProfile((p) => ({ ...p, cover_photo: result.url }));
-      await updateBasicInfo({
-        name: profile.name || "",
-        bio: profile.bio,
-        location: profile.location,
-        profile_photo: profile.profile_photo,
-        cover_photo: result.url,
+      setProfile((p) => {
+        const updated = { ...p, cover_photo: result.url };
+        updateBasicInfo({
+          name: updated.name || "",
+          bio: updated.bio,
+          location: updated.location,
+          profile_photo: updated.profile_photo,
+          cover_photo: result.url,
+        });
+        return updated;
       });
     }
     setUploading(null);
@@ -73,26 +76,32 @@ export default function ProfileClient({ profile: initialProfile }: ProfileClient
     setUploading("avatar");
     const result = await uploadProfilePhoto(profile.id, file);
     if (!("error" in result)) {
-      setProfile((p) => ({ ...p, profile_photo: result.url }));
-      await updateBasicInfo({
-        name: profile.name || "",
-        bio: profile.bio,
-        location: profile.location,
-        profile_photo: result.url,
-        cover_photo: profile.cover_photo,
+      setProfile((p) => {
+        const updated = { ...p, profile_photo: result.url };
+        updateBasicInfo({
+          name: updated.name || "",
+          bio: updated.bio,
+          location: updated.location,
+          profile_photo: result.url,
+          cover_photo: updated.cover_photo,
+        });
+        return updated;
       });
     }
     setUploading(null);
   };
 
   const handleRemoveCover = async () => {
-    setProfile((p) => ({ ...p, cover_photo: null }));
-    await updateBasicInfo({
-      name: profile.name || "",
-      bio: profile.bio,
-      location: profile.location,
-      profile_photo: profile.profile_photo,
-      cover_photo: null,
+    setProfile((p) => {
+      const updated = { ...p, cover_photo: null };
+      updateBasicInfo({
+        name: updated.name || "",
+        bio: updated.bio,
+        location: updated.location,
+        profile_photo: updated.profile_photo,
+        cover_photo: null,
+      });
+      return updated;
     });
   };
 
