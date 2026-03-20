@@ -38,7 +38,7 @@ export default function BookingSidebar({ retreat, isAuthenticated }: BookingSide
   if (retreat.property) includedRoles.add("venue");
   if (retreat.teamMembers) {
     for (const tm of retreat.teamMembers) {
-      includedRoles.add(tm.role);
+      if (tm.role !== "other") includedRoles.add(tm.role);
     }
   }
 

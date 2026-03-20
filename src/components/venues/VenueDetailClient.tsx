@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { MapPin, Trees, Sparkles, Mountain, Users, Mail, Instagram, ArrowLeft, Eye } from "lucide-react";
+import TikTokIcon from "@/components/icons/TikTokIcon";
 import AnimateOnScroll from "@/components/ui/AnimateOnScroll";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
@@ -209,7 +210,7 @@ export default function VenueDetailClient({ venue, isPreview = false, isHost = f
                         className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                         aria-label="TikTok"
                       >
-                        <span className="text-xs font-bold">TK</span>
+                        <TikTokIcon className="w-5 h-5" />
                       </a>
                     )}
                   </div>

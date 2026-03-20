@@ -21,6 +21,7 @@ import {
   X,
   Eye,
 } from "lucide-react";
+import TikTokIcon from "@/components/icons/TikTokIcon";
 import BasicInfoForm from "@/components/account/sections/BasicInfoForm";
 import ProfessionalForm from "@/components/account/sections/ProfessionalForm";
 import AboutForm from "@/components/account/sections/AboutForm";
@@ -401,6 +402,7 @@ export default function ProfileClient({ profile: initialProfile }: ProfileClient
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
+                    <TikTokIcon className="w-4 h-4" />
                     @{profile.tiktok_handle}
                   </a>
                 )}

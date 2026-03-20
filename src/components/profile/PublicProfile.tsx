@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import TikTokIcon from "@/components/icons/TikTokIcon";
 import { ROLE_LABELS } from "@/lib/data/retreats";
 import type { HostProfileData } from "@/types/profile";
 
@@ -280,6 +281,7 @@ export default function PublicProfile({ profile }: PublicProfileProps) {
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                         >
+                          <TikTokIcon className="w-4 h-4" />
                           @{profile.tiktok_handle}
                         </a>
                       )}

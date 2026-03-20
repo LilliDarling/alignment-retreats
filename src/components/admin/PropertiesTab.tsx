@@ -20,6 +20,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
+import TikTokIcon from "@/components/icons/TikTokIcon";
 import { approveProperty, rejectProperty, unpublishProperty } from "@/lib/actions/admin";
 import { AMENITY_OPTIONS, FEATURE_OPTIONS, PROPERTY_TYPES } from "@/lib/constants/venue";
 import type { PendingProperty, PublishedProperty } from "@/lib/queries/admin";
@@ -393,7 +394,7 @@ export default function PropertiesTab({ properties: initial, publishedProperties
                               rel="noopener noreferrer"
                               className="text-primary hover:underline flex items-center gap-1"
                             >
-                              <span className="w-3 h-3 text-[10px] font-bold flex items-center justify-center">TK</span>
+                              <TikTokIcon className="w-3 h-3" />
                               @{property.tiktok_handle}
                             </a>
                           )}
@@ -534,7 +535,7 @@ export default function PropertiesTab({ properties: initial, publishedProperties
                                 rel="noopener noreferrer"
                                 className="text-primary hover:underline flex items-center gap-1"
                               >
-                                <span className="w-3 h-3 text-[10px] font-bold flex items-center justify-center">TK</span>
+                                <TikTokIcon className="w-3 h-3" />
                                 @{property.tiktok_handle}
                               </a>
                             )}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Instagram, Globe } from "lucide-react";
+import TikTokIcon from "@/components/icons/TikTokIcon";
 import { updateSocialLinks } from "@/lib/actions/profile";
 import type { EditableProfile, SocialLinksUpdate } from "@/types/profile";
 import UnsavedChangesModal from "@/components/ui/UnsavedChangesModal";
@@ -133,7 +134,7 @@ export default function SocialLinksForm({ profile, onSaved, onCancel }: SocialLi
           TikTok
         </label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">@</span>
+          <TikTokIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             id="tiktok"
             type="text"
