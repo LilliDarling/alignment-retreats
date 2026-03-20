@@ -26,7 +26,7 @@ const MAP_STROKE = "hsl(37 22% 88%)";
 const MAP_MARKER_FILL = "hsl(37 29% 95%)";
 const MAP_MARKER_STROKE = "hsl(94 27% 14%)";
 
-function formatPrice(price: number, currency: string = "USD"): string {
+function formatPrice(price: number, currency: string = "CAD"): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
@@ -282,6 +282,7 @@ export default function WorldMap({ retreats = [] }: WorldMapProps) {
                   <div className="flex items-center justify-between mt-3">
                     <span className="text-primary font-bold text-sm">
                       {formatPrice(activeRetreat.price, activeRetreat.currency)}
+                      <span className="text-[10px] font-normal text-muted-foreground ml-1">CAD</span>
                     </span>
                     <Link
                       href={`/retreats/${activeRetreat.slug}`}

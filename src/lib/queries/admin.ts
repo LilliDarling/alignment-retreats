@@ -82,6 +82,7 @@ export interface PublishedRetreat {
   max_attendees: number | null;
   status: string;
   host_name: string | null;
+  host_email: string | null;
 }
 
 export interface PendingProperty {
@@ -116,6 +117,10 @@ export interface PublishedProperty {
   status: string;
   owner_name: string | null;
   owner_email: string | null;
+  contact_name: string | null;
+  contact_email: string | null;
+  instagram_handle: string | null;
+  tiktok_handle: string | null;
 }
 
 export interface ContactSubmission {
@@ -346,6 +351,7 @@ async function getPublishedRetreats(): Promise<PublishedRetreat[]> {
       max_attendees: (row.max_attendees as number) || null,
       status: (row.status as string) || "published",
       host_name: host ? (host.name as string) || null : null,
+      host_email: host ? (host.email as string) || null : null,
     };
   });
 }
@@ -429,6 +435,10 @@ async function getPublishedProperties(): Promise<PublishedProperty[]> {
       status: (row.status as string) || "published",
       owner_name: owner ? (owner.name as string) || null : null,
       owner_email: owner ? (owner.email as string) || null : null,
+      contact_name: (row.contact_name as string) || null,
+      contact_email: (row.contact_email as string) || null,
+      instagram_handle: (row.instagram_handle as string) || null,
+      tiktok_handle: (row.tiktok_handle as string) || null,
     };
   });
 }

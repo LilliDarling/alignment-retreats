@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Globe, Calendar, Users, DollarSign, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
+import { Globe, Calendar, Users, DollarSign, ChevronDown, ChevronUp, AlertTriangle, Mail } from "lucide-react";
 import { unpublishRetreat } from "@/lib/actions/admin";
 import { parseLocalDate } from "@/lib/utils/format";
 import type { PublishedRetreat } from "@/lib/queries/admin";
@@ -128,6 +128,30 @@ export default function PublishedTab({ retreats }: PublishedTabProps) {
                     </div>
                   )}
                 </div>
+
+                {/* Host Contact */}
+                {(retreat.host_name || retreat.host_email) && (
+                  <div className="p-4 rounded-xl bg-muted/50 border border-border">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider mb-2">Host Contact</h4>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm shrink-0">
+                        {retreat.host_name ? retreat.host_name.charAt(0).toUpperCase() : "?"}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{retreat.host_name || "Unknown"}</p>
+                        {retreat.host_email && (
+                          <a
+                            href={`mailto:${retreat.host_email}`}
+                            className="text-xs text-primary hover:underline flex items-center gap-1"
+                          >
+                            <Mail className="w-3 h-3" />
+                            {retreat.host_email}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Unpublish */}
                 {!isConfirming ? (

@@ -151,7 +151,7 @@ The central user record. One-to-one with `auth.users`.
 | `location` | text | |
 | `availability_status` | text | |
 | `hourly_rate` / `daily_rate` | numeric | |
-| `rate_currency` | text | Default 'USD' |
+| `rate_currency` | text | Default 'CAD' |
 | `instagram_handle` | text | |
 | `tiktok_handle` | text | |
 | `website_url` | text | |

@@ -11,11 +11,8 @@ interface RatesFormProps {
   onCancel?: () => void;
 }
 
-const CURRENCIES = ["USD", "CAD", "EUR", "GBP", "AUD", "MXN"];
-
 export default function RatesForm({ profile, onSaved, onCancel }: RatesFormProps) {
   const [rate, setRate] = useState(profile.rate != null ? String(profile.rate) : "");
-  const [currency, setCurrency] = useState(profile.rate_currency || "USD");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +21,7 @@ export default function RatesForm({ profile, onSaved, onCancel }: RatesFormProps
     setError(null);
     const data: RatesUpdate = {
       rate: rate ? parseFloat(rate) : null,
-      rate_currency: currency,
+      rate_currency: "CAD",
     };
     const result = await updateRates(data);
     if (result.error) {
@@ -56,20 +53,8 @@ export default function RatesForm({ profile, onSaved, onCancel }: RatesFormProps
             />
           </div>
         </div>
-        <div>
-          <label htmlFor="currency" className="text-sm font-medium text-foreground mb-1 block">
-            Currency
-          </label>
-          <select
-            id="currency"
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl border border-border bg-white text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-          >
-            {CURRENCIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+        <div className="flex items-end pb-1">
+          <span className="text-sm text-muted-foreground">CAD</span>
         </div>
       </div>
 

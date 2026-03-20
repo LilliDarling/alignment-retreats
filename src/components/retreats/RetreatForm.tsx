@@ -936,7 +936,7 @@ export default function RetreatForm({
               </div>
               <div>
                 <label htmlFor="price_per_person" className={labelClass}>
-                  Your Rate Per Person (USD)
+                  Your Rate Per Person (CAD)
                 </label>
                 <input
                   id="price_per_person"
@@ -955,7 +955,7 @@ export default function RetreatForm({
                 />
                 {fieldError("price_per_person")}
                 <p className="text-xs text-muted-foreground mt-1">
-                  This is your per-person rate and should cover all of your expenses outside of the platform (travel, materials, time, etc.). Each team member (venue, co-host, etc.) sets their own rate separately. A 25% platform fee is added on top of the combined total.
+                  This is your per-person rate in Canadian dollars (CAD) and should cover all of your expenses outside of the platform (travel, materials, time, etc.). Each team member (venue, co-host, etc.) sets their own rate separately. A 25% platform fee is added on top of the combined total.
                 </p>
               </div>
             </div>

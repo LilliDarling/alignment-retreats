@@ -437,8 +437,9 @@ export default function ProfileClient({ profile: initialProfile }: ProfileClient
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Per Person</p>
                     <p className="text-foreground font-semibold">
-                      {new Intl.NumberFormat("en-US", { style: "currency", currency: profile.rate_currency || "USD" }).format(profile.rate)}
+                      {new Intl.NumberFormat("en-US", { style: "currency", currency: profile.rate_currency || "CAD" }).format(profile.rate)}
                     </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Priced in CAD</p>
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground italic">No rate set</p>

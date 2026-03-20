@@ -51,7 +51,7 @@ function toRetreat(row: Record<string, unknown>): Retreat {
     endDate: r.end_date as string,
     price: (r.ticket_price as number) || (r.price_per_person as number),
     ticketPrice: (r.ticket_price as number) || undefined,
-    currency: "USD",
+    currency: "CAD",
     spotsTotal: (r.max_attendees as number) || undefined,
     image,
     galleryImages: (r.gallery_images as string[]) || [],
