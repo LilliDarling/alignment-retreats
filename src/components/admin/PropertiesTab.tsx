@@ -99,6 +99,7 @@ export default function PropertiesTab({ properties: initial, publishedProperties
   const [properties, setProperties] = useState(initial);
   const [published, setPublished] = useState(initialPublished);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedPublishedId, setExpandedPublishedId] = useState<string | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
   const [adminNotes, setAdminNotes] = useState<Record<string, string>>({});
   const [feedback, setFeedback] = useState<{ msg: string; type: "success" | "error" } | null>(null);
@@ -124,6 +125,10 @@ export default function PropertiesTab({ properties: initial, publishedProperties
           status: "published",
           owner_name: approved.owner_name,
           owner_email: approved.owner_email,
+          contact_name: approved.contact_name,
+          contact_email: approved.contact_email,
+          instagram_handle: approved.instagram_handle,
+          tiktok_handle: approved.tiktok_handle,
         }, ...prev]);
       }
       setFeedback({ msg: "Property approved and published!", type: "success" });
@@ -173,10 +178,10 @@ export default function PropertiesTab({ properties: initial, publishedProperties
           owner_user_id: "",
           owner_name: unpublished.owner_name,
           owner_email: unpublished.owner_email,
-          contact_name: null,
-          contact_email: null,
-          instagram_handle: null,
-          tiktok_handle: null,
+          contact_name: unpublished.contact_name,
+          contact_email: unpublished.contact_email,
+          instagram_handle: unpublished.instagram_handle,
+          tiktok_handle: unpublished.tiktok_handle,
           property_features: [],
         }, ...prev]);
       }
@@ -459,51 +464,108 @@ export default function PropertiesTab({ properties: initial, publishedProperties
           </Card>
         ) : (
           <div className="space-y-2">
-            {published.map((property) => (
-              <Card key={property.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    {property.photos.length > 0 ? (
-                      <div className="relative w-14 h-10 rounded-lg overflow-hidden shrink-0">
-                        <Image src={property.photos[0]} alt="" fill className="object-cover" sizes="56px" />
+            {published.map((property) => {
+              const isPubExpanded = expandedPublishedId === property.id;
+              return (
+                <Card key={property.id}>
+                  <CardContent className="p-0">
+                    <button
+                      onClick={() => setExpandedPublishedId(isPubExpanded ? null : property.id)}
+                      className="w-full flex items-center gap-4 p-4 text-left cursor-pointer hover:bg-muted/30 transition-colors"
+                    >
+                      {property.photos.length > 0 ? (
+                        <div className="relative w-14 h-10 rounded-lg overflow-hidden shrink-0">
+                          <Image src={property.photos[0]} alt="" fill className="object-cover" sizes="56px" />
+                        </div>
+                      ) : (
+                        <div className="w-14 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                          <Home className="w-4 h-4 text-muted-foreground/40" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm truncate">{property.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatLabel(property.property_type, propertyTypeLabel)}
+                          {property.location ? ` · ${property.location}` : ""}
+                          {property.capacity ? ` · ${property.capacity} guests` : ""}
+                          {property.owner_name ? ` · ${property.owner_name}` : ""}
+                        </p>
                       </div>
-                    ) : (
-                      <div className="w-14 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                        <Home className="w-4 h-4 text-muted-foreground/40" />
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-green-100 text-green-700">Published</span>
+                        {isPubExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                      </div>
+                    </button>
+
+                    {isPubExpanded && (
+                      <div className="border-t border-border px-5 py-4 space-y-4">
+                        {/* Owner / Contact */}
+                        <div className="p-4 rounded-xl bg-muted/50 border border-border">
+                          <h4 className="text-sm font-semibold mb-2">Owner / Contact</h4>
+                          <div className="space-y-1.5 text-sm">
+                            <p><span className="text-muted-foreground">Owner:</span> {property.owner_name || "Unknown"}</p>
+                            {property.owner_email && (
+                              <a href={`mailto:${property.owner_email}`} className="text-primary hover:underline flex items-center gap-1">
+                                <Mail className="w-3 h-3" /> {property.owner_email}
+                              </a>
+                            )}
+                            {property.contact_name && (
+                              <p><span className="text-muted-foreground">Contact:</span> {property.contact_name}</p>
+                            )}
+                            {property.contact_email && (
+                              <a href={`mailto:${property.contact_email}`} className="text-primary hover:underline flex items-center gap-1">
+                                <Mail className="w-3 h-3" /> {property.contact_email}
+                              </a>
+                            )}
+                            {property.instagram_handle && (
+                              <a
+                                href={`https://instagram.com/${property.instagram_handle}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline flex items-center gap-1"
+                              >
+                                <Instagram className="w-3 h-3" /> @{property.instagram_handle}
+                              </a>
+                            )}
+                            {property.tiktok_handle && (
+                              <a
+                                href={`https://tiktok.com/@${property.tiktok_handle}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline flex items-center gap-1"
+                              >
+                                <span className="w-3 h-3 text-[10px] font-bold flex items-center justify-center">TK</span>
+                                @{property.tiktok_handle}
+                              </a>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/venues/${property.id}`}
+                            target="_blank"
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            View listing
+                          </Link>
+                          <button
+                            onClick={() => handleUnpublish(property.id)}
+                            disabled={loading === property.id}
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50 cursor-pointer border border-border"
+                          >
+                            {loading === property.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <X className="w-3 h-3" />}
+                            Unpublish
+                          </button>
+                        </div>
                       </div>
                     )}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm truncate">{property.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatLabel(property.property_type, propertyTypeLabel)}
-                        {property.location ? ` · ${property.location}` : ""}
-                        {property.capacity ? ` · ${property.capacity} guests` : ""}
-                        {property.owner_name ? ` · ${property.owner_name}` : ""}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-green-100 text-green-700">Published</span>
-                      <Link
-                        href={`/venues/${property.id}`}
-                        target="_blank"
-                        className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                        title="View listing"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </Link>
-                      <button
-                        onClick={() => handleUnpublish(property.id)}
-                        disabled={loading === property.id}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50 cursor-pointer border border-border"
-                      >
-                        {loading === property.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <X className="w-3 h-3" />}
-                        Unpublish
-                      </button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>

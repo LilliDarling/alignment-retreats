@@ -136,7 +136,7 @@ export default function BookingSidebar({ retreat, isAuthenticated }: BookingSide
               <span>Secure checkout, scheduling & support</span>
             </div>
             <p className="text-[11px] text-muted-foreground/70 pt-1">
-              All team members set their own independent rates. A 25% platform fee is included in the total.
+              All team members set their own independent rates. A 25% platform fee is included in the total. All prices are in Canadian dollars (CAD).
             </p>
           </div>
         )}
@@ -176,6 +176,9 @@ export default function BookingSidebar({ retreat, isAuthenticated }: BookingSide
         )}
         <p className="text-center text-xs text-muted-foreground mt-3">
           Secure checkout powered by Stripe
+        </p>
+        <p className="text-center text-[11px] text-muted-foreground/70 mt-1">
+          All prices are in Canadian dollars (CAD)
         </p>
       </div>
 

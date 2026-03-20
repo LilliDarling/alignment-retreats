@@ -177,7 +177,7 @@ export default function CooperativePage() {
                     $2,000 CAD
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
-                    one-time buy-in
+                    one-time buy-in · priced in Canadian dollars
                   </p>
                 </CardHeader>
 

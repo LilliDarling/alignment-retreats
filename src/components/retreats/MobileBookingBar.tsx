@@ -22,7 +22,7 @@ export default function MobileBookingBar({ retreat }: MobileBookingBarProps) {
             </span>
             <span className="text-xs text-muted-foreground ml-1">/ person</span>
             <p className="text-xs text-muted-foreground">
-              {formatDateRange(retreat.startDate, retreat.endDate)}
+              {formatDateRange(retreat.startDate, retreat.endDate)} · CAD
             </p>
           </div>
           <a

@@ -257,7 +257,7 @@ serve(async (req) => {
         
         const transfer = await stripe.transfers.create({
           amount: amountInCents,
-          currency: "usd",
+          currency: "cad",
           destination: stripeAccount.stripe_account_id,
           metadata: {
             payout_id: payout.id,
