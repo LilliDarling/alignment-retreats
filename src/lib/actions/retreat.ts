@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { RetreatFormData } from "@/lib/constants/retreat";
+import { deleteStorageUrl, deleteStorageUrls, cleanupRemovedUrls } from "@/lib/utils/storage";
 
 const IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
 const VIDEO_EXTS = new Set(["mp4", "webm", "mov"]);
@@ -112,10 +113,10 @@ export async function updateRetreat(
 
   const supabase = await createClient();
 
-  // Verify ownership and get current status
+  // Verify ownership and get current status + existing media
   const { data: existing, error: fetchError } = await supabase
     .from("retreats")
-    .select("host_user_id, status")
+    .select("host_user_id, status, main_image, gallery_images, gallery_videos")
     .eq("id", retreatId)
     .single();
 
@@ -163,6 +164,20 @@ export async function updateRetreat(
 
   if (error) return { error: error.message };
   if (!updated?.length) return { error: "Retreat was modified by another request. Please refresh and try again." };
+
+  // Clean up removed media from storage (fire-and-forget)
+  const oldMainImage = (existing as Record<string, unknown>).main_image as string | null;
+  const oldImages = ((existing as Record<string, unknown>).gallery_images as string[]) || [];
+  const oldVideos = ((existing as Record<string, unknown>).gallery_videos as string[]) || [];
+  const newMainImage = data.main_image || null;
+
+  const cleanupPromises: Promise<void>[] = [];
+  if (oldMainImage && oldMainImage !== newMainImage) {
+    cleanupPromises.push(deleteStorageUrl(oldMainImage));
+  }
+  cleanupPromises.push(cleanupRemovedUrls(oldImages, data.gallery_images || []));
+  cleanupPromises.push(cleanupRemovedUrls(oldVideos, data.gallery_videos || []));
+  Promise.all(cleanupPromises).catch(() => {});
 
   revalidatePath("/dashboard");
   revalidatePath(`/host/retreats/${retreatId}/edit`);
@@ -223,7 +238,7 @@ export async function deleteRetreat(
 
   const { data: existing, error: fetchError } = await supabase
     .from("retreats")
-    .select("host_user_id, status")
+    .select("host_user_id, status, main_image, gallery_images, gallery_videos")
     .eq("id", retreatId)
     .single();
 
@@ -235,12 +250,22 @@ export async function deleteRetreat(
     return { error: "Only draft, pending review, or cancelled retreats can be deleted. Published retreats must be unpublished first." };
   }
 
+  // Collect all media URLs to delete from storage
+  const row = existing as Record<string, unknown>;
+  const allMedia: string[] = [];
+  if (row.main_image) allMedia.push(row.main_image as string);
+  if (row.gallery_images) allMedia.push(...(row.gallery_images as string[]));
+  if (row.gallery_videos) allMedia.push(...(row.gallery_videos as string[]));
+
   const { error } = await supabase
     .from("retreats")
     .delete()
     .eq("id", retreatId);
 
   if (error) return { error: error.message };
+
+  // Clean up storage after successful DB delete
+  deleteStorageUrls(allMedia).catch(() => {});
 
   revalidatePath("/dashboard");
   redirect("/dashboard");
