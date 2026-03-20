@@ -240,7 +240,7 @@ export default function SubmissionsTab({ retreats: initial }: SubmissionsTabProp
                                 className="w-full h-full object-cover"
                                 controls
                                 playsInline
-                                preload="metadata"
+                                preload="auto"
                               />
                             </div>
                           ))}

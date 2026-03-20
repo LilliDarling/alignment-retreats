@@ -135,13 +135,13 @@ export async function uploadRetreatVideo(
   const path = `${user.id}/${retreatId}-${generateFileName(file)}`;
 
   const { error } = await supabase.storage
-    .from("retreat-photos")
+    .from("retreat-videos")
     .upload(path, file);
 
   if (error) return { error: error.message };
 
   const { data: { publicUrl } } = supabase.storage
-    .from("retreat-photos")
+    .from("retreat-videos")
     .getPublicUrl(path);
 
   return { url: publicUrl };

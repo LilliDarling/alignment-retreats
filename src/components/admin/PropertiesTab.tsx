@@ -324,7 +324,7 @@ export default function PropertiesTab({ properties: initial, publishedProperties
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {property.videos.map((url, i) => (
                               <div key={i} className="relative aspect-video rounded-lg overflow-hidden bg-black">
-                                <video src={url} className="w-full h-full object-cover" controls playsInline />
+                                <video src={url} className="w-full h-full object-cover" controls playsInline preload="auto" />
                               </div>
                             ))}
                           </div>
