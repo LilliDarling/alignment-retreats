@@ -22,6 +22,7 @@ import {
   Sparkles,
   Building2,
 } from "lucide-react";
+import TikTokIcon from "@/components/icons/TikTokIcon";
 import { Card, CardContent } from "@/components/ui/Card";
 import {
   createProperty,
@@ -842,9 +843,7 @@ export default function VenueForm({
                   TikTok Handle
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                    @
-                  </span>
+                  <TikTokIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
                     id="tiktok_handle"
                     type="text"

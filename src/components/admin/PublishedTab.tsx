@@ -6,6 +6,21 @@ import { unpublishRetreat } from "@/lib/actions/admin";
 import { parseLocalDate } from "@/lib/utils/format";
 import type { PublishedRetreat } from "@/lib/queries/admin";
 
+const ROLE_LABELS: Record<string, string> = {
+  host: "Host",
+  venue: "Venue / Location",
+  cohost: "Co-Host",
+  chef: "Chef / Catering",
+  photographer: "Photographer / Videographer",
+  yoga_instructor: "Yoga Instructor",
+  sound_healer: "Sound Healer",
+  massage: "Massage Therapist",
+  staff: "Staff",
+  other: "Other",
+};
+
+const PLATFORM_FEE_RATE = 0.25;
+
 interface PublishedTabProps {
   retreats: PublishedRetreat[];
 }
@@ -129,6 +144,11 @@ export default function PublishedTab({ retreats }: PublishedTabProps) {
                   )}
                 </div>
 
+                {/* Price Breakdown */}
+                {retreat.ticket_price && (
+                  <PriceBreakdown retreat={retreat} />
+                )}
+
                 {/* Host Contact */}
                 {(retreat.host_name || retreat.host_email) && (
                   <div className="p-4 rounded-xl bg-muted/50 border border-border">
@@ -187,6 +207,87 @@ export default function PublishedTab({ retreats }: PublishedTabProps) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function PriceBreakdown({ retreat }: { retreat: PublishedRetreat }) {
+  const hostRate = retreat.price_per_person || 0;
+  const agreedMembers = retreat.team_members.filter((tm) => tm.agreed);
+  const totalTeamPerPerson = agreedMembers.reduce((sum, tm) => sum + tm.fee_amount, 0);
+  const subtotalPerPerson = hostRate + totalTeamPerPerson;
+  const platformFee = Math.ceil(subtotalPerPerson * PLATFORM_FEE_RATE);
+  const calculatedTicketPrice = subtotalPerPerson + platformFee;
+  const ticketPrice = retreat.ticket_price || 0;
+  const priceMismatch = ticketPrice !== calculatedTicketPrice;
+
+  return (
+    <div className="p-4 rounded-xl bg-muted/30 border border-border mb-4">
+      <div className="flex items-center gap-2 mb-3">
+        <DollarSign className="w-4 h-4 text-primary" />
+        <h4 className="text-xs font-semibold uppercase tracking-wider">Price Breakdown</h4>
+        <span className="text-[11px] text-muted-foreground ml-auto">per person · CAD</span>
+      </div>
+
+      <div className="space-y-1.5 text-sm">
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Host Rate</span>
+          <span className="font-medium">${hostRate.toLocaleString()}</span>
+        </div>
+
+        {agreedMembers.map((tm) => (
+          <div key={tm.id} className="flex justify-between text-muted-foreground">
+            <span>
+              {ROLE_LABELS[tm.role] || tm.role}
+              {tm.description ? ` — ${tm.description}` : tm.member_name ? ` — ${tm.member_name}` : ""}
+            </span>
+            <span>${tm.fee_amount.toLocaleString()}</span>
+          </div>
+        ))}
+
+        <div className="flex justify-between pt-2 border-t border-border">
+          <span className="font-medium">Subtotal</span>
+          <span className="font-medium">${subtotalPerPerson.toLocaleString()}</span>
+        </div>
+
+        <div className="flex justify-between text-muted-foreground">
+          <span>Platform Fee (25%)</span>
+          <span>${platformFee.toLocaleString()}</span>
+        </div>
+
+        <div className="flex justify-between pt-2 border-t border-border font-semibold text-primary">
+          <span>Ticket Price</span>
+          <span>${ticketPrice.toLocaleString()}</span>
+        </div>
+
+        {priceMismatch && (
+          <div className="flex items-start gap-2 mt-2 p-2.5 rounded-lg bg-amber-50 border border-amber-200">
+            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-700">
+              Ticket price (${ticketPrice.toLocaleString()}) doesn&apos;t match calculated breakdown (${calculatedTicketPrice.toLocaleString()}).
+              This may indicate costs were changed after publishing.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Revenue projection */}
+      {retreat.expected_attendees && (
+        <div className="mt-3 pt-3 border-t border-border grid grid-cols-3 gap-3 text-center">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">Gross Revenue</p>
+            <p className="text-sm font-bold text-foreground">${(ticketPrice * retreat.expected_attendees).toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">Platform Revenue</p>
+            <p className="text-sm font-bold text-primary">${(platformFee * retreat.expected_attendees).toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">Payouts</p>
+            <p className="text-sm font-bold text-foreground">${(subtotalPerPerson * retreat.expected_attendees).toLocaleString()}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

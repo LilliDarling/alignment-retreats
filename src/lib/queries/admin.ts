@@ -80,9 +80,11 @@ export interface PublishedRetreat {
   ticket_price: number | null;
   expected_attendees: number | null;
   max_attendees: number | null;
+  price_per_person: number | null;
   status: string;
   host_name: string | null;
   host_email: string | null;
+  team_members: TeamMemberInfo[];
 }
 
 export interface PendingProperty {
@@ -336,6 +338,32 @@ async function getPublishedRetreats(): Promise<PublishedRetreat[]> {
     }
   }
 
+  // Fetch team members for all published retreats
+  const retreatIds = retreats.map((r) => (r as Record<string, unknown>).id as string);
+  const { data: teamData } = await supabase
+    .from("retreat_team")
+    .select("*")
+    .in("retreat_id", retreatIds);
+
+  const teamByRetreat = new Map<string, TeamMemberInfo[]>();
+  if (teamData) {
+    for (const t of teamData as Record<string, unknown>[]) {
+      const retreatId = t.retreat_id as string;
+      if (!teamByRetreat.has(retreatId)) teamByRetreat.set(retreatId, []);
+      const memberProfile = profileMap.get(t.user_id as string);
+      teamByRetreat.get(retreatId)!.push({
+        id: t.id as string,
+        user_id: t.user_id as string,
+        role: t.role as string,
+        fee_type: t.fee_type as string,
+        fee_amount: (t.fee_amount as number) || 0,
+        description: (t.description as string) || null,
+        agreed: (t.agreed as boolean) || false,
+        member_name: memberProfile ? (memberProfile.name as string) || null : null,
+      });
+    }
+  }
+
   return retreats.map((r) => {
     const row = r as Record<string, unknown>;
     const host = profileMap.get(row.host_user_id as string);
@@ -349,9 +377,11 @@ async function getPublishedRetreats(): Promise<PublishedRetreat[]> {
       ticket_price: (row.ticket_price as number) || null,
       expected_attendees: (row.expected_attendees as number) || null,
       max_attendees: (row.max_attendees as number) || null,
+      price_per_person: (row.price_per_person as number) || null,
       status: (row.status as string) || "published",
       host_name: host ? (host.name as string) || null : null,
       host_email: host ? (host.email as string) || null : null,
+      team_members: teamByRetreat.get(row.id as string) || [],
     };
   });
 }

@@ -72,6 +72,12 @@ function toRetreat(row: Record<string, unknown>): Retreat {
           property_type: (property.property_type as string) || "venue",
         }
       : null,
+    customVenue: !property && (r.custom_venue_name as string)
+      ? {
+          name: r.custom_venue_name as string,
+          location: (r.location_details as string) || null,
+        }
+      : null,
   };
 }
 

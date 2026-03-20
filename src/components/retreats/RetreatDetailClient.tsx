@@ -10,6 +10,7 @@ import {
   Users,
   Check,
   Handshake,
+  Home,
 } from "lucide-react";
 import BookingSidebar from "@/components/retreats/BookingSidebar";
 import RetreatCard from "@/components/retreats/RetreatCard";
@@ -143,7 +144,9 @@ export default function RetreatDetailClient({
             <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-white/70 text-sm">
               <span className="flex items-center gap-1.5">
                 <MapPin className="w-4 h-4" />
-                {displayRetreat.location}
+                {displayRetreat.venue && displayRetreat.venue !== displayRetreat.location
+                  ? `${displayRetreat.venue} · ${displayRetreat.location}`
+                  : displayRetreat.location}
               </span>
               {displayRetreat.duration && (
                 <span className="flex items-center gap-1.5">
@@ -215,14 +218,14 @@ export default function RetreatDetailClient({
               )}
 
               {/* Meet the Team */}
-              {displayRetreat.teamMembers && displayRetreat.teamMembers.length > 0 && (
+              {displayRetreat.teamMembers && displayRetreat.teamMembers.filter((tm) => tm.role !== "other").length > 0 && (
                 <div className="mb-8">
                   <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2 mb-4">
                     <Handshake className="w-4 h-4" />
                     Meet the Team
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {displayRetreat.teamMembers.map((tm, i) => {
+                    {displayRetreat.teamMembers.filter((tm) => tm.role !== "other").map((tm, i) => {
                       const profile = teamProfiles.find((p) => p.id === tm.userId);
                       return (
                         <button
@@ -473,16 +476,50 @@ export default function RetreatDetailClient({
             </div>
 
             {/* RIGHT COLUMN — 40% Venue Sidebar */}
-            {displayRetreat.property && (
+            {displayRetreat.property ? (
               <div className="hidden lg:block lg:col-span-2">
                 <VenueSidebar property={displayRetreat.property} />
+              </div>
+            ) : displayRetreat.customVenue && (
+              <div className="hidden lg:block lg:col-span-2">
+                <div className="bg-white rounded-[16px] border border-border overflow-hidden sticky top-[100px]">
+                  <div className="p-5 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Home className="w-4 h-4 text-primary" />
+                      <h3 className="text-lg font-display text-foreground">{displayRetreat.customVenue.name}</h3>
+                    </div>
+                    {displayRetreat.customVenue.location && (
+                      <p className="text-sm text-muted-foreground flex items-center gap-1.5 ml-6">
+                        <MapPin className="w-3.5 h-3.5" />
+                        {displayRetreat.customVenue.location}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
             {/* Mobile Venue — below content on small screens */}
-            {displayRetreat.property && (
+            {displayRetreat.property ? (
               <div className="lg:hidden">
                 <VenueSidebar property={displayRetreat.property} />
+              </div>
+            ) : displayRetreat.customVenue && (
+              <div className="lg:hidden">
+                <div className="bg-white rounded-[16px] border border-border overflow-hidden">
+                  <div className="p-5 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Home className="w-4 h-4 text-primary" />
+                      <h3 className="text-lg font-display text-foreground">{displayRetreat.customVenue.name}</h3>
+                    </div>
+                    {displayRetreat.customVenue.location && (
+                      <p className="text-sm text-muted-foreground flex items-center gap-1.5 ml-6">
+                        <MapPin className="w-3.5 h-3.5" />
+                        {displayRetreat.customVenue.location}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </div>

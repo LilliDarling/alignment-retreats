@@ -62,6 +62,10 @@ export interface Retreat {
     property_features: string[];
     property_type: string;
   } | null;
+  customVenue?: {
+    name: string;
+    location: string | null;
+  } | null;
 }
 
 export interface ItineraryDay {
