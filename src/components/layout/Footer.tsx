@@ -142,6 +142,14 @@ export default function Footer() {
                   Cancellation Policy
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/media-release"
+                  className="inline-block text-sm hover:text-white hover:translate-x-1 transition-all duration-200"
+                >
+                  Media Release
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -204,6 +212,9 @@ export default function Footer() {
             </Link>
             <Link href="/privacy" className="hover:text-white transition-colors">
               Privacy Policy
+            </Link>
+            <Link href="/media-release" className="hover:text-white transition-colors">
+              Media Release
             </Link>
             <a
               href={siteConfig.parentOrg.url}

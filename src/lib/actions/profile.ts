@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { deleteStorageUrl } from "@/lib/utils/storage";
 import type {
   EditableProfile,
   BasicInfoUpdate,
@@ -93,6 +94,28 @@ export async function updateBasicInfo(data: BasicInfoUpdate) {
   if (data.name && data.name.length > 100) return { error: "Name must be 100 characters or fewer." };
   if (data.bio && data.bio.length > 8000) return { error: "Bio must be 8,000 characters or fewer." };
   if (data.location && data.location.length > 200) return { error: "Location must be 200 characters or fewer." };
+
+  // Clean up old photos from storage if being replaced or removed
+  const userId = await getAuthUserId();
+  if (userId && (data.profile_photo !== undefined || data.cover_photo !== undefined)) {
+    const supabase = await createClient();
+    const { data: current } = await supabase
+      .from("profiles")
+      .select("profile_photo, cover_photo")
+      .eq("id", userId)
+      .single();
+
+    if (current) {
+      const old = current as Record<string, unknown>;
+      if (old.profile_photo && old.profile_photo !== data.profile_photo) {
+        deleteStorageUrl(old.profile_photo as string).catch(() => {});
+      }
+      if (old.cover_photo && old.cover_photo !== data.cover_photo) {
+        deleteStorageUrl(old.cover_photo as string).catch(() => {});
+      }
+    }
+  }
+
   return updateProfileFields({ ...data });
 }
 

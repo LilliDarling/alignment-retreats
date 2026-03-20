@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { VenueFormData } from "@/lib/constants/venue";
+import { deleteStorageUrls, cleanupRemovedUrls } from "@/lib/utils/storage";
 
 const HANDLE_REGEX = /^[a-zA-Z0-9._]{1,50}$/;
 const IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
@@ -108,7 +109,7 @@ export async function updateProperty(
 
   const { data: existing, error: fetchError } = await supabase
     .from("properties")
-    .select("owner_user_id, status")
+    .select("owner_user_id, status, photos, videos")
     .eq("id", propertyId)
     .single();
 
@@ -149,6 +150,15 @@ export async function updateProperty(
 
   if (error) return { error: error.message };
   if (!updated?.length) return { error: "Property was modified by another request. Please refresh and try again." };
+
+  // Clean up removed media from storage (fire-and-forget)
+  const row = existing as Record<string, unknown>;
+  const oldPhotos = (row.photos as string[]) || [];
+  const oldVideos = (row.videos as string[]) || [];
+  Promise.all([
+    cleanupRemovedUrls(oldPhotos, data.photos || []),
+    cleanupRemovedUrls(oldVideos, data.videos || []),
+  ]).catch(() => {});
 
   revalidatePath("/dashboard");
   revalidatePath(`/venues/${propertyId}/edit`);
@@ -210,7 +220,7 @@ export async function deleteProperty(
 
   const { data: existing, error: fetchError } = await supabase
     .from("properties")
-    .select("owner_user_id, status")
+    .select("owner_user_id, status, photos, videos")
     .eq("id", propertyId)
     .single();
 
@@ -226,12 +236,21 @@ export async function deleteProperty(
     };
   }
 
+  // Collect all media URLs to delete from storage
+  const allMedia: string[] = [
+    ...((p.photos as string[]) || []),
+    ...((p.videos as string[]) || []),
+  ];
+
   const { error } = await supabase
     .from("properties")
     .delete()
     .eq("id", propertyId);
 
   if (error) return { error: error.message };
+
+  // Clean up storage after successful DB delete
+  deleteStorageUrls(allMedia).catch(() => {});
 
   revalidatePath("/dashboard");
   redirect("/dashboard");
