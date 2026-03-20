@@ -8,7 +8,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com https://static.wixstatic.com https://*.r2.dev https://*.supabase.co",
   "font-src 'self' https://fonts.gstatic.com",
-  "media-src 'self' https://*.r2.dev",
+  "media-src 'self' https://*.r2.dev https://*.supabase.co",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://cdn.jsdelivr.net",
   "frame-src https://js.stripe.com",
 ]

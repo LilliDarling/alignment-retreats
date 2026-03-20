@@ -136,6 +136,7 @@ export default function VenueDetailClient({ venue, isPreview = false, isHost = f
                           className="w-full h-full object-cover"
                           controls
                           playsInline
+                          preload="auto"
                         />
                       </div>
                     ))}

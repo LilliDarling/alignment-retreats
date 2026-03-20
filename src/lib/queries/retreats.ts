@@ -33,8 +33,9 @@ function toRetreat(row: Record<string, unknown>): Retreat {
     const [ey, em, ed] = (r.end_date as string).split("T")[0].split("-").map(Number);
     const start = new Date(sy, sm - 1, sd);
     const end = new Date(ey, em - 1, ed);
-    const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    duration = `${days} day${days !== 1 ? "s" : ""}`;
+    const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    const days = nights + 1;
+    duration = `${days} day${days !== 1 ? "s" : ""}, ${nights} night${nights !== 1 ? "s" : ""}`;
   }
 
   return {

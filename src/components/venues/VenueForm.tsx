@@ -551,7 +551,7 @@ export default function VenueForm({
                     controls
                     muted
                     playsInline
-                    preload="metadata"
+                    preload="auto"
                   />
                   <button
                     type="button"

@@ -372,7 +372,7 @@ export default function RetreatDetailClient({
                               className="w-full h-full object-cover"
                               controls
                               playsInline
-                              preload="metadata"
+                              preload="auto"
                             />
                           </div>
                         ))}

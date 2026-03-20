@@ -50,6 +50,7 @@ export default function VenueSidebar({ property }: VenueSidebarProps) {
               controls
               playsInline
               muted
+              preload="auto"
             />
           ) : (
             <Image
