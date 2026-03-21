@@ -717,13 +717,16 @@ export default function RetreatForm({
               <label htmlFor="description" className={labelClass}>
                 Description <span className="text-red-500">*</span>
               </label>
+              <p className="text-xs text-muted-foreground mb-1">
+                Overview of your retreat — this is the main text visitors will see. You can include links.
+              </p>
               <textarea
                 id="description"
                 value={form.description}
                 onChange={(e) => update("description", e.target.value)}
                 rows={5}
                 className={`${inputClass("description")} resize-none`}
-                placeholder="Describe your retreat experience..."
+                placeholder="What is your retreat about? Who is it for? Include any links (e.g. application forms, Google Docs)..."
               />
               {fieldError("description")}
             </div>
@@ -974,13 +977,16 @@ export default function RetreatForm({
               <label htmlFor="what_you_offer" className={labelClass}>
                 What You Offer
               </label>
+              <p className="text-xs text-muted-foreground mb-1">
+                Optional — describe the experience: classes, workshops, meals, or activities that are separate from your description above.
+              </p>
               <textarea
                 id="what_you_offer"
                 value={form.what_you_offer}
                 onChange={(e) => update("what_you_offer", e.target.value)}
                 rows={4}
                 className={`${inputClass("what_you_offer")} resize-none`}
-                placeholder="Describe what attendees will experience: classes, workshops, meals, accommodation..."
+                placeholder="e.g. Daily yoga sessions, farm-to-table meals, private accommodation, guided meditation..."
               />
               {fieldError("what_you_offer")}
             </div>
