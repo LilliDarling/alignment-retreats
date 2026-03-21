@@ -11,6 +11,7 @@ import {
   Check,
   Handshake,
   Home,
+  ExternalLink,
 } from "lucide-react";
 import BookingSidebar from "@/components/retreats/BookingSidebar";
 import RetreatCard from "@/components/retreats/RetreatCard";
@@ -32,6 +33,33 @@ interface RetreatDetailClientProps {
   teamProfiles?: HostProfileData[];
   isAuthenticated?: boolean;
   isPreview?: boolean;
+}
+
+function linkifyText(text: string): (string | React.ReactElement)[] {
+  const parts = text.split(/(https:\/\/[^\s<]+)/g);
+  return parts.map((part, i) => {
+    if (/^https:\/\//.test(part)) {
+      let domain: string;
+      try {
+        domain = new URL(part).hostname.replace(/^www\./, "");
+      } catch {
+        return part;
+      }
+      return (
+        <a
+          key={i}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-primary underline hover:text-primary/80"
+        >
+          {domain}
+          <ExternalLink className="w-3 h-3 shrink-0" />
+        </a>
+      );
+    }
+    return part;
+  });
 }
 
 export default function RetreatDetailClient({
@@ -324,8 +352,17 @@ export default function RetreatDetailClient({
                       <AnimateOnScroll>
                         <h2 className="text-2xl font-display mb-4">About This Retreat</h2>
                         <p className="text-muted-foreground leading-relaxed whitespace-pre-line mb-6">
-                          {displayRetreat.longDescription || displayRetreat.description}
+                          {linkifyText(displayRetreat.description)}
                         </p>
+
+                        {displayRetreat.whatYouOffer && displayRetreat.whatYouOffer !== displayRetreat.description && (
+                          <div className="mb-6">
+                            <h3 className="text-xl font-display mb-3">What You&apos;ll Experience</h3>
+                            <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
+                              {linkifyText(displayRetreat.whatYouOffer)}
+                            </p>
+                          </div>
+                        )}
 
                         {displayRetreat.amenities && displayRetreat.amenities.length > 0 && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-6">

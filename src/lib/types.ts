@@ -27,7 +27,7 @@ export interface Retreat {
   title: string;
   category: string;
   description: string;
-  longDescription?: string;
+  whatYouOffer?: string;
   location: string;
   venue?: string;
   duration: string;

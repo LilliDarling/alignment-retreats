@@ -44,7 +44,7 @@ function toRetreat(row: Record<string, unknown>): Retreat {
     title: r.title as string,
     category: ((t) => t ? t.charAt(0).toUpperCase() + t.slice(1) : "Retreat")(r.retreat_type as string),
     description: r.description as string,
-    longDescription: (r.what_you_offer as string) || undefined,
+    whatYouOffer: (r.what_you_offer as string) || undefined,
     location,
     venue: (r.custom_venue_name as string) || (property?.name as string) || undefined,
     duration,
