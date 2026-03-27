@@ -31,12 +31,15 @@ export default function AboutForm({ profile, onSaved, onCancel }: AboutFormProps
   };
 
   const handleSave = async () => {
+    if (!whatIOffer.trim()) { setError("What you offer is required."); return; }
+    if (!whatImLookingFor.trim()) { setError("What you're looking for is required."); return; }
+    if (!availability) { setError("Availability status is required."); return; }
     setSaving(true);
     setError(null);
     const data: AboutUpdate = {
-      what_i_offer: whatIOffer.trim() || null,
-      what_im_looking_for: whatImLookingFor.trim() || null,
-      availability_status: availability || null,
+      what_i_offer: whatIOffer.trim(),
+      what_im_looking_for: whatImLookingFor.trim(),
+      availability_status: availability,
       travel_willing: travelWilling,
     };
     const result = await updateAbout(data);
@@ -52,7 +55,7 @@ export default function AboutForm({ profile, onSaved, onCancel }: AboutFormProps
     <div className="space-y-6">
       <div>
         <label htmlFor="offer" className="text-sm font-medium text-foreground mb-1 block">
-          What I Offer
+          What I Offer <span className="text-red-500">*</span>
         </label>
         <textarea
           id="offer"
@@ -66,7 +69,7 @@ export default function AboutForm({ profile, onSaved, onCancel }: AboutFormProps
 
       <div>
         <label htmlFor="looking" className="text-sm font-medium text-foreground mb-1 block">
-          What I&apos;m Looking For
+          What I&apos;m Looking For <span className="text-red-500">*</span>
         </label>
         <textarea
           id="looking"
@@ -80,7 +83,7 @@ export default function AboutForm({ profile, onSaved, onCancel }: AboutFormProps
 
       <div>
         <label htmlFor="availability" className="text-sm font-medium text-foreground mb-1 block">
-          Availability
+          Availability <span className="text-red-500">*</span>
         </label>
         <select
           id="availability"

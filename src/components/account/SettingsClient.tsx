@@ -172,8 +172,8 @@ export default function SettingsClient({
       setNewsletterFeedback({ type: "error", message: error });
       return;
     }
-    // Sync with Mailchimp (best-effort)
-    await supabase.functions.invoke("mailchimp-subscribe", {
+    // Sync with MailerLite (best-effort)
+    await supabase.functions.invoke("mailerlite-subscribe", {
       body: { email: user.email, subscribe: checked },
     });
     setNewsletterSaving(false);

@@ -83,12 +83,15 @@ export default function SocialLinksForm({ profile, onSaved, onCancel }: SocialLi
 
   const handleSave = async () => {
     if (hasValidationErrors) return;
+    if (!instagram.trim()) { setError("Instagram handle is required."); return; }
+    if (!tiktok.trim()) { setError("TikTok handle is required."); return; }
+    if (!website.trim()) { setError("Website URL is required."); return; }
     setSaving(true);
     setError(null);
     const data: SocialLinksUpdate = {
-      instagram_handle: instagram.trim() || null,
-      tiktok_handle: tiktok.trim() || null,
-      website_url: website.trim() || null,
+      instagram_handle: instagram.trim(),
+      tiktok_handle: tiktok.trim(),
+      website_url: website.trim(),
     };
     const result = await updateSocialLinks(data);
     if (result.error) {
@@ -108,7 +111,7 @@ export default function SocialLinksForm({ profile, onSaved, onCancel }: SocialLi
     <div className="space-y-6">
       <div>
         <label htmlFor="instagram" className="text-sm font-medium text-foreground mb-1 block">
-          Instagram
+          Instagram <span className="text-red-500">*</span>
         </label>
         <div className="relative">
           <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -131,7 +134,7 @@ export default function SocialLinksForm({ profile, onSaved, onCancel }: SocialLi
 
       <div>
         <label htmlFor="tiktok" className="text-sm font-medium text-foreground mb-1 block">
-          TikTok
+          TikTok <span className="text-red-500">*</span>
         </label>
         <div className="relative">
           <TikTokIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -154,7 +157,7 @@ export default function SocialLinksForm({ profile, onSaved, onCancel }: SocialLi
 
       <div>
         <label htmlFor="website" className="text-sm font-medium text-foreground mb-1 block">
-          Website
+          Website <span className="text-red-500">*</span>
         </label>
         <div className="relative">
           <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

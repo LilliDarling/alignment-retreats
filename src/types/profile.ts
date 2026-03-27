@@ -44,8 +44,6 @@ export interface EditableProfile {
   website_url: string | null;
   portfolio_photos: string[] | null;
   portfolio_videos: string[] | null;
-  rate: number | null;
-  rate_currency: string | null;
   travel_willing: boolean;
   show_in_directory: boolean;
   profile_completed: boolean;
@@ -78,11 +76,6 @@ export interface AboutUpdate {
   what_im_looking_for: string | null;
   availability_status: string | null;
   travel_willing: boolean;
-}
-
-export interface RatesUpdate {
-  rate: number | null;
-  rate_currency: string | null;
 }
 
 export interface PortfolioUpdate {

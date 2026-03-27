@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
+import { isMailerSendConfigured, sendTemplateEmail, getTemplateId } from "../_shared/mailersend.ts";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL");
 
 interface NewMemberNotification {
@@ -19,7 +19,6 @@ const getRoleLabels = (roles: string[]): string => {
     creative: "Creative / Marketing",
     attendee: "Attendee",
   };
-
   return roles.map((role) => roleMap[role] || role).join(", ");
 };
 
@@ -29,9 +28,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Validate required environment variables
-    if (!RESEND_API_KEY) {
-      console.error("RESEND_API_KEY not configured");
+    if (!isMailerSendConfigured()) {
       return new Response(
         JSON.stringify({ success: false, error: "Email service not configured", skipped: true }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -39,7 +36,6 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (!ADMIN_EMAIL) {
-      console.error("ADMIN_EMAIL not configured");
       return new Response(
         JSON.stringify({ success: false, error: "Admin email not configured", skipped: true }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -48,92 +44,33 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { name, email, roles }: NewMemberNotification = await req.json();
 
-    const roleLabels = getRoleLabels(roles);
-    const signupDate = new Date().toLocaleString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZoneName: "short",
-    });
-
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      </head>
-      <body style="font-family: 'Barlow', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #3E2723; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="font-family: 'Tenor Sans', sans-serif; color: #3E2723; margin-bottom: 10px;">🎉 New Member Joined!</h1>
-        </div>
-        
-        <p style="font-size: 16px;">Great news! A new member has joined Alignment Retreats.</p>
-        
-        <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0;">
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 8px 0; font-weight: 600; color: #555; width: 100px;">Name:</td>
-              <td style="padding: 8px 0;">${name}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; font-weight: 600; color: #555;">Email:</td>
-              <td style="padding: 8px 0;"><a href="mailto:${email}" style="color: #3E2723;">${email}</a></td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; font-weight: 600; color: #555;">Roles:</td>
-              <td style="padding: 8px 0;">${roleLabels}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; font-weight: 600; color: #555;">Joined:</td>
-              <td style="padding: 8px 0;">${signupDate}</td>
-            </tr>
-          </table>
-        </div>
-        
-        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-        <p style="font-size: 12px; color: #888; text-align: center;">
-          This is an automated notification from Alignment Retreats.
-        </p>
-      </body>
-      </html>
-    `;
-
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
+    const result = await sendTemplateEmail({
+      to: ADMIN_EMAIL,
+      templateId: getTemplateId("MAILERSEND_TEMPLATE_NEW_MEMBER"),
+      variables: {
+        name,
+        email,
+        roles: getRoleLabels(roles),
+        signup_date: new Date().toLocaleString("en-US", {
+          weekday: "long", year: "numeric", month: "long", day: "numeric",
+          hour: "2-digit", minute: "2-digit", timeZoneName: "short",
+        }),
       },
-      body: JSON.stringify({
-        from: "Alignment Retreats <onboarding@alignmentretreats.xyz>",
-        to: [ADMIN_EMAIL],
-        subject: `🎉 New Alignment Retreats Member: ${name}`,
-        html: htmlContent,
-      }),
     });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      console.error("Resend API error:", data);
-      // Return success with error info instead of throwing
+    if (!result.success) {
       return new Response(
-        JSON.stringify({ success: false, error: data.message || "Notification failed", emailError: true }),
+        JSON.stringify({ success: false, error: result.error || "Notification failed", emailError: true }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    return new Response(JSON.stringify({ success: true, data }), {
+    return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (error: any) {
     console.error("Error in notify-new-member function:", error);
-    // Return 200 with error info - never block signup due to notification failures
     return new Response(
       JSON.stringify({ success: false, error: error.message, emailError: true }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }

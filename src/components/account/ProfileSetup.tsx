@@ -7,7 +7,6 @@ import BasicInfoForm from "@/components/account/sections/BasicInfoForm";
 import ProfessionalForm from "@/components/account/sections/ProfessionalForm";
 import AboutForm from "@/components/account/sections/AboutForm";
 import SocialLinksForm from "@/components/account/sections/SocialLinksForm";
-import RatesForm from "@/components/account/sections/RatesForm";
 import PortfolioForm from "@/components/account/sections/PortfolioForm";
 import { markProfileComplete } from "@/lib/actions/profile";
 import type { EditableProfile } from "@/types/profile";
@@ -17,7 +16,6 @@ const STEPS = [
   { key: "about", label: "About You" },
   { key: "professional", label: "Professional" },
   { key: "social", label: "Social Links" },
-  { key: "rates", label: "Rates" },
   { key: "portfolio", label: "Portfolio" },
 ] as const;
 
@@ -124,9 +122,6 @@ export default function ProfileSetup({ profile: initialProfile }: ProfileSetupPr
         )}
         {step.key === "social" && (
           <SocialLinksForm profile={profile} onSaved={handleStepSaved} onCancel={goBack} />
-        )}
-        {step.key === "rates" && (
-          <RatesForm profile={profile} onSaved={handleStepSaved} onCancel={goBack} />
         )}
         {step.key === "portfolio" && (
           <PortfolioForm profile={profile} onSaved={handleStepSaved} onCancel={goBack} />

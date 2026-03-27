@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { sendPublishedEmail } from "@/lib/email";
 
 async function requireAdmin(): Promise<string | null> {
   const supabase = await createClient();
@@ -91,6 +92,22 @@ export async function publishRetreat(
 
   if (error) return { error: error.message };
 
+  // Send published notification email to host
+  const { data: retreat } = await supabase
+    .from("retreats")
+    .select("title, host_user_id")
+    .eq("id", retreatId)
+    .single();
+  if (retreat) {
+    const row = retreat as Record<string, unknown>;
+    const { data: email } = await supabase.rpc("get_profile_email_admin", {
+      profile_id: row.host_user_id as string,
+    });
+    if (email) {
+      sendPublishedEmail(email as string, "retreat", (row.title as string) || "Untitled Retreat");
+    }
+  }
+
   revalidatePath("/admin");
   return { error: null };
 }
@@ -150,6 +167,22 @@ export async function approveProperty(
     .eq("id", propertyId);
 
   if (error) return { error: error.message };
+
+  // Send published notification email to venue owner
+  const { data: property } = await supabase
+    .from("properties")
+    .select("name, owner_user_id")
+    .eq("id", propertyId)
+    .single();
+  if (property) {
+    const row = property as Record<string, unknown>;
+    const { data: email } = await supabase.rpc("get_profile_email_admin", {
+      profile_id: row.owner_user_id as string,
+    });
+    if (email) {
+      sendPublishedEmail(email as string, "venue", (row.name as string) || "Untitled Venue");
+    }
+  }
 
   revalidatePath("/admin");
   return { error: null };

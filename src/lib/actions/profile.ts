@@ -9,7 +9,6 @@ import type {
   ProfessionalUpdate,
   SocialLinksUpdate,
   AboutUpdate,
-  RatesUpdate,
   PortfolioUpdate,
 } from "@/types/profile";
 
@@ -19,7 +18,6 @@ const PROFILE_SELECT = `
   availability_status, what_i_offer, what_im_looking_for,
   instagram_handle, tiktok_handle, website_url,
   portfolio_photos, portfolio_videos,
-  rate, rate_currency,
   travel_willing, show_in_directory, profile_completed
 ` as const;
 
@@ -63,8 +61,6 @@ export async function getOwnProfile(): Promise<EditableProfile | null> {
     website_url: data.website_url as string | null,
     portfolio_photos: data.portfolio_photos as string[] | null,
     portfolio_videos: data.portfolio_videos as string[] | null,
-    rate: data.rate as number | null,
-    rate_currency: data.rate_currency as string | null,
     travel_willing: (data.travel_willing as boolean) || false,
     show_in_directory: (data.show_in_directory as boolean) || false,
     profile_completed: (data.profile_completed as boolean) || false,
@@ -91,9 +87,13 @@ async function updateProfileFields(
 }
 
 export async function updateBasicInfo(data: BasicInfoUpdate) {
-  if (data.name && data.name.length > 100) return { error: "Name must be 100 characters or fewer." };
-  if (data.bio && data.bio.length > 8000) return { error: "Bio must be 8,000 characters or fewer." };
-  if (data.location && data.location.length > 200) return { error: "Location must be 200 characters or fewer." };
+  if (!data.name?.trim()) return { error: "Name is required." };
+  if (data.name.length > 100) return { error: "Name must be 100 characters or fewer." };
+  if (!data.bio?.trim()) return { error: "Bio is required." };
+  if (data.bio.length > 8000) return { error: "Bio must be 8,000 characters or fewer." };
+  if (!data.location?.trim()) return { error: "Location is required." };
+  if (data.location.length > 200) return { error: "Location must be 200 characters or fewer." };
+  if (!data.profile_photo) return { error: "Profile photo is required." };
 
   // Clean up old photos from storage if being replaced or removed
   const userId = await getAuthUserId();
@@ -120,29 +120,34 @@ export async function updateBasicInfo(data: BasicInfoUpdate) {
 }
 
 export async function updateProfessional(data: ProfessionalUpdate) {
+  if (!data.expertise_areas?.length) return { error: "At least one expertise area is required." };
+  if (!data.languages?.length) return { error: "At least one language is required." };
+  if (data.years_experience == null) return { error: "Years of experience is required." };
   return updateProfileFields({ ...data });
 }
 
 const HANDLE_REGEX = /^[a-zA-Z0-9._]{1,50}$/;
 
 export async function updateSocialLinks(data: SocialLinksUpdate) {
-  if (data.instagram_handle && !HANDLE_REGEX.test(data.instagram_handle)) {
+  if (!data.instagram_handle?.trim()) return { error: "Instagram handle is required." };
+  if (!HANDLE_REGEX.test(data.instagram_handle)) {
     return { error: "Instagram handle may only contain letters, numbers, periods, and underscores (max 50 characters)." };
   }
-  if (data.tiktok_handle && !HANDLE_REGEX.test(data.tiktok_handle)) {
+  if (!data.tiktok_handle?.trim()) return { error: "TikTok handle is required." };
+  if (!HANDLE_REGEX.test(data.tiktok_handle)) {
     return { error: "TikTok handle may only contain letters, numbers, periods, and underscores (max 50 characters)." };
   }
+  if (!data.website_url?.trim()) return { error: "Website URL is required." };
   return updateProfileFields({ ...data });
 }
 
 export async function updateAbout(data: AboutUpdate) {
-  if (data.what_i_offer && data.what_i_offer.length > 3000) return { error: "What you offer must be 3,000 characters or fewer." };
-  if (data.what_im_looking_for && data.what_im_looking_for.length > 3000) return { error: "What you're looking for must be 3,000 characters or fewer." };
-  if (data.availability_status && data.availability_status.length > 200) return { error: "Availability status must be 200 characters or fewer." };
-  return updateProfileFields({ ...data });
-}
-
-export async function updateRates(data: RatesUpdate) {
+  if (!data.what_i_offer?.trim()) return { error: "What you offer is required." };
+  if (data.what_i_offer.length > 3000) return { error: "What you offer must be 3,000 characters or fewer." };
+  if (!data.what_im_looking_for?.trim()) return { error: "What you're looking for is required." };
+  if (data.what_im_looking_for.length > 3000) return { error: "What you're looking for must be 3,000 characters or fewer." };
+  if (!data.availability_status?.trim()) return { error: "Availability status is required." };
+  if (data.availability_status.length > 200) return { error: "Availability status must be 200 characters or fewer." };
   return updateProfileFields({ ...data });
 }
 
