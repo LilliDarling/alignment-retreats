@@ -13,7 +13,6 @@ import {
   Instagram,
   Pencil,
   Heart,
-  DollarSign,
   ImageIcon,
   ArrowLeft,
   Plane,
@@ -26,13 +25,12 @@ import BasicInfoForm from "@/components/account/sections/BasicInfoForm";
 import ProfessionalForm from "@/components/account/sections/ProfessionalForm";
 import AboutForm from "@/components/account/sections/AboutForm";
 import SocialLinksForm from "@/components/account/sections/SocialLinksForm";
-import RatesForm from "@/components/account/sections/RatesForm";
 import PortfolioForm from "@/components/account/sections/PortfolioForm";
 import { uploadProfilePhoto } from "@/lib/utils/upload";
 import { updateBasicInfo } from "@/lib/actions/profile";
 import type { EditableProfile } from "@/types/profile";
 
-type Section = "basic" | "professional" | "about" | "social" | "rates" | "portfolio" | null;
+type Section = "basic" | "professional" | "about" | "social" | "portfolio" | null;
 
 interface ProfileClientProps {
   profile: EditableProfile;
@@ -424,31 +422,6 @@ export default function ProfileClient({ profile: initialProfile }: ProfileClient
             )}
           </ProfileSection>
 
-          {/* Rates */}
-          <ProfileSection
-            title="Rates"
-            icon={<DollarSign className="w-4 h-4" />}
-            onEdit={() => setEditingSection("rates")}
-            editing={editingSection === "rates"}
-          >
-            {editingSection === "rates" ? (
-              <RatesForm profile={profile} onSaved={handleSaved} onCancel={handleCancel} />
-            ) : (
-              <div className="space-y-3">
-                {profile.rate != null ? (
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Per Person</p>
-                    <p className="text-foreground font-semibold">
-                      {new Intl.NumberFormat("en-US", { style: "currency", currency: profile.rate_currency || "CAD" }).format(profile.rate)}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">Priced in CAD</p>
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground italic">No rate set</p>
-                )}
-              </div>
-            )}
-          </ProfileSection>
         </div>
       </div>
     </main>

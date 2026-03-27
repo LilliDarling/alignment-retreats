@@ -63,16 +63,16 @@ export default function BasicInfoForm({ profile, onSaved, onCancel }: BasicInfoF
   };
 
   const handleSave = async () => {
-    if (!name.trim()) {
-      setError("Name is required.");
-      return;
-    }
+    if (!name.trim()) { setError("Name is required."); return; }
+    if (!bio.trim()) { setError("Bio is required."); return; }
+    if (!location.trim()) { setError("Location is required."); return; }
+    if (!photoUrl) { setError("Profile photo is required."); return; }
     setSaving(true);
     setError(null);
     const data: BasicInfoUpdate = {
       name: name.trim(),
-      bio: bio.trim() || null,
-      location: location.trim() || null,
+      bio: bio.trim(),
+      location: location.trim(),
       profile_photo: photoUrl || null,
       cover_photo: coverUrl || null,
     };
@@ -128,7 +128,7 @@ export default function BasicInfoForm({ profile, onSaved, onCancel }: BasicInfoF
 
       {/* Profile Photo */}
       <div>
-        <label className="text-sm font-medium text-foreground mb-2 block">Profile Photo</label>
+        <label className="text-sm font-medium text-foreground mb-2 block">Profile Photo <span className="text-red-500">*</span></label>
         <div className="flex items-center gap-4">
           <div
             className="relative w-20 h-20 rounded-full overflow-hidden bg-muted cursor-pointer group shrink-0"
@@ -178,7 +178,7 @@ export default function BasicInfoForm({ profile, onSaved, onCancel }: BasicInfoF
       {/* Bio */}
       <div>
         <label htmlFor="bio" className="text-sm font-medium text-foreground mb-1 block">
-          Bio
+          Bio <span className="text-red-500">*</span>
         </label>
         <textarea
           id="bio"
@@ -193,7 +193,7 @@ export default function BasicInfoForm({ profile, onSaved, onCancel }: BasicInfoF
       {/* Location */}
       <div>
         <label htmlFor="location" className="text-sm font-medium text-foreground mb-1 block">
-          Location
+          Location <span className="text-red-500">*</span>
         </label>
         <div className="relative">
           <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

@@ -189,6 +189,29 @@ export async function submitPropertyForReview(
     return { error: `Cannot submit a property with status "${status}".`, isFirstTime: false };
   }
 
+  // Profile completeness check
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("name, bio, location, profile_photo, expertise_areas, languages, years_experience, what_i_offer, what_im_looking_for, availability_status, instagram_handle, tiktok_handle, website_url")
+    .eq("id", userId)
+    .single();
+
+  if (!profile) {
+    return { error: "Profile not found.", isFirstTime: false };
+  }
+
+  const prof = profile as Record<string, unknown>;
+  if (
+    !prof.name || !prof.bio || !prof.location || !prof.profile_photo ||
+    !(prof.expertise_areas as string[] | null)?.length ||
+    !(prof.languages as string[] | null)?.length ||
+    prof.years_experience == null ||
+    !prof.what_i_offer || !prof.what_im_looking_for || !prof.availability_status ||
+    !prof.instagram_handle || !prof.tiktok_handle || !prof.website_url
+  ) {
+    return { error: "Please complete your profile before submitting a venue. Go to My Profile to fill in all required fields.", isFirstTime: false };
+  }
+
   if (!p.name || !p.description || !p.location || !p.property_type) {
     return { error: "Please fill in all required fields before submitting.", isFirstTime: false };
   }

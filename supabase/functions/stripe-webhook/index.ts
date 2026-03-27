@@ -7,6 +7,7 @@ import {
   securityHeaders
 } from "../_shared/security.ts";
 import { corsHeaders } from "../_shared/cors.ts";
+import { isMailerSendConfigured, sendTemplateEmail, getTemplateId } from "../_shared/mailersend.ts";
 
 // Maximum events to process per minute (per IP)
 const WEBHOOK_RATE_LIMIT = 100;
@@ -246,10 +247,9 @@ serve(async (req) => {
           .single();
 
         const attendeeName = profile?.name || "Unknown";
-        const resendApiKey = Deno.env.get("RESEND_API_KEY");
 
         // Send booking confirmation email to attendee
-        if (resendApiKey && retreat && profile?.email) {
+        if (isMailerSendConfigured() && retreat && profile?.email) {
           try {
             const formatDate = (d: string) =>
               new Date(d).toLocaleDateString("en-US", {
@@ -259,24 +259,17 @@ serve(async (req) => {
                 day: "numeric",
               });
 
-            await fetch("https://api.resend.com/emails", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${resendApiKey}`,
+            await sendTemplateEmail({
+              to: profile.email,
+              templateId: getTemplateId("MAILERSEND_TEMPLATE_BOOKING_CONFIRMATION"),
+              variables: {
+                name: attendeeName,
+                retreat_title: retreat.title,
+                start_date: retreat.start_date ? formatDate(retreat.start_date) : "TBD",
+                end_date: retreat.end_date ? formatDate(retreat.end_date) : "TBD",
+                amount_paid: `$${totalAmount.toFixed(2)}`,
+                booking_ref: booking.id.split("-")[0].toUpperCase(),
               },
-              body: JSON.stringify({
-                to: [profile.email],
-                template_alias: "booking-confirmation",
-                data: {
-                  name: attendeeName,
-                  retreat_title: retreat.title,
-                  start_date: retreat.start_date ? formatDate(retreat.start_date) : "TBD",
-                  end_date: retreat.end_date ? formatDate(retreat.end_date) : "TBD",
-                  amount_paid: `$${totalAmount.toFixed(2)}`,
-                  booking_ref: booking.id.split("-")[0].toUpperCase(),
-                },
-              }),
             });
           } catch (emailErr) {
             console.error("Booking confirmation email failed:", emailErr);
@@ -286,55 +279,17 @@ serve(async (req) => {
         // Notify admin via email
         try {
           const adminEmail = Deno.env.get("ADMIN_EMAIL");
-          if (adminEmail && resendApiKey && retreat) {
-            await fetch("https://api.resend.com/emails", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${resendApiKey}`,
+          if (adminEmail && isMailerSendConfigured() && retreat) {
+            await sendTemplateEmail({
+              to: adminEmail,
+              templateId: getTemplateId("MAILERSEND_TEMPLATE_BOOKING_ADMIN"),
+              variables: {
+                retreat_title: retreat.title,
+                attendee_name: attendeeName,
+                amount: `$${totalAmount.toFixed(2)}`,
+                booking_ref: booking.id.split("-")[0].toUpperCase(),
+                date: new Date().toLocaleString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" }),
               },
-              body: JSON.stringify({
-                from: "Alignment Retreats <bookings@alignmentretreats.xyz>",
-                to: [adminEmail],
-                subject: `New Booking: ${retreat.title} — $${totalAmount.toFixed(2)}`,
-                html: `
-                  <!DOCTYPE html>
-                  <html>
-                  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-                  <body style="font-family: 'Barlow', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #3E2723; max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <div style="text-align: center; margin-bottom: 30px;">
-                      <h1 style="font-family: 'Tenor Sans', sans-serif; color: #3E2723; margin-bottom: 10px;">New Booking Received!</h1>
-                    </div>
-                    <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0;">
-                      <table style="width: 100%; border-collapse: collapse;">
-                        <tr>
-                          <td style="padding: 8px 0; font-weight: 600; color: #555; width: 120px;">Retreat:</td>
-                          <td style="padding: 8px 0;">${retreat.title}</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 8px 0; font-weight: 600; color: #555;">Attendee:</td>
-                          <td style="padding: 8px 0;">${attendeeName}</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 8px 0; font-weight: 600; color: #555;">Amount:</td>
-                          <td style="padding: 8px 0;">$${totalAmount.toFixed(2)}</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 8px 0; font-weight: 600; color: #555;">Booking Ref:</td>
-                          <td style="padding: 8px 0; font-family: monospace;">${booking.id.split("-")[0].toUpperCase()}</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 8px 0; font-weight: 600; color: #555;">Date:</td>
-                          <td style="padding: 8px 0;">${new Date().toLocaleString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" })}</td>
-                        </tr>
-                      </table>
-                    </div>
-                    <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-                    <p style="font-size: 12px; color: #888; text-align: center;">This is an automated notification from Alignment Retreats.</p>
-                  </body>
-                  </html>
-                `,
-              }),
             });
           }
         } catch (notifyErr) {

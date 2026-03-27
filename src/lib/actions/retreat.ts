@@ -149,9 +149,10 @@ export async function updateRetreat(
     looking_for: data.looking_for || { needs: [], notes: {} },
   };
 
-  // If published/full, push back to pending_review
+  // If published/full, push back to pending_review and lock price
   if (wasPublished) {
     updateData.status = "pending_review";
+    delete updateData.price_per_person;
   }
 
   const { data: updated, error } = await supabase
@@ -204,6 +205,29 @@ export async function submitRetreatForReview(
   const status = existing.status as string;
   if (status !== "draft" && status !== "pending_review") {
     return { error: `Cannot submit a retreat with status "${status}".`, isFirstTime: false };
+  }
+
+  // Profile completeness check
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("name, bio, location, profile_photo, expertise_areas, languages, years_experience, what_i_offer, what_im_looking_for, availability_status, instagram_handle, tiktok_handle, website_url")
+    .eq("id", userId)
+    .single();
+
+  if (!profile) {
+    return { error: "Profile not found.", isFirstTime: false };
+  }
+
+  const p = profile as Record<string, unknown>;
+  if (
+    !p.name || !p.bio || !p.location || !p.profile_photo ||
+    !(p.expertise_areas as string[] | null)?.length ||
+    !(p.languages as string[] | null)?.length ||
+    p.years_experience == null ||
+    !p.what_i_offer || !p.what_im_looking_for || !p.availability_status ||
+    !p.instagram_handle || !p.tiktok_handle || !p.website_url
+  ) {
+    return { error: "Please complete your profile before submitting a retreat. Go to My Profile to fill in all required fields.", isFirstTime: false };
   }
 
   // Basic completeness check

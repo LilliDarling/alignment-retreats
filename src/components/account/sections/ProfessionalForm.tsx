@@ -16,11 +16,13 @@ function TagInput({
   placeholder,
   tags,
   onChange,
+  required,
 }: {
   label: string;
   placeholder: string;
   tags: string[];
   onChange: (tags: string[]) => void;
+  required?: boolean;
 }) {
   const [input, setInput] = useState("");
 
@@ -37,7 +39,9 @@ function TagInput({
 
   return (
     <div>
-      <label className="text-sm font-medium text-foreground mb-1 block">{label}</label>
+      <label className="text-sm font-medium text-foreground mb-1 block">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
       <div className="flex flex-wrap gap-2 mb-2">
         {tags.map((tag) => (
           <span
@@ -89,13 +93,16 @@ export default function ProfessionalForm({ profile, onSaved, onCancel }: Profess
   const [error, setError] = useState<string | null>(null);
 
   const handleSave = async () => {
+    if (expertiseAreas.length === 0) { setError("At least one expertise area is required."); return; }
+    if (languages.length === 0) { setError("At least one language is required."); return; }
+    if (!yearsExperience) { setError("Years of experience is required."); return; }
     setSaving(true);
     setError(null);
     const data: ProfessionalUpdate = {
       expertise_areas: expertiseAreas,
       certifications,
       languages,
-      years_experience: yearsExperience ? parseInt(yearsExperience, 10) : null,
+      years_experience: parseInt(yearsExperience, 10),
     };
     const result = await updateProfessional(data);
     if (result.error) {
@@ -113,6 +120,7 @@ export default function ProfessionalForm({ profile, onSaved, onCancel }: Profess
         placeholder="e.g. Yoga, Meditation, Breathwork"
         tags={expertiseAreas}
         onChange={setExpertiseAreas}
+        required
       />
 
       <TagInput
@@ -127,11 +135,12 @@ export default function ProfessionalForm({ profile, onSaved, onCancel }: Profess
         placeholder="e.g. English, Spanish"
         tags={languages}
         onChange={setLanguages}
+        required
       />
 
       <div>
         <label htmlFor="years" className="text-sm font-medium text-foreground mb-1 block">
-          Years of Experience
+          Years of Experience <span className="text-red-500">*</span>
         </label>
         <input
           id="years"
