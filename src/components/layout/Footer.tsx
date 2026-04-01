@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Instagram, Facebook, Linkedin, ShieldCheck, BadgeCheck } from "lucide-react";
+import { Instagram, Facebook, Linkedin, Youtube, ShieldCheck, BadgeCheck } from "lucide-react";
 import { siteConfig, navLinks } from "@/lib/data/site";
 import SupportButton from "@/components/ui/SupportButton";
 
@@ -50,6 +50,26 @@ export default function Footer() {
               aria-label="LinkedIn"
             >
               <Linkedin className="w-4 h-4" />
+            </a>
+            <a
+              href={siteConfig.social.youtube}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary transition-colors"
+              aria-label="YouTube"
+            >
+              <Youtube className="w-4 h-4" />
+            </a>
+            <a
+              href={siteConfig.social.tiktok}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary transition-colors"
+              aria-label="TikTok"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+              </svg>
             </a>
           </div>
         </div>

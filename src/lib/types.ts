@@ -8,6 +8,8 @@ export interface SiteConfig {
     instagram: string;
     facebook: string;
     linkedin: string;
+    youtube: string;
+    tiktok: string;
   };
   videoUrl: string;
   parentOrg: {

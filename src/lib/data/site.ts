@@ -12,6 +12,8 @@ export const siteConfig: SiteConfig = {
     facebook:
       "https://www.facebook.com/people/Alignment-Retreats-Co-op/61587878720842/",
     linkedin: "https://www.linkedin.com/company/madc-foundation/",
+    youtube: "https://www.youtube.com/@AlignmentRetreats",
+    tiktok: "https://www.tiktok.com/@alignment.retreats",
   },
   videoUrl:
     "https://pub-fb209cd67e9a4a668e7d182d022f613a.r2.dev/Alignment-Retreats-Website-BG.mp4",
