@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   MapPin,
   Briefcase,
@@ -14,6 +16,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  ArrowLeft,
 } from "lucide-react";
 import TikTokIcon from "@/components/icons/TikTokIcon";
 import { ROLE_LABELS } from "@/lib/data/retreats";
@@ -23,8 +26,15 @@ interface PublicProfileProps {
   profile: HostProfileData;
 }
 
+const BACK_ROUTES: Record<string, { href: string; label: string }> = {
+  "admin-members": { href: "/admin", label: "Back to Members" },
+};
+
 export default function PublicProfile({ profile }: PublicProfileProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
+  const backRoute = from ? BACK_ROUTES[from] : null;
   const allMedia = [
     ...(profile.portfolio_photos || []).map((url) => ({ type: "photo" as const, url })),
     ...(profile.portfolio_videos || []).map((url) => ({ type: "video" as const, url })),
@@ -44,6 +54,17 @@ export default function PublicProfile({ profile }: PublicProfileProps) {
 
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-28">
+      {/* Back navigation */}
+      {backRoute && (
+        <Link
+          href={backRoute.href}
+          className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          {backRoute.label}
+        </Link>
+      )}
+
       {/* Cover */}
       <div className="relative h-48 sm:h-64 rounded-[16px] overflow-hidden bg-gradient-to-br from-primary/20 via-primary/10 to-muted mb-4">
         {profile.cover_photo && (

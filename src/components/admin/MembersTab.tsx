@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Search,
   Users,
@@ -15,6 +16,9 @@ import {
   Mail,
   Crown,
   Loader2,
+  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { toggleCoopMembership } from "@/lib/actions/admin";
@@ -45,17 +49,27 @@ const roleIcons: Record<
   admin: Shield,
 };
 
+const PAGE_SIZE = 25;
+
 export default function MembersTab({ members }: MembersTabProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMember, setSelectedMember] = useState<AdminMember | null>(
     null
   );
+  const [currentPage, setCurrentPage] = useState(1);
 
   const filtered = members.filter(
     (m) =>
       m.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       m.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       m.roles.some((r) => r.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginated = filtered.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE
   );
 
   const now = new Date();
@@ -146,7 +160,10 @@ export default function MembersTab({ members }: MembersTabProps) {
                 type="text"
                 placeholder="Search members..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="w-full pl-9 pr-3 py-2 rounded-xl border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
             </div>
@@ -179,7 +196,7 @@ export default function MembersTab({ members }: MembersTabProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.slice(0, 100).map((member) => (
+                  {paginated.map((member) => (
                     <tr
                       key={member.id}
                       className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
@@ -219,11 +236,70 @@ export default function MembersTab({ members }: MembersTabProps) {
                   ))}
                 </tbody>
               </table>
-              {filtered.length > 100 && (
-                <p className="text-center text-sm text-muted-foreground mt-3">
-                  Showing first 100 of {filtered.length} members. Use search to
-                  narrow results.
-                </p>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4 border-t border-border mt-2">
+                  <p className="text-sm text-muted-foreground">
+                    Showing {(safePage - 1) * PAGE_SIZE + 1}–
+                    {Math.min(safePage * PAGE_SIZE, filtered.length)} of{" "}
+                    {filtered.length} members
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={safePage === 1}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(
+                        (page) =>
+                          page === 1 ||
+                          page === totalPages ||
+                          Math.abs(page - safePage) <= 1
+                      )
+                      .reduce<(number | "ellipsis")[]>((acc, page, idx, arr) => {
+                        if (idx > 0 && page - (arr[idx - 1] as number) > 1) {
+                          acc.push("ellipsis");
+                        }
+                        acc.push(page);
+                        return acc;
+                      }, [])
+                      .map((item, idx) =>
+                        item === "ellipsis" ? (
+                          <span
+                            key={`ellipsis-${idx}`}
+                            className="w-8 h-8 flex items-center justify-center text-muted-foreground text-sm"
+                          >
+                            …
+                          </span>
+                        ) : (
+                          <button
+                            key={item}
+                            onClick={() => setCurrentPage(item)}
+                            className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                              safePage === item
+                                ? "bg-primary text-white"
+                                : "hover:bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            {item}
+                          </button>
+                        )
+                      )}
+                    <button
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
+                      disabled={safePage === totalPages}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           )}
@@ -356,6 +432,19 @@ function MemberDrawer({
                 : "Unknown"}
             </p>
           </div>
+
+          {/* View Full Profile */}
+          {member.slug && (
+            <div className="mb-6">
+              <Link
+                href={`/profile/${member.slug}?from=admin-members`}
+                className="inline-flex items-center gap-2 w-full justify-center px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors"
+              >
+                <ExternalLink className="w-4 h-4" />
+                View Full Profile
+              </Link>
+            </div>
+          )}
 
           {/* User ID */}
           <div>

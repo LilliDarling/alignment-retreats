@@ -7,6 +7,7 @@ export interface AdminMember {
   email: string;
   created_at: string | null;
   roles: string[];
+  slug: string | null;
 }
 
 export interface LookingForData {
@@ -191,6 +192,7 @@ async function getMembers(): Promise<AdminMember[]> {
     email: (p.email as string) || "",
     created_at: (p.created_at as string) || null,
     roles: (p.roles as string[]) || [],
+    slug: (p.slug as string) || null,
   }));
 }
 
