@@ -35,10 +35,10 @@ export default function PrivacyPage() {
               1. Who We Are
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Alignment Retreats is a cooperative platform operated by the MADC
-              Foundation. References to &ldquo;we,&rdquo; &ldquo;us,&rdquo;
+              Alignment Retreats is a cooperative platform operated by
+              Overstory Collective. References to &ldquo;we,&rdquo; &ldquo;us,&rdquo;
               or &ldquo;our&rdquo; in this policy refer to Alignment Retreats
-              and the MADC Foundation. You can contact us at{" "}
+              and Overstory Collective. You can contact us at{" "}
               <a
                 href="mailto:hello@alignmentretreats.xyz"
                 className="text-primary hover:underline"

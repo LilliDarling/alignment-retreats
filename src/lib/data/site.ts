@@ -18,7 +18,7 @@ export const siteConfig: SiteConfig = {
   videoUrl:
     "https://pub-fb209cd67e9a4a668e7d182d022f613a.r2.dev/Alignment-Retreats-Website-BG.mp4",
   parentOrg: {
-    name: "MADC Foundation",
+    name: "Overstory Collective",
     url: "https://madcfoundation.org/",
   },
 };
@@ -64,8 +64,8 @@ export const faqs: FAQ[] = [
       "From yoga and meditation to leadership intensives and wellness immersions — our platform hosts a diverse range of transformative experiences across multiple countries.",
   },
   {
-    question: "How does the MADC Foundation connect to Alignment Retreats?",
+    question: "How does Overstory Collective connect to Alignment Retreats?",
     answer:
-      "Alignment Retreats is a project of the MADC Foundation, a nonprofit dedicated to meaningful community development. A portion of platform proceeds supports foundation initiatives.",
+      "Alignment Retreats is a project of Overstory Collective, a nonprofit dedicated to meaningful community development. A portion of platform proceeds supports foundation initiatives.",
   },
 ];

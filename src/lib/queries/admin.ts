@@ -184,7 +184,11 @@ async function getMembers(): Promise<AdminMember[]> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("get_all_profiles_admin");
 
-  if (error || !data) return [];
+  if (error) {
+    console.error("getMembers RPC error:", error.message);
+    return [];
+  }
+  if (!data) return [];
 
   return (data as Record<string, unknown>[]).map((p) => ({
     id: p.id as string,

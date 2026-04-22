@@ -1,3 +1,14 @@
+-- Ensure admin_audit_log table exists (referenced by the RPC below)
+CREATE TABLE IF NOT EXISTS public.admin_audit_log (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  admin_user_id uuid NOT NULL,
+  action text NOT NULL,
+  resource_type text NOT NULL,
+  resource_count integer,
+  ip_address text,
+  created_at timestamp with time zone NOT NULL DEFAULT now()
+);
+
 -- Add slug to get_all_profiles_admin return so admin can link to member profiles
 DROP FUNCTION IF EXISTS public.get_all_profiles_admin();
 CREATE OR REPLACE FUNCTION public.get_all_profiles_admin()

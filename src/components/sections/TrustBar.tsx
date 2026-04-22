@@ -17,7 +17,7 @@ const trustItems = [
   {
     icon: Heart,
     title: "Purpose-Driven",
-    description: "Backed by the MADC Foundation nonprofit",
+    description: "Backed by the Overstory Collective nonprofit",
   },
 ];
 

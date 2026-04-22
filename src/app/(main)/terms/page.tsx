@@ -38,7 +38,7 @@ export default function TermsPage() {
               These Terms of Service (&ldquo;Terms&rdquo;) govern your use of
               the Alignment Retreats website and platform (collectively, the
               &ldquo;Service&rdquo;), operated by Alignment Retreats, a project
-              of the MADC Foundation. By creating an account or using the
+              of Overstory Collective. By creating an account or using the
               Service in any way, you confirm that you have read, understood,
               and agree to these Terms. If you do not agree, do not use the
               Service.
@@ -228,7 +228,7 @@ export default function TermsPage() {
             </p>
             <p className="text-muted-foreground leading-relaxed">
               To the maximum extent permitted by law, Alignment Retreats and
-              the MADC Foundation shall not be liable for any indirect,
+              Overstory Collective shall not be liable for any indirect,
               incidental, consequential, or punitive damages arising from your
               use of the Service or participation in any retreat listed on the
               platform.
@@ -274,7 +274,7 @@ export default function TermsPage() {
             </h2>
             <p className="text-muted-foreground leading-relaxed">
               These Terms are governed by the laws of the United States and the
-              state in which the MADC Foundation is incorporated, without
+              state in which Overstory Collective is incorporated, without
               regard to conflict of law principles. Any disputes arising under
               these Terms shall be resolved in the courts of that jurisdiction.
             </p>

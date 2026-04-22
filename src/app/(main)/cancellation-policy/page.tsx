@@ -20,7 +20,7 @@ export default function CancellationPolicyPage() {
             Refund & Cancellation Policy
           </h1>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            A Societal Enterprise Operated under MADCF
+            A Societal Enterprise Operated under Overstory Collective
           </p>
           <p className="text-sm text-muted-foreground mt-4">
             Last updated: March 2026
@@ -232,7 +232,7 @@ export default function CancellationPolicyPage() {
                 <span className="text-primary font-bold shrink-0">—</span>
                 <span>
                   The admin team will reconcile unrecoverable amounts manually
-                  (e.g., future credit or MADCF coverage)
+                  (e.g., future credit or Overstory Collective coverage)
                 </span>
               </li>
             </ul>
@@ -361,7 +361,7 @@ export default function CancellationPolicyPage() {
             <p className="text-muted-foreground leading-relaxed">
               This policy is governed and enforced by{" "}
               <strong className="text-foreground">Alignment Retreats Co-Op</strong>,
-              operated under <strong className="text-foreground">MADCF</strong>. All
+              operated under <strong className="text-foreground">Overstory Collective</strong>. All
               refunds, disputes, or payout delays are managed by the Operations
               Team. Technical implementations are handled by the platform
               developer team.

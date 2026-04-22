@@ -107,7 +107,7 @@ export default function CooperativePage() {
     <>
       <PageHero
         title="Become a Co-Op Co-Founder"
-        subtitle="Alignment Retreats Co-Op is a societal enterprise operated under MADCF. Join as a co-founder and participate in profit sharing and governance."
+        subtitle="Alignment Retreats Co-Op is a societal enterprise operated under Overstory Collective. Join as a co-founder and participate in profit sharing and governance."
         backgroundImage="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1920&h=600&fit=crop"
       >
         <div className="mt-8">
@@ -193,7 +193,7 @@ export default function CooperativePage() {
                       </p>
                     </div>
                     <div className="text-center">
-                      <p className="text-sm text-muted-foreground">MADCF</p>
+                      <p className="text-sm text-muted-foreground">Overstory Collective</p>
                       <p className="text-2xl font-bold text-foreground">30%</p>
                       <p className="text-xs text-muted-foreground">
                         community initiatives
@@ -211,7 +211,7 @@ export default function CooperativePage() {
                   </ul>
 
                   <p className="text-sm text-muted-foreground text-center pt-2">
-                    30% of net platform profits support MADCF&apos;s societal and
+                    30% of net platform profits support Overstory Collective&apos;s societal and
                     community initiatives.
                   </p>
                 </CardContent>
