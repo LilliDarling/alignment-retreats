@@ -207,7 +207,7 @@ export async function submitPropertyForReview(
     !(prof.languages as string[] | null)?.length ||
     prof.years_experience == null ||
     !prof.what_i_offer || !prof.what_im_looking_for || !prof.availability_status ||
-    !prof.instagram_handle || !prof.tiktok_handle || !prof.website_url
+    (!prof.instagram_handle && !prof.tiktok_handle)
   ) {
     return { error: "Please complete your profile before submitting a venue. Go to My Profile to fill in all required fields.", isFirstTime: false };
   }

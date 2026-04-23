@@ -129,16 +129,23 @@ export async function updateProfessional(data: ProfessionalUpdate) {
 const HANDLE_REGEX = /^[a-zA-Z0-9._]{1,50}$/;
 
 export async function updateSocialLinks(data: SocialLinksUpdate) {
-  if (!data.instagram_handle?.trim()) return { error: "Instagram handle is required." };
-  if (!HANDLE_REGEX.test(data.instagram_handle)) {
+  const instagram = data.instagram_handle?.trim() || "";
+  const tiktok = data.tiktok_handle?.trim() || "";
+  if (!instagram && !tiktok) {
+    return { error: "Please add at least one social handle (Instagram or TikTok)." };
+  }
+  if (instagram && !HANDLE_REGEX.test(instagram)) {
     return { error: "Instagram handle may only contain letters, numbers, periods, and underscores (max 50 characters)." };
   }
-  if (!data.tiktok_handle?.trim()) return { error: "TikTok handle is required." };
-  if (!HANDLE_REGEX.test(data.tiktok_handle)) {
+  if (tiktok && !HANDLE_REGEX.test(tiktok)) {
     return { error: "TikTok handle may only contain letters, numbers, periods, and underscores (max 50 characters)." };
   }
-  if (!data.website_url?.trim()) return { error: "Website URL is required." };
-  return updateProfileFields({ ...data });
+  return updateProfileFields({
+    ...data,
+    instagram_handle: instagram || null,
+    tiktok_handle: tiktok || null,
+    website_url: data.website_url?.trim() || null,
+  });
 }
 
 export async function updateAbout(data: AboutUpdate) {

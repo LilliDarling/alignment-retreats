@@ -345,6 +345,7 @@ export default function RetreatForm({
 
   const handleBookAndSubmit = async () => {
     if (!retreatId) return;
+    setShowFirstTimeModal(false);
     setSubmitting(true);
     setError(null);
     try {
@@ -353,7 +354,6 @@ export default function RetreatForm({
         setError(result.error);
       } else {
         setSuccess("Retreat submitted for review! You'll be notified once it's approved.");
-        setShowFirstTimeModal(false);
       }
     } catch {
       setError("Something went wrong. Please check your connection and try again.");

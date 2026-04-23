@@ -302,6 +302,7 @@ export default function VenueForm({
 
   const handleBookAndSubmit = async () => {
     if (!propertyId) return;
+    setShowSubmitModal(false);
     setSubmitting(true);
     setError(null);
     try {
@@ -310,7 +311,6 @@ export default function VenueForm({
         setError(result.error);
       } else {
         setSuccess("Property submitted for review! You'll be notified once it's approved.");
-        setShowSubmitModal(false);
       }
     } catch {
       setError("Something went wrong. Please check your connection and try again.");

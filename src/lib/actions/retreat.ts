@@ -225,7 +225,7 @@ export async function submitRetreatForReview(
     !(p.languages as string[] | null)?.length ||
     p.years_experience == null ||
     !p.what_i_offer || !p.what_im_looking_for || !p.availability_status ||
-    !p.instagram_handle || !p.tiktok_handle || !p.website_url
+    (!p.instagram_handle && !p.tiktok_handle)
   ) {
     return { error: "Please complete your profile before submitting a retreat. Go to My Profile to fill in all required fields.", isFirstTime: false };
   }
