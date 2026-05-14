@@ -11,7 +11,7 @@ export async function getDashboardData(
     await Promise.all([
       supabase
         .from("profiles")
-        .select("name, bio, profile_photo, is_coop_member, onboarding_completed, show_in_directory")
+        .select("name, bio, profile_photo, is_coop_member, onboarding_completed, profile_completed")
         .eq("id", userId)
         .single(),
       supabase
@@ -49,7 +49,7 @@ export async function getDashboardData(
     is_coop_member: !!(profileData as Record<string, unknown>)?.is_coop_member,
     onboarding_completed:
       (profileData?.onboarding_completed as Record<string, boolean>) || null,
-    profile_completed: !!(profileData?.show_in_directory),
+    profile_completed: !!(profileData as Record<string, unknown> | null)?.profile_completed,
   };
 
   const roles = (rolesResult.data || []).map(

@@ -67,6 +67,31 @@ export async function getOwnProfile(): Promise<EditableProfile | null> {
   };
 }
 
+const COMPLETION_FIELDS = `
+  name, bio, location, profile_photo,
+  expertise_areas, languages, years_experience,
+  what_i_offer, what_im_looking_for, availability_status,
+  instagram_handle, tiktok_handle, profile_completed
+` as const;
+
+function isProfileComplete(p: Record<string, unknown>): boolean {
+  const hasStr = (v: unknown) => typeof v === "string" && v.trim().length > 0;
+  const hasArr = (v: unknown) => Array.isArray(v) && v.length > 0;
+  return (
+    hasStr(p.name) &&
+    hasStr(p.bio) &&
+    hasStr(p.location) &&
+    hasStr(p.profile_photo) &&
+    hasArr(p.expertise_areas) &&
+    hasArr(p.languages) &&
+    p.years_experience != null &&
+    hasStr(p.what_i_offer) &&
+    hasStr(p.what_im_looking_for) &&
+    hasStr(p.availability_status) &&
+    (hasStr(p.instagram_handle) || hasStr(p.tiktok_handle))
+  );
+}
+
 async function updateProfileFields(
   fields: Record<string, unknown>
 ): Promise<{ error: string | null }> {
@@ -80,6 +105,21 @@ async function updateProfileFields(
     .eq("id", userId);
 
   if (error) return { error: error.message };
+
+  if (!fields.profile_completed) {
+    const { data: current } = await supabase
+      .from("profiles")
+      .select(COMPLETION_FIELDS)
+      .eq("id", userId)
+      .single() as { data: Record<string, unknown> | null };
+
+    if (current && !current.profile_completed && isProfileComplete(current)) {
+      await supabase
+        .from("profiles")
+        .update({ profile_completed: true })
+        .eq("id", userId);
+    }
+  }
 
   revalidatePath("/account");
   revalidatePath("/dashboard");
