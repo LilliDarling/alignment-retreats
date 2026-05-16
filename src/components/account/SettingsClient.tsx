@@ -11,12 +11,15 @@ import {
   Loader2,
   CheckCircle,
   AlertCircle,
+  Plus,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
   updateDirectoryVisibility,
   updateNewsletterOptIn,
+  addUserRole,
 } from "@/lib/actions/profile";
+import type { AppRole } from "@/types/auth";
 import {
   Card,
   CardHeader,
@@ -122,8 +125,39 @@ export default function SettingsClient({
   const [deleting, setDeleting] = useState(false);
   const [deleteFeedback, setDeleteFeedback] = useState<FeedbackState>(null);
 
+  // Add role
+  const [addingRole, setAddingRole] = useState<AppRole | null>(null);
+  const [addRoleFeedback, setAddRoleFeedback] = useState<FeedbackState>(null);
+
   const roleLabel = (r: string) =>
     r === "landowner" ? "Venue Owner" : r.charAt(0).toUpperCase() + r.slice(1);
+
+  const ALL_SELF_ASSIGNABLE: AppRole[] = [
+    "host",
+    "cohost",
+    "landowner",
+    "staff",
+    "attendee",
+  ];
+  const missingRoles = ALL_SELF_ASSIGNABLE.filter(
+    (r) => !user.roles.includes(r)
+  );
+
+  async function handleAddRole(role: AppRole) {
+    setAddingRole(role);
+    setAddRoleFeedback(null);
+    const { error } = await addUserRole(role);
+    setAddingRole(null);
+    if (error) {
+      setAddRoleFeedback({ type: "error", message: error });
+      return;
+    }
+    setAddRoleFeedback({
+      type: "success",
+      message: `${roleLabel(role)} role added.`,
+    });
+    router.refresh();
+  }
 
   async function handlePasswordReset() {
     setPasswordFeedback(null);
@@ -241,6 +275,35 @@ export default function SettingsClient({
                   <Badge variant="muted">Member</Badge>
                 )}
               </div>
+              {missingRoles.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Add another role
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {missingRoles.map((r) => {
+                      const isLoading = addingRole === r;
+                      return (
+                        <button
+                          key={r}
+                          type="button"
+                          onClick={() => handleAddRole(r)}
+                          disabled={addingRole !== null}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border border-dashed border-primary/40 text-primary hover:bg-primary/10 hover:border-primary/60 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isLoading ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Plus className="w-3.5 h-3.5" />
+                          )}
+                          {roleLabel(r)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <Feedback state={addRoleFeedback} />
+                </div>
+              )}
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-0.5">

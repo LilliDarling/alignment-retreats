@@ -3,8 +3,16 @@ import Image from "next/image";
 import { Instagram, Facebook, Linkedin, Youtube, ShieldCheck, BadgeCheck } from "lucide-react";
 import { siteConfig, navLinks } from "@/lib/data/site";
 import SupportButton from "@/components/ui/SupportButton";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Footer() {
+export default async function Footer() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const getInvolvedHref = (role: "host" | "cohost" | "landowner") =>
+    user ? "/account/settings" : `/signup?role=${role}`;
+
   return (
     <footer className="text-white/80" style={{ backgroundColor: "hsl(94 27% 14%)" }}>
       {/* Top: Logo + Social */}
@@ -101,7 +109,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href="/signup?role=host"
+                  href={getInvolvedHref("host")}
                   className="inline-block text-sm hover:text-white hover:translate-x-1 transition-all duration-200"
                 >
                   Host a Retreat
@@ -109,7 +117,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/signup?role=cohost"
+                  href={getInvolvedHref("cohost")}
                   className="inline-block text-sm hover:text-white hover:translate-x-1 transition-all duration-200"
                 >
                   Become a Co-Host
@@ -117,7 +125,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/signup?role=landowner"
+                  href={getInvolvedHref("landowner")}
                   className="inline-block text-sm hover:text-white hover:translate-x-1 transition-all duration-200"
                 >
                   List Your Venue

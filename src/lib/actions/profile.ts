@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { deleteStorageUrl } from "@/lib/utils/storage";
+import type { AppRole } from "@/types/auth";
 import type {
   EditableProfile,
   BasicInfoUpdate,
@@ -212,4 +213,47 @@ export async function updateDirectoryVisibility(show: boolean): Promise<{ error:
 
 export async function updateNewsletterOptIn(optIn: boolean): Promise<{ error: string | null }> {
   return updateProfileFields({ newsletter_opt_in: optIn } as Record<string, unknown>);
+}
+
+const SELF_ASSIGNABLE_ROLES: AppRole[] = ["host", "cohost", "landowner", "staff", "attendee"];
+
+export async function addUserRole(role: AppRole): Promise<{ error: string | null }> {
+  if (!SELF_ASSIGNABLE_ROLES.includes(role)) {
+    return { error: "That role can't be self-assigned." };
+  }
+
+  const userId = await getAuthUserId();
+  if (!userId) return { error: "Not authenticated" };
+
+  const supabase = await createClient();
+
+  const { error: roleErr } = await supabase
+    .from("user_roles")
+    .upsert(
+      { user_id: userId, role },
+      { onConflict: "user_id,role", ignoreDuplicates: true }
+    );
+  if (roleErr) return { error: roleErr.message };
+
+  const profileTable =
+    role === "host" ? "hosts" :
+    role === "cohost" ? "cohosts" :
+    role === "staff" ? "staff_profiles" :
+    null;
+
+  if (profileTable) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: profileErr } = await (supabase as any)
+      .from(profileTable)
+      .upsert(
+        { user_id: userId },
+        { onConflict: "user_id", ignoreDuplicates: true }
+      );
+    if (profileErr) return { error: profileErr.message };
+  }
+
+  revalidatePath("/account");
+  revalidatePath("/account/settings");
+  revalidatePath("/dashboard");
+  return { error: null };
 }

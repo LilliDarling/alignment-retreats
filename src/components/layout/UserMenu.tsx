@@ -179,7 +179,7 @@ export default function UserMenu({ user, scrolled }: UserMenuProps) {
 
             {!isHost && (
               <Link
-                href="/signup?step=host"
+                href="/account/settings"
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
               >
