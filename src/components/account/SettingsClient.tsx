@@ -18,7 +18,9 @@ import {
   updateDirectoryVisibility,
   updateNewsletterOptIn,
   addUserRole,
+  getAccountDeletionBlockers,
 } from "@/lib/actions/profile";
+import type { DeletionBlocker } from "@/lib/actions/profile";
 import type { AppRole } from "@/types/auth";
 import {
   Card,
@@ -124,6 +126,26 @@ export default function SettingsClient({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteFeedback, setDeleteFeedback] = useState<FeedbackState>(null);
+  const [blockers, setBlockers] = useState<DeletionBlocker[] | null>(null);
+  const [loadingBlockers, setLoadingBlockers] = useState(false);
+
+  async function openDeleteModal() {
+    setShowDeleteModal(true);
+    setDeleteConfirmText("");
+    setDeleteFeedback(null);
+    setBlockers(null);
+    setLoadingBlockers(true);
+    const result = await getAccountDeletionBlockers();
+    setBlockers(result);
+    setLoadingBlockers(false);
+  }
+
+  function closeDeleteModal() {
+    setShowDeleteModal(false);
+    setDeleteConfirmText("");
+    setDeleteFeedback(null);
+    setBlockers(null);
+  }
 
   // Add role
   const [addingRole, setAddingRole] = useState<AppRole | null>(null);
@@ -221,15 +243,27 @@ export default function SettingsClient({
     if (deleteConfirmText !== "DELETE") return;
     setDeleting(true);
     setDeleteFeedback(null);
-    const { error } = await supabase.functions.invoke("delete-account", {
+    const { data, error } = await supabase.functions.invoke<{
+      error?: string;
+      blockers?: DeletionBlocker[];
+    }>("delete-account", {
       body: { userId: user.id },
     });
-    if (error) {
+    if (error || data?.error) {
       setDeleting(false);
-      setDeleteFeedback({
-        type: "error",
-        message: "Failed to delete account. Please contact support.",
-      });
+      if (data?.blockers && data.blockers.length > 0) {
+        setBlockers(data.blockers);
+        setDeleteFeedback({
+          type: "error",
+          message: data.error || "Account deletion is blocked.",
+        });
+      } else {
+        setDeleteFeedback({
+          type: "error",
+          message:
+            data?.error || "Failed to delete account. Please contact support.",
+        });
+      }
       return;
     }
     await supabase.auth.signOut();
@@ -431,7 +465,7 @@ export default function SettingsClient({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowDeleteModal(true)}
+              onClick={openDeleteModal}
               className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
             >
               Delete Account
@@ -445,53 +479,88 @@ export default function SettingsClient({
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => {
-              setShowDeleteModal(false);
-              setDeleteConfirmText("");
-              setDeleteFeedback(null);
-            }}
+            onClick={closeDeleteModal}
           />
           <div className="relative bg-white rounded-[20px] shadow-2xl w-full max-w-md p-6">
-            <h2 className="text-lg font-display font-semibold text-foreground mb-2">
-              Delete Your Account?
-            </h2>
-            <p className="text-sm text-muted-foreground mb-4">
-              This action cannot be undone. Your profile, bookings, listings,
-              and all data will be permanently deleted.
-            </p>
-            <p className="text-sm font-medium text-foreground mb-2">
-              Type{" "}
-              <span className="font-mono font-bold text-red-600">DELETE</span>{" "}
-              to confirm:
-            </p>
-            <input
-              type="text"
-              value={deleteConfirmText}
-              onChange={(e) => setDeleteConfirmText(e.target.value)}
-              placeholder="DELETE"
-              className="w-full px-3 py-2 text-sm border border-border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400 transition-colors mb-4"
-            />
-            <Feedback state={deleteFeedback} />
-            <div className="flex gap-3 mt-4">
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setDeleteConfirmText("");
-                  setDeleteFeedback(null);
-                }}
-                className="flex-1 px-4 py-2 text-sm font-medium text-foreground border border-border rounded-xl hover:bg-muted transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteAccount}
-                disabled={deleteConfirmText !== "DELETE" || deleting}
-                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-              >
-                {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
-                Delete Account
-              </button>
-            </div>
+            {loadingBlockers ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : blockers && blockers.length > 0 ? (
+              <>
+                <h2 className="text-lg font-display font-semibold text-foreground mb-2">
+                  Can&apos;t Delete Account Yet
+                </h2>
+                <p className="text-sm text-muted-foreground mb-4">
+                  You have retreats with active bookings. Cancel and refund
+                  those bookings before deleting your account.
+                </p>
+                <ul className="space-y-2 mb-4 max-h-60 overflow-y-auto">
+                  {blockers.map((b) => (
+                    <li
+                      key={b.id}
+                      className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl bg-muted/50 border border-border"
+                    >
+                      <span className="text-sm font-medium text-foreground truncate">
+                        {b.title}
+                      </span>
+                      <span className="text-xs text-muted-foreground shrink-0">
+                        {b.bookingCount} booking
+                        {b.bookingCount === 1 ? "" : "s"}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <Feedback state={deleteFeedback} />
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={closeDeleteModal}
+                    className="flex-1 px-4 py-2 text-sm font-medium text-foreground border border-border rounded-xl hover:bg-muted transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 className="text-lg font-display font-semibold text-foreground mb-2">
+                  Delete Your Account?
+                </h2>
+                <p className="text-sm text-muted-foreground mb-4">
+                  This action cannot be undone. Your profile, bookings, listings,
+                  and all data will be permanently deleted.
+                </p>
+                <p className="text-sm font-medium text-foreground mb-2">
+                  Type{" "}
+                  <span className="font-mono font-bold text-red-600">DELETE</span>{" "}
+                  to confirm:
+                </p>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="DELETE"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400 transition-colors mb-4"
+                />
+                <Feedback state={deleteFeedback} />
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={closeDeleteModal}
+                    className="flex-1 px-4 py-2 text-sm font-medium text-foreground border border-border rounded-xl hover:bg-muted transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={deleteConfirmText !== "DELETE" || deleting}
+                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                  >
+                    {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
+                    Delete Account
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

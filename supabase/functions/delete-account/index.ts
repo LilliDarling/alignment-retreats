@@ -74,6 +74,51 @@ serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    // Pre-flight: if the user is a host of any retreat with bookings,
+    // refuse deletion — they need to cancel/refund first.
+    // (bookings.retreat_id is ON DELETE RESTRICT to protect financial records.)
+    const { data: hostedRetreats } = await supabaseAdmin
+      .from("retreats")
+      .select("id, title")
+      .eq("host_user_id", userId);
+
+    const hostedRetreatIds = (hostedRetreats || []).map((r: { id: string }) => r.id);
+
+    if (hostedRetreatIds.length > 0) {
+      const { data: blockingBookings } = await supabaseAdmin
+        .from("bookings")
+        .select("retreat_id")
+        .in("retreat_id", hostedRetreatIds);
+
+      if (blockingBookings && blockingBookings.length > 0) {
+        const counts = new Map<string, number>();
+        for (const b of blockingBookings as { retreat_id: string }[]) {
+          counts.set(b.retreat_id, (counts.get(b.retreat_id) || 0) + 1);
+        }
+        const blockers = (hostedRetreats || [])
+          .filter((r: { id: string }) => counts.has(r.id))
+          .map((r: { id: string; title: string }) => ({
+            id: r.id,
+            title: r.title,
+            bookingCount: counts.get(r.id) || 0,
+          }));
+        return new Response(
+          JSON.stringify({
+            error: "Cancel and refund the bookings on these retreats before deleting your account.",
+            blockers,
+          }),
+          { status: 409, headers: { ...cors, ...securityHeaders } }
+        );
+      }
+
+      // No bookings — clear retreat_wishes matches so the cascade can proceed.
+      // (matched_retreat_id has no ON DELETE clause and defaults to NO ACTION.)
+      await supabaseAdmin
+        .from("retreat_wishes")
+        .update({ matched_retreat_id: null, matched_at: null })
+        .in("matched_retreat_id", hostedRetreatIds);
+    }
+
     // Create audit log before deletion
     const auditEntry = createAuditLog({
       action: "account_deletion",

@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { navLinks } from "@/lib/data/site";
 import Button from "@/components/ui/Button";
 import UserMenu from "@/components/layout/UserMenu";
+import NotificationBell from "@/components/layout/NotificationBell";
 import SupportButton from "@/components/ui/SupportButton";
 import { useLenis } from "@/components/providers/SmoothScrollProvider";
 import { createClient } from "@/lib/supabase/client";
@@ -138,7 +139,10 @@ export default function Navbar({
 
               {/* Auth */}
               {user ? (
-                <UserMenu user={user} scrolled={scrolled || !isHome} />
+                <div className="flex items-center gap-2">
+                  <NotificationBell scrolled={scrolled || !isHome} />
+                  <UserMenu user={user} scrolled={scrolled || !isHome} />
+                </div>
               ) : (
                 <>
                   <Link

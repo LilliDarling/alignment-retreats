@@ -189,7 +189,7 @@ serve(async (req) => {
         // Get retreat details for payout scheduling and confirmation email
         const { data: retreat } = await supabaseAdmin
           .from("retreats")
-          .select("title, start_date, end_date, max_attendees")
+          .select("title, start_date, end_date, max_attendees, host_user_id")
           .eq("id", retreat_id)
           .single();
 
@@ -294,6 +294,77 @@ serve(async (req) => {
           }
         } catch (notifyErr) {
           console.error("Admin booking notification failed:", notifyErr);
+        }
+
+        // Notify the host: in-site notification + email
+        if (retreat?.host_user_id) {
+          const hostUserId = retreat.host_user_id as string;
+
+          // Count total bookings so the host sees momentum
+          const { count: totalBookingsForHost } = await supabaseAdmin
+            .from("bookings")
+            .select("id", { count: "exact", head: true })
+            .eq("retreat_id", retreat_id);
+
+          const { error: notifErr } = await supabaseAdmin
+            .from("notifications")
+            .insert({
+              user_id: hostUserId,
+              type: "booking_new",
+              title: `New booking on ${retreat.title}`,
+              body: `${attendeeName} booked your retreat. ${
+                totalBookingsForHost ?? 1
+              } booking${(totalBookingsForHost ?? 1) === 1 ? "" : "s"} total.`,
+              action_url: "/dashboard",
+              retreat_id,
+            });
+          if (notifErr) console.error("Host notification insert failed:", notifErr);
+
+          // Email the host
+          try {
+            const { data: hostAuthUser } =
+              await supabaseAdmin.auth.admin.getUserById(hostUserId);
+            const hostEmail = hostAuthUser?.user?.email;
+            if (hostEmail && isMailerSendConfigured()) {
+              const { data: hostProfile } = await supabaseAdmin
+                .from("profiles")
+                .select("name")
+                .eq("id", hostUserId)
+                .single();
+
+              const formatDate = (d: string) =>
+                new Date(d).toLocaleDateString("en-US", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                });
+
+              await sendTemplateEmail({
+                to: hostEmail,
+                templateId: getTemplateId("MAILERSEND_TEMPLATE_BOOKING_HOST"),
+                variables: {
+                  host_name: hostProfile?.name || "there",
+                  attendee_name: attendeeName,
+                  retreat_title: retreat.title,
+                  start_date: retreat.start_date
+                    ? formatDate(retreat.start_date)
+                    : "TBD",
+                  end_date: retreat.end_date
+                    ? formatDate(retreat.end_date)
+                    : "TBD",
+                  amount_paid: `$${totalAmount.toFixed(2)}`,
+                  booking_ref: booking.id.split("-")[0].toUpperCase(),
+                  total_bookings: String(totalBookingsForHost ?? 1),
+                  dashboard_url: `${
+                    Deno.env.get("SITE_URL") || "https://alignmentretreats.com"
+                  }/dashboard`,
+                },
+              });
+            }
+          } catch (hostEmailErr) {
+            console.error("Host booking email failed:", hostEmailErr);
+          }
         }
 
         // Log if retreat is now full

@@ -215,6 +215,42 @@ export async function updateNewsletterOptIn(optIn: boolean): Promise<{ error: st
   return updateProfileFields({ newsletter_opt_in: optIn } as Record<string, unknown>);
 }
 
+export type DeletionBlocker = { id: string; title: string; bookingCount: number };
+
+export async function getAccountDeletionBlockers(): Promise<DeletionBlocker[]> {
+  const userId = await getAuthUserId();
+  if (!userId) return [];
+
+  const supabase = await createClient();
+  const { data: retreats } = await supabase
+    .from("retreats")
+    .select("id, title")
+    .eq("host_user_id", userId);
+
+  if (!retreats || retreats.length === 0) return [];
+
+  const retreatIds = retreats.map((r) => r.id);
+  const { data: bookings } = await supabase
+    .from("bookings")
+    .select("retreat_id")
+    .in("retreat_id", retreatIds);
+
+  if (!bookings || bookings.length === 0) return [];
+
+  const counts = new Map<string, number>();
+  for (const b of bookings) {
+    counts.set(b.retreat_id, (counts.get(b.retreat_id) || 0) + 1);
+  }
+
+  return retreats
+    .filter((r) => counts.has(r.id))
+    .map((r) => ({
+      id: r.id,
+      title: r.title ?? "Untitled retreat",
+      bookingCount: counts.get(r.id) || 0,
+    }));
+}
+
 const SELF_ASSIGNABLE_ROLES: AppRole[] = ["host", "cohost", "landowner", "staff", "attendee"];
 
 export async function addUserRole(role: AppRole): Promise<{ error: string | null }> {
