@@ -1,13 +1,11 @@
 "use client";
 
-import { Phone, Calendar, Save, Loader2 } from "lucide-react";
-
-const CALENDLY_URL = "https://calendly.com/mathew-vetten/co-op-onboarding";
+import { ClipboardCheck, Save, Loader2, Send } from "lucide-react";
 
 interface FirstTimeSubmitModalProps {
   open: boolean;
   onSaveAsDraft: () => void;
-  onBookAndSubmit: () => void;
+  onSubmit: () => void;
   submitting?: boolean;
   saving?: boolean;
   type?: "retreat" | "venue";
@@ -16,7 +14,7 @@ interface FirstTimeSubmitModalProps {
 export default function FirstTimeSubmitModal({
   open,
   onSaveAsDraft,
-  onBookAndSubmit,
+  onSubmit,
   submitting,
   saving,
   type = "retreat",
@@ -25,11 +23,6 @@ export default function FirstTimeSubmitModal({
 
   const label = type === "retreat" ? "retreat" : "property";
 
-  const handleBookCall = () => {
-    window.open(CALENDLY_URL, "_blank", "noopener,noreferrer");
-    onBookAndSubmit();
-  };
-
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
@@ -37,14 +30,14 @@ export default function FirstTimeSubmitModal({
         {/* Header */}
         <div className="flex items-center gap-3 p-6 pb-4 border-b border-border">
           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-            <Phone className="w-5 h-5 text-primary" />
+            <ClipboardCheck className="w-5 h-5 text-primary" />
           </div>
           <div className="flex-1">
             <h2 className="text-base font-semibold text-foreground">
               Ready to submit?
             </h2>
             <p className="text-xs text-muted-foreground">
-              Book a call to get your {label} reviewed
+              Send your {label} for review
             </p>
           </div>
         </div>
@@ -52,27 +45,25 @@ export default function FirstTimeSubmitModal({
         {/* Content */}
         <div className="p-6 space-y-4">
           <p className="text-sm text-foreground leading-relaxed">
-            Before we can review your {label}, we need to hop on a quick call
-            to make sure everything is set up for success.
+            Our team will review your {label} and reach out if we need any
+            additional information.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            We&apos;ll go over the details together, answer any questions, and
-            get your {label} on the path to being published. If you&apos;re not
-            ready to book a call yet, you can save your progress as a draft and
-            come back anytime.
+            Please allow up to <span className="font-medium text-foreground">10 business days</span> for review.
+            You can keep editing your draft anytime before submitting.
           </p>
 
           <button
-            onClick={handleBookCall}
+            onClick={onSubmit}
             disabled={submitting}
             className="flex items-center justify-center gap-2 w-full py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
             {submitting ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <Calendar className="w-4 h-4" />
+              <Send className="w-4 h-4" />
             )}
-            {submitting ? "Submitting..." : "Book a Call & Submit"}
+            {submitting ? "Submitting..." : "Submit for Review"}
           </button>
 
           <button

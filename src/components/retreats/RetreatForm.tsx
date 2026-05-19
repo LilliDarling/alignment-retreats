@@ -343,7 +343,7 @@ export default function RetreatForm({
     setShowFirstTimeModal(true);
   };
 
-  const handleBookAndSubmit = async () => {
+  const handleSubmitForReview = async () => {
     if (!retreatId) return;
     setShowFirstTimeModal(false);
     setSubmitting(true);
@@ -353,7 +353,7 @@ export default function RetreatForm({
       if (result.error) {
         setError(result.error);
       } else {
-        setSuccess("Retreat submitted for review! You'll be notified once it's approved.");
+        setSuccess("Retreat submitted for review! We'll reach out if we need more info — please allow up to 10 business days.");
       }
     } catch {
       setError("Something went wrong. Please check your connection and try again.");
@@ -388,9 +388,9 @@ export default function RetreatForm({
       open={showFirstTimeModal}
       onSaveAsDraft={() => {
         setShowFirstTimeModal(false);
-        setSuccess("Draft saved. Book a call when you're ready to submit for review.");
+        setSuccess("Draft saved. Submit for review when you're ready.");
       }}
-      onBookAndSubmit={handleBookAndSubmit}
+      onSubmit={handleSubmitForReview}
       submitting={submitting}
       saving={saving}
       type="retreat"

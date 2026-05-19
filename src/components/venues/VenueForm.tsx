@@ -300,7 +300,7 @@ export default function VenueForm({
     setShowSubmitModal(true);
   };
 
-  const handleBookAndSubmit = async () => {
+  const handleSubmitForReview = async () => {
     if (!propertyId) return;
     setShowSubmitModal(false);
     setSubmitting(true);
@@ -310,7 +310,7 @@ export default function VenueForm({
       if (result.error) {
         setError(result.error);
       } else {
-        setSuccess("Property submitted for review! You'll be notified once it's approved.");
+        setSuccess("Property submitted for review! We'll reach out if we need more info — please allow up to 10 business days.");
       }
     } catch {
       setError("Something went wrong. Please check your connection and try again.");
@@ -349,9 +349,9 @@ export default function VenueForm({
       open={showSubmitModal}
       onSaveAsDraft={() => {
         setShowSubmitModal(false);
-        setSuccess("Draft saved. Book a call when you're ready to submit for review.");
+        setSuccess("Draft saved. Submit for review when you're ready.");
       }}
-      onBookAndSubmit={handleBookAndSubmit}
+      onSubmit={handleSubmitForReview}
       submitting={submitting}
       saving={saving}
       type="venue"
