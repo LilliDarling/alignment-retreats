@@ -7,6 +7,9 @@
     "binding": "ASSETS"
   },
   "main": ".open-next/worker.js",
+  "images": {
+    "binding": "IMAGES"
+  },
   "observability": {
     "enabled": true,
     "logs": {

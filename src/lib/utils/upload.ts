@@ -1,3 +1,4 @@
+import imageCompression from "browser-image-compression";
 import { createClient } from "@/lib/supabase/client";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
@@ -40,6 +41,21 @@ function generateFileName(file: File): string {
   return `${timestamp}-${random}.${ext}`;
 }
 
+async function compressImage(file: File): Promise<File> {
+  // GIFs lose animation when re-encoded; skip them.
+  if (file.type === "image/gif") return file;
+  try {
+    return await imageCompression(file, {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 2000,
+      useWebWorker: true,
+      initialQuality: 0.8,
+    });
+  } catch {
+    return file;
+  }
+}
+
 export async function uploadProfilePhoto(
   userId: string,
   file: File
@@ -49,11 +65,12 @@ export async function uploadProfilePhoto(
   if (getMediaType(file) !== "image") return { error: "Profile photo must be an image." };
 
   const supabase = createClient();
-  const path = `${userId}/${generateFileName(file)}`;
+  const compressed = await compressImage(file);
+  const path = `${userId}/${generateFileName(compressed)}`;
 
   const { error } = await supabase.storage
     .from("profile-photos")
-    .upload(path, file, { upsert: true });
+    .upload(path, compressed, { upsert: true });
 
   if (error) return { error: error.message };
 
@@ -75,11 +92,12 @@ export async function uploadPortfolioMedia(
   if (!mediaType) return { error: "Unsupported file type." };
 
   const supabase = createClient();
-  const path = `${userId}/${generateFileName(file)}`;
+  const payload = mediaType === "image" ? await compressImage(file) : file;
+  const path = `${userId}/${generateFileName(payload)}`;
 
   const { error } = await supabase.storage
     .from("portfolio-media")
-    .upload(path, file);
+    .upload(path, payload);
 
   if (error) return { error: error.message };
 
@@ -104,11 +122,12 @@ export async function uploadRetreatImage(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated" };
 
-  const path = `${user.id}/${retreatId}-${generateFileName(file)}`;
+  const compressed = await compressImage(file);
+  const path = `${user.id}/${retreatId}-${generateFileName(compressed)}`;
 
   const { error } = await supabase.storage
     .from("retreat-photos")
-    .upload(path, file, { upsert: true });
+    .upload(path, compressed, { upsert: true });
 
   if (error) return { error: error.message };
 
@@ -160,11 +179,12 @@ export async function uploadVenueImage(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated" };
 
-  const path = `${user.id}/${propertyId}-${generateFileName(file)}`;
+  const compressed = await compressImage(file);
+  const path = `${user.id}/${propertyId}-${generateFileName(compressed)}`;
 
   const { error } = await supabase.storage
     .from("venue-photos")
-    .upload(path, file, { upsert: true });
+    .upload(path, compressed, { upsert: true });
 
   if (error) return { error: error.message };
 
